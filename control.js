@@ -569,6 +569,7 @@ async function boot(options={}){
  activeCardType=STATE.broadcast?.card?.type||null;
  if(STATE.broadcast?.cardAnimations)CARD_ANIM_MAP={...CARD_ANIM_MAP,...STATE.broadcast.cardAnimations};
  if(STATE.broadcast?.eventAnimations)EVENT_ANIM_MAP={...EVENT_ANIM_MAP,...STATE.broadcast.eventAnimations};
+ [['FOUR','eventThemeFour'],['SIX','eventThemeSix'],['WICKET','eventThemeWicket']].forEach(([event,id])=>{const control=$(id);if(control)control.value=EVENT_ANIM_MAP[event]||control.value;});
  // Switch the two root views together so Login and Dashboard can never appear one below the other.
  setAuthView(true);
  renderAll();
