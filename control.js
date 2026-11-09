@@ -57,6 +57,7 @@ function showPage(id){
  if(!STATE?.user){setAuthView(false);return;}
  if(!$(id))return;
  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+ document.body.classList.toggle('scoringView',id==='scoring');
  $(id).classList.remove('hidden');
  document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.go===id));
  closeSideNav();
