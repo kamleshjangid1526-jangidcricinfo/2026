@@ -118,18 +118,54 @@
     if(e.extra==='bye') return (Number(e.total)||0)+'B';
     return String(e.runs ?? 0);
   }
+  function ownerUid(){return String(STATE?.user?.id||MATCH?.userId||'');}
+  function setSyncState(state,label){window.JCOffline?.status(state,label);}
+  async function syncPendingMatch(){
+    if(!navigator.onLine){setSyncState('offline','● Offline · Sync Pending');return false;}
+    const uid=ownerUid();if(!uid||!window.JCOffline)return false;
+    if(syncPendingMatch.running)return false;
+    syncPendingMatch.running=true;
+    try{
+      for(let attempt=0;attempt<5;attempt++){
+        const pending=await JCOffline.loadPending(uid);
+        if(!pending){await JCOffline.markSynced(uid);setSyncState('synced','● Online · Synced');return true;}
+        setSyncState('pending','● Online · Sync Pending');
+        if(pending.type==='snapshot'&&pending.match){
+          await api('/api/match/state',{method:'POST',body:JSON.stringify({match:pending.match})});
+        }else if(pending.type==='finish'&&pending.payload){
+          await api('/api/match/finish',{method:'POST',body:JSON.stringify(pending.payload)});
+        }else{
+          await JCOffline.clearPending(uid,pending.version);continue;
+        }
+        await JCOffline.clearPending(uid,pending.version);
+        const remaining=await JCOffline.loadPending(uid);
+        if(!remaining){await JCOffline.markSynced(uid,pending.version);setSyncState('synced','● Online · Synced');return true;}
+      }
+      setSyncState('pending','● Online · Sync Pending');return false;
+    }catch(error){
+      console.warn('Offline match sync is still pending:',error);
+      setSyncState('pending','● Online · Sync Pending');return false;
+    }finally{syncPendingMatch.running=false;}
+  }
+  syncPendingMatch.running=false;
   async function saveMatch(shouldRender=true) {
-    if(!MATCH?.id || MATCH.status!=='live') throw new Error('कोई LIVE match नहीं है। पहले नया मैच शुरू करें।');
+    if(!MATCH?.id || MATCH.status!=='live') throw new Error('कोई LIVE मैच नहीं है। पहले नया मैच शुरू करें।');
+    const uid=ownerUid();
+    if(!uid||!window.JCOffline)throw new Error('Offline Save सुविधा तैयार नहीं है। कृपया पेज एक बार Online खोलकर Reload करें।');
     MATCH.updatedAt=new Date().toISOString();
     const snapshot=clone(MATCH);
-    await api('/api/match/state',{method:'POST',body:JSON.stringify({match:snapshot})});
+    await JCOffline.saveMatch(uid,snapshot);
     if(STATE) {
       STATE.activeMatch=clone(snapshot);
       STATE.matches ||= [];
       const ix=STATE.matches.findIndex(m=>m.id===snapshot.id);
       if(ix>=0) STATE.matches[ix]=clone(snapshot); else STATE.matches.push(clone(snapshot));
+      STATE.offlineMode=!navigator.onLine;
+      await JCOffline.cacheState(uid,STATE);
     }
+    setSyncState(navigator.onLine?'pending':'offline',navigator.onLine?'● Online · Sync Pending':'● Offline · Sync Pending');
     if(shouldRender) renderScoring();
+    if(navigator.onLine) syncPendingMatch();
     return true;
   }
   async function recordDelivery({kind='run',runs=0,extra='',totalRuns=0,batterRuns=0}={}) {
@@ -315,19 +351,32 @@
       <div class="scoreCommandMetric metricBalls"><small>BALLS BOWLED</small><b>${ballsNow}</b><span>${fmtOvers(ballsNow)} overs</span></div>
       <div class="scoreCommandMetric metricRate"><small>RUN RATE</small><b>${runRate(i)}</b><span>Current run rate</span></div>`;
     const stateNotice=m.result?`<div class="scoreCommandNotice isResult">🏆 ${safe(m.result)}</div>`:m.awaitingNextInnings?'<div class="scoreCommandNotice">पहली पारी पूरी हो गई है। अब दूसरी पारी शुरू करें।</div>':m.awaitingMatchFinish?'<div class="scoreCommandNotice">पारी पूरी हो गई है। Finish Match से परिणाम सेव करें।</div>':i.awaitingBowler&&isOpen?'<div class="scoreCommandNotice">ओवर पूरा हुआ — अगला गेंदबाज चुनें।</div>':'';
-    header.innerHTML=`<div class="scoreCommandBoard">
-      <div class="scoreCommandTop"><div class="scoreCommandTitle"><span class="scoreCommandEyebrow">JANGID CRICINFO · SCORING DESK</span><h3>${safe(m.title||'Cricket Match')}</h3><span>${safe(m.tournamentName||'Standalone match')}${m.venue||m.location?` · ${safe(m.venue||m.location)}`:''}</span></div><div class="scoreCommandStatus ${m.status==='live'?'isLive':'isDone'}">${topStatus}<span>INNINGS ${Number(m.inningsNo||1)}</span></div></div>
-      <div class="scoreCommandMainGrid">
-        <article class="scoreCommandTeamCard battingSide"><div class="scoreCommandRole"><span>01</span> BATTING</div><div class="scoreCommandTeamBody">${teamCard(bat,i.battingId,'BATTING TEAM')}</div><div class="scoreCommandTeamFoot battingPlayersFoot"><span>BATTERS</span><b>${safe(strikerNow?.name||'—')} <small>STR</small></b><b>${safe(nonNow?.name||'—')} <small>NON</small></b></div></article>
-        <article class="scoreCommandCenter"><div class="scoreCommandCenterTop"><span>LIVE TOTAL</span>${targetNow?`<b class="scoreCommandTarget">TARGET ${targetNow}</b>`:`<b class="scoreCommandPowerplay">${pp?`POWERPLAY ${safe(pp)}`:'INNINGS '+Number(m.inningsNo||1)}</b>`}</div><div class="scoreCommandDigits"><strong>${scoreNow}</strong><i>/</i><strong>${wicketsNow}</strong></div><div class="scoreCommandOvers"><div><small>OVERS</small><b>${fmtOvers(ballsNow)} <em>/ ${maxOvers}</em></b></div><div><small>CRR</small><b>${runRate(i)}</b></div><div><small>POWERPLAY</small><b>${pp||'—'}</b></div></div><div class="scoreCommandProgress"><span style="width:${progressPct.toFixed(2)}%"></span></div></article>
-        <article class="scoreCommandTeamCard bowlingSide"><div class="scoreCommandRole"><span>02</span> BOWLING</div><div class="scoreCommandTeamBody">${teamCard(bowl,i.bowlingId,'BOWLING TEAM')}</div><div class="scoreCommandTeamFoot"><span>CURRENT BOWLER</span><b>${safe(bowlerNow?.name||'—')}</b></div></article>
+    const battingName=bat?.name||m.teamAName||'Batting Team';
+    header.innerHTML=`<div class="mobileLiveScoreBoard">
+      <div class="mobileScoreTeam" title="${safe(battingName)}">${safe(battingName)}</div>
+      <div class="mobileScoreMain">
+        ${targetNow>0?`<span class="mobileTargetBadge">TARGET ${targetNow}</span>`:''}
+        <strong>${scoreNow}/${wicketsNow}</strong>
+        <span class="mobileScoreOvers">${fmtOvers(ballsNow)} OV · BALL ${ballsNow}</span>
       </div>
-      <div class="scoreCommandMetrics">${metaCards}</div>
-      ${stateNotice}
+      <div class="mobileScoreMeta"><span>INNINGS ${Number(m.inningsNo||1)}</span><span>CRR ${runRate(i)}</span>${targetNow>0?`<span>NEED ${runsNeeded} · RRR ${requiredRate}</span>`:''}</div>
+      ${m.awaitingNextInnings?'<div class="mobileScoreNotice">पहली पारी पूरी · दूसरी पारी सेट करें</div>':m.awaitingMatchFinish?'<div class="mobileScoreNotice">पारी पूरी · Finish Match चुनें</div>':i.awaitingBowler?'<div class="mobileScoreNotice">ओवर पूरा · अगला Bowler चुनें</div>':''}
     </div>`;
     const striker=i.batStats?.[i.striker],non=i.batStats?.[i.nonStriker],bowler=i.bowlStats?.[i.currentBowler];
-    players.innerHTML=`<div class="currentPlayerGroups"><section class="currentPlayerGroup battingPlayerGroup"><h4>BATTERS · ${safe(bat?.name||'Batting Side')}</h4><div class="currentPlayerCard"><div><small>STRIKER</small><b>${safe(striker?.name||'—')}</b><strong>${striker?.runs||0} (${striker?.balls||0})</strong><span>${striker?.fours||0}×4 · ${striker?.sixes||0}×6</span></div><div><small>NON-STRIKER</small><b>${safe(non?.name||'—')}</b><strong>${non?.runs||0} (${non?.balls||0})</strong><span>${non?.fours||0}×4 · ${non?.sixes||0}×6</span></div></div></section><section class="currentPlayerGroup bowlingPlayerGroup"><h4>BOWLER · ${safe(bowl?.name||'Bowling Side')}</h4><div class="currentPlayerCard"><div><small>CURRENT BOWLER</small><b>${safe(bowler?.name||'—')}</b><strong>${fmtOvers(bowler?.balls||0)} · ${bowler?.runs||0}/${bowler?.wickets||0}</strong><span>WD ${bowler?.wides||0} · NB ${bowler?.noBalls||0}</span></div></div></section></div>`;
-    recent.innerHTML=(i.events||[]).slice(-18).map(e=>`<span class="ball ${e.wicket?'ballWicket':e.runs===4?'ballFour':e.runs===6?'ballSix':''}" title="${safe(e.commentary||'')} ">${safe(e.label||labelForEvent(e))}</span>`).join('')||'<span class="muted">पहली गेंद का इंतज़ार…</span>';
+    players.innerHTML=`<div class="currentPlayerGroups mobilePlayerGroups">
+      <section class="currentPlayerGroup battingPlayerGroup">
+        <div class="mobilePlayerRow isStriker"><small>STRIKER</small><b>${safe(striker?.name||'—')}</b><strong>${striker?.runs||0} <em>(${striker?.balls||0})</em></strong></div>
+        <div class="mobilePlayerRow isNonStriker"><small>NON-STRIKER</small><b>${safe(non?.name||'—')}</b><strong>${non?.runs||0} <em>(${non?.balls||0})</em></strong></div>
+      </section>
+      <section class="currentPlayerGroup bowlingPlayerGroup">
+        <small class="mobileRole">BOWLER</small><b class="mobileBowlerName">${safe(bowler?.name||'Select Bowler')}</b>
+        <strong class="mobileBowlerFigures">${fmtOvers(bowler?.balls||0)} · ${bowler?.runs||0}/${bowler?.wickets||0}</strong>
+      </section>
+    </div>`;
+    const latestBall=[...(i.events||[])].reverse().find(e=>e?.ballLabel);
+    const currentOver=latestBall?String(latestBall.ballLabel).split('.')[0]:null;
+    const visibleBalls=currentOver?(i.events||[]).filter(e=>String(e?.ballLabel||'').split('.')[0]===currentOver).slice(-12):(i.events||[]).slice(-6);
+    recent.innerHTML=visibleBalls.map(e=>`<span class="ball ${e.wicket?'ballWicket':e.runs===4?'ballFour':e.runs===6?'ballSix':''}" title="${safe(e.commentary||'')} ">${safe(e.label||labelForEvent(e))}</span>`).join('')||'<span class="muted">इस Over की गेंदों का इंतज़ार…</span>';
     const disabled=!isOpen || !!i._replaceSlot || !!i.awaitingNewBatter || !!i.awaitingBowler || !i.currentBowler;
     grid?.classList.toggle('disabledScoreGrid',disabled);grid?.querySelectorAll('button').forEach(b=>b.disabled=disabled);
     if(finish)finish.disabled=m.status!=='live';
@@ -451,7 +500,22 @@
   window.startSecondInnings=startSecondInnings;
   window.requestNextInnings=requestNextInnings;
   window.resumeScoringSetup=()=>{const i=innings();if(!i)return;if(MATCH?.awaitingNextInnings||MATCH?.awaitingInningsSetup)startSecondInnings();else if(i.awaitingNewBatter&&i._replaceSlot)promptReplacement(i._replaceSlot);else if(i.awaitingBowler)promptBowler();};
-  window.JangidScoring={recordDelivery,undoLastDelivery,saveMatch,finalizeMatch,renderScoring,startSecondInnings,requestNextInnings,openChangeBatter,getAllOutWicketLimit:allOutWicketLimit,isInningsAllOut};
+  window.JangidScoring={recordDelivery,undoLastDelivery,saveMatch,finalizeMatch,renderScoring,startSecondInnings,requestNextInnings,openChangeBatter,syncPendingMatch,getAllOutWicketLimit:allOutWicketLimit,isInningsAllOut};
+  window.addEventListener('online',()=>syncPendingMatch());
+  window.addEventListener('offline',()=>setSyncState('offline','● Offline · Sync Pending'));
+  window.addEventListener('focus',()=>{if(navigator.onLine)syncPendingMatch()});
+  window.addEventListener('load',()=>{const uid=ownerUid();if(uid&&navigator.onLine)syncPendingMatch();},{once:true});
+  document.addEventListener('click',event=>{
+    if(event.target.closest('#scoringCardToggle')){
+      const box=el('scoringCardControls');if(box){box.open=!box.open;const button=el('scoringCardToggle');if(button)button.textContent=box.open?'▣ Cards · Open':'▣ Cards';}
+      return;
+    }
+    if(event.target.closest('#scoringCardClose')){
+      const box=el('scoringCardControls');if(box)box.open=false;
+      const button=el('scoringCardToggle');if(button)button.textContent='▣ Cards';
+      return;
+    }
+  });
   document.addEventListener('click',async event=>{
     const run=event.target.closest('[data-run]');
     const extra=event.target.closest('[data-extra]');
