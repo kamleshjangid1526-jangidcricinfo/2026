@@ -63,6 +63,12 @@
         try{const result=await apiRequest(url,init);if((result.status||200)<400&&result.body?.user){await saveState(result.body);const merged=await withPending(clone(result.body));await saveState(merged);const pending=activeUid?(await records('queue:'+activeUid+':')).length:0;localStatus(pending?'pending':'synced',pending?pending+' pending items.':'Firebase connected.');return toResponse({status:200,body:merged});}return toResponse(result);}
         catch(error){if(!isNetworkError(error))throw error;const saved=await readState();if(!saved)throw error;const merged=await withPending(saved);localStatus('offline','Offline mode · पिछला Match और Teams डेटा लोड हुआ।');return toResponse({status:200,body:{...merged,firebaseConnection:'offline',offlineMode:true}});}
       }
+      const publicMatchPath=url.pathname.match(/^\/api\/public\/match\/([^/]+)$/);
+      if(publicMatchPath&&method==='GET'){
+        const matchCacheKey='public:match:'+decodeURIComponent(publicMatchPath[1]);
+        try{const result=await apiRequest(url,init);if((result.status||200)<400)await store?.put(matchCacheKey,result.body||{});return toResponse(result);}
+        catch(error){if(!isNetworkError(error))throw error;const cached=await store?.get(matchCacheKey);if(!cached)throw error;localStatus('offline','इस Scoreboard का पिछला Match snapshot दिखाया जा रहा है।');return toResponse({status:200,body:{...cached,offlineMode:true}});}
+      }
       if(url.pathname==='/api/public'&&method==='GET'){
         try{const result=await apiRequest(url,init);if((result.status||200)<400)await store?.put('public:last',result.body||{});return toResponse(result);}
         catch(error){if(!isNetworkError(error))throw error;const cached=await store?.get('public:last');if(!cached)throw error;localStatus('offline','Public page last saved copy दिखा रहा है।');return toResponse({status:200,body:{...cached,offlineMode:true}});}
