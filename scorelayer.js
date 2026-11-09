@@ -194,9 +194,10 @@ function renderBar(m,b){
  if(savedStudio){renderStudioBar(layer,m,b,savedStudio);return;}
  layer.dataset.studio='false';
  const layout=Math.max(1,Math.min(20,Number(b.layer)||1)),color=Math.max(1,Math.min(10,Number(b.color)||1));
- layer.className=`scoreBar layer${layout} jlCompactPattern jlNewTwenty color${color}`;layer.dataset.layout=String(layout);layer.dataset.family='compact';layer.dataset.color=String(color);
+ layer.className=`scoreBar layer${layout} jlCompactPattern ${layout>=8?'jlNewTwenty ':''}color${color}${layout<=7?` referenceEra${layout}`:''}`;layer.dataset.layout=String(layout);layer.dataset.family='compact';layer.dataset.color=String(color);
  const freshAccents=['#53d9ee','#46d69b','#ff526f','#ff9a50','#a58bff','#f5ce58','#1e5a84','#4de3d5','#ff6c91','#c6d2df'];
- layer.style.setProperty('--accent',freshAccents[color-1]||accentByColor[1]);
+ const referenceAccents={1:'#00c7dc',2:'#d6b34b',3:'#8c9daa',4:'#23a4da',5:'#e81d87',6:'#df2e8c',7:'#138d45'};
+ layer.style.setProperty('--accent',layout<=7?referenceAccents[layout]:(freshAccents[color-1]||accentByColor[1]));
  applyScoreDesign(b.design||{});
  const battingId=i.battingId??m.teamA;
  const batting=teamMeta(battingId,m,'BAT');
@@ -223,7 +224,6 @@ function renderBar(m,b){
    <div class="jlScoreMain"><strong class="jlRuns">${runs}</strong><span class="jlSlash">/</span><strong class="jlWickets">${wickets}</strong><span class="jlOversValue">${overs}</span></div>
   </div>
   <div class="jlBowler">
-   ${compactLogo(bowling)}
    <b class="jlBowlerName ${String(bw?.name||'').length>15?'isLong':''}">${esc(bw?.name||'—')}</b>
    <strong class="jlBowlerFigures">${bowlerOvers} – ${bowlerRuns} – ${bowlerWickets}</strong>
   </div>
