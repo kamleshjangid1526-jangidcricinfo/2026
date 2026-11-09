@@ -218,6 +218,7 @@ function renderBar(m,b){
   </div>
   <div class="jlScoreWrap">
    <div class="jlScoreTop">${targetBadge}<div class="jlPowerplayGroup">${pp}</div></div>
+   <div class="jlScoreTeamName" title="${esc(batting.name)}">${esc(batting.name||"BATTING TEAM")}</div>
    <div class="jlScoreMain"><strong class="jlRuns">${runs}</strong><span class="jlSlash">/</span><strong class="jlWickets">${wickets}</strong><span class="jlOversValue">${overs}</span></div>
   </div>
   <div class="jlBowler">
