@@ -154,7 +154,7 @@
    Keep the scoring workflow visible without page-level vertical scrolling. */
 body:has(#scoring:not(.hidden)){overflow:hidden}
 #app main:has(#scoring:not(.hidden)){height:calc(100dvh - 66px);min-height:0;overflow:hidden;padding-bottom:0}
-#scoring:not(.hidden){height:100%;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:6px;padding:8px 12px}
+#scoring:not(.hidden){height:100%;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;padding:8px 12px}
 #scoring>.pageHead{flex:0 0 auto;margin:0;min-height:30px}
 #scoring>.pageHead h2{font-size:clamp(17px,1.5vw,22px);margin:0}
 #scoring>#scoreHeader{flex:0 0 auto;min-height:0;margin:0}
