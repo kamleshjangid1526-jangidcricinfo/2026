@@ -108,6 +108,19 @@
     return version;
   }
 
+  async function saveFinish(uid, payload, liveSnapshot, finishedMatch) {
+    if (!uid || !liveSnapshot?.id || !finishedMatch?.id) throw new Error('Offline Finish के लिए Match data उपलब्ध नहीं है।');
+    const local = JSON.parse(JSON.stringify(finishedMatch));
+    const live = JSON.parse(JSON.stringify(liveSnapshot));
+    const version = Date.now() + '-' + (++revision);
+    const pending = { type: 'finish', uid: String(uid), payload: JSON.parse(JSON.stringify(payload)), match: live, localMatch: local, version, queuedAt: Date.now() };
+    await write('match:' + uid, local);
+    await write('pending:' + uid, pending);
+    try { channel?.postMessage({ type: 'match', uid: String(uid), match: local, pending: true, version }); } catch (_) {}
+    try { window.dispatchEvent(new CustomEvent('jc-offline-match', { detail: { uid: String(uid), match: local, pending: true, version } })); } catch (_) {}
+    return version;
+  }
+
   async function loadMatch(uid) { return uid ? read('match:' + uid) : null; }
   async function loadPending(uid) { return uid ? read('pending:' + uid) : null; }
 
@@ -132,5 +145,5 @@
     }, { once: true });
   }
 
-  window.JCOffline = { read, write, remove, cacheState, loadState, saveMatch, loadMatch, loadPending, clearPending, markSynced, status, channel };
+  window.JCOffline = { read, write, remove, cacheState, loadState, saveMatch, saveFinish, loadMatch, loadPending, clearPending, markSynced, status, channel };
 })();
