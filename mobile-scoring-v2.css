@@ -1,0 +1,83 @@
+/* Compact mobile scoring desk. Kept separate so desktop workflows remain unchanged. */
+@media(max-width:700px){
+ body.jc-scoring-view{height:100svh;min-height:100svh;overflow:hidden;overscroll-behavior:none}
+ body.jc-scoring-view #app{height:100svh;min-height:0;overflow:hidden}
+ body.jc-scoring-view .topbar{height:40px;min-height:40px;padding:3px 8px;gap:6px;display:flex;align-items:center}
+ body.jc-scoring-view .topbar .brand,body.jc-scoring-view .topRight,body.jc-scoring-view #scoring>.pageHead{display:none!important}
+ body.jc-scoring-view .menuOpenBtn{display:inline-flex!important;width:38px;min-width:38px;height:32px;min-height:32px;padding:0;gap:3px;justify-content:center;align-items:center;border-radius:8px;font-size:15px}
+ body.jc-scoring-view .menuOpenBtn span{font-size:9px;letter-spacing:.5px}
+ body.jc-scoring-view #app main{height:calc(100svh - 40px);min-height:0;overflow:hidden;padding:5px 7px 8px}
+ body.jc-scoring-view #scoring{height:100%;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:6px}
+ body.jc-scoring-view #offlineScoreStatus{flex:0 0 21px;min-height:21px}
+ body.jc-scoring-view #scoreHeader{flex:0 0 auto;min-height:0;margin:0}
+ body.jc-scoring-view .scoreCommandBoard{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;padding:7px;border-radius:11px}
+ body.jc-scoring-view .scoreCommandTop{display:none!important}
+ body.jc-scoring-view .scoreCommandMainGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);grid-template-areas:"bat score";gap:5px;min-width:0}
+ body.jc-scoring-view .scoreCommandTeamCard.battingSide{grid-area:bat;min-width:0;padding:6px;background:#102a40;border-radius:8px}
+ body.jc-scoring-view .scoreCommandTeamCard.bowlingSide{display:none!important}
+ body.jc-scoring-view .scoreCommandTeamBody{gap:5px;min-width:0}
+ body.jc-scoring-view .scoreCommandTeamLogo{display:none!important}
+ body.jc-scoring-view .scoreCommandTeamCopy{min-width:0}
+ body.jc-scoring-view .scoreCommandTeamCopy small{font-size:8px}
+ body.jc-scoring-view .scoreCommandTeamCopy b{font-size:clamp(12px,3.6vw,17px);line-height:1.1;overflow-wrap:anywhere}
+ body.jc-scoring-view .scoreCommandTeamCopy span{display:none}
+ body.jc-scoring-view .scoreCommandRole{font-size:8px;margin-bottom:3px}
+ body.jc-scoring-view .scoreCommandTeamFoot{display:none!important}
+ body.jc-scoring-view .scoreCommandCenter{grid-area:score;min-width:0;padding:6px 8px;border-radius:8px;display:flex;flex-direction:column;justify-content:center}
+ body.jc-scoring-view .scoreCommandCenterTop{justify-content:center;gap:5px;min-height:20px}
+ body.jc-scoring-view .scoreCommandTarget{font-size:10px;padding:3px 9px;border-radius:7px}
+ body.jc-scoring-view .scoreCommandPowerplay{font-size:9px}
+ body.jc-scoring-view .scoreCommandDigits{font-size:clamp(30px,8vw,43px);line-height:.98;gap:4px;justify-content:center}
+ body.jc-scoring-view .scoreCommandOvers{gap:8px;justify-content:center;margin-top:4px}
+ body.jc-scoring-view .scoreCommandOvers>div{gap:1px}
+ body.jc-scoring-view .scoreCommandOvers small{font-size:7px}
+ body.jc-scoring-view .scoreCommandOvers b{font-size:11px}
+ body.jc-scoring-view .scoreCommandProgress{height:3px;margin-top:4px}
+ body.jc-scoring-view .scoreCommandMetrics{display:none!important}
+ body.jc-scoring-view .scoreCommandNotice{padding:5px 8px;margin:0;font-size:10px}
+ body.jc-scoring-view .scoreGrid.cbLiveDetailsGrid{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;flex:0 0 auto;min-height:0;margin:0}
+ body.jc-scoring-view #currentPlayers{min-width:0}
+ body.jc-scoring-view #currentPlayers>.currentPlayerGroups{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:5px;min-width:0}
+ body.jc-scoring-view .currentPlayerGroup{padding:5px 6px;border-radius:8px;min-width:0}
+ body.jc-scoring-view .currentPlayerGroup h4{font-size:8px;letter-spacing:.5px;margin:0 0 3px}
+ body.jc-scoring-view .currentPlayerCard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;min-width:0}
+ body.jc-scoring-view .bowlingPlayerGroup .currentPlayerCard{grid-template-columns:minmax(0,1fr)}
+ body.jc-scoring-view .currentPlayerCard>div{padding:4px 5px;min-width:0;gap:1px}
+ body.jc-scoring-view .currentPlayerCard small{font-size:7px}
+ body.jc-scoring-view .currentPlayerCard b{font-size:10px;overflow-wrap:anywhere}
+ body.jc-scoring-view .currentPlayerCard strong{font-size:13px}
+ body.jc-scoring-view .currentPlayerCard span{font-size:7px}
+ body.jc-scoring-view .scoreGrid.cbLiveDetailsGrid>.panel:has(#recentBalls){padding:5px 7px;margin:0}
+ body.jc-scoring-view .scoreGrid.cbLiveDetailsGrid>.panel:has(#recentBalls) .panelHead{margin:0 0 3px}
+ body.jc-scoring-view .scoreGrid.cbLiveDetailsGrid>.panel:has(#recentBalls) .panelHead h3{font-size:9px}
+ body.jc-scoring-view #recentBalls{display:flex;flex-wrap:nowrap;gap:4px;min-height:26px;overflow:hidden}
+ body.jc-scoring-view #recentBalls .ball{width:24px;height:24px;min-width:24px;font-size:10px}
+ body.jc-scoring-view .powerplayControl{display:flex;align-items:center;gap:4px;min-height:29px;padding:3px 5px;margin:0;flex:0 0 auto}
+ body.jc-scoring-view .powerplayControl>span{font-size:8px;margin-right:auto}
+ body.jc-scoring-view .powerplayControl button{min-width:28px;height:23px;padding:2px 6px;font-size:9px}
+ body.jc-scoring-view .powerplayControl small{font-size:8px}
+ body.jc-scoring-view .scoreManagementBar{margin:0;padding:5px;gap:4px;flex:0 0 auto}
+ body.jc-scoring-view .scoreManagementIntro{display:none}
+ body.jc-scoring-view .scoreManagementButtons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;width:100%}
+ body.jc-scoring-view .scoreManagementButtons button{min-width:0;min-height:28px;padding:4px;font-size:9px;line-height:1.1;white-space:normal}
+ body.jc-scoring-view #startNextInningsBtn,body.jc-scoring-view #finishMatch{grid-column:span 1}
+ body.jc-scoring-view .scoreActionGrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin:0;flex:0 0 auto}
+ body.jc-scoring-view .scoreActionGrid button{min-width:0;min-height:34px;padding:3px;font-size:11px;border-radius:7px}
+ body.jc-scoring-view .scoreActionGrid .extra,body.jc-scoring-view .scoreActionGrid .wicket{grid-column:span 1}
+ body.jc-scoring-view .scoringCardPanel{margin:0;min-height:0;flex:0 0 auto}
+ body.jc-scoring-view .scoringCardSummary{display:block;min-height:30px;padding:7px 10px;font-size:10px}
+ body.jc-scoring-view .scoringCardPanel[open]{max-height:24svh;overflow:auto}
+ body.jc-scoring-view .scoringCardPanel>.panelHead{padding:5px 8px}
+ body.jc-scoring-view .scoringCardPanel>.panelHead h3{font-size:12px}
+ body.jc-scoring-view .scoringCardPanel>.panelHead p{display:none}
+ body.jc-scoring-view .scoreCardActionGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:5px}
+ body.jc-scoring-view .scoreCardAction{min-height:30px;padding:4px;font-size:9px}
+ body.jc-scoring-view .pageFooterNav{display:none!important}
+ body.jc-scoring-view #scoring .panel{min-width:0}
+}
+@media(max-width:390px) and (max-height:760px){
+ body.jc-scoring-view .scoreCommandBoard{padding:5px}
+ body.jc-scoring-view .scoreManagementButtons button{min-height:25px;font-size:8px}
+ body.jc-scoring-view .scoreActionGrid button{min-height:30px;font-size:10px}
+ body.jc-scoring-view .currentPlayerCard>div{padding:3px}
+}
