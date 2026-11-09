@@ -413,7 +413,8 @@ async function handleApi(url,init={}) {
     return fail(404,`यह ऑनलाइन सुविधा अभी उपलब्ध नहीं है: ${method} ${path}`);
   } catch(error) {
     console.error('Jangid Firebase API error:',error);
-    return fail(error.status||400,error.message||'अनुरोध पूरा नहीं हो पाया।',error.code?{code:error.code}:{});
+    const details={...(error.code?{code:error.code}:{}),...(error.matchId?{matchId:error.matchId}:{}),...(Array.isArray(error.matches)?{matches:error.matches.map(m=>({id:m.id,title:m.title||'Local Match',teamAName:m.teamAName||'Team A',teamBName:m.teamBName||'Team B',activeInnings:m.activeInnings||{}}))}:{})};
+    return fail(error.status||400,error.message||'अनुरोध पूरा नहीं हो पाया।',details);
   }
 }
 
