@@ -335,6 +335,23 @@ function incomingCornerMarkup(eventName,meta={}){
  const detail=eventName==='NEW BOWLER'?`${fmtOvers(p.balls||0)} OV · ${Number(p.wickets||0)} W · ${Number(p.runs||0)} RUNS`:`${Number(p.runs||0)} RUNS · ${Number(p.balls||0)} BALLS`;
  return `<div class="incomingPlayerToast ${eventName==='NEW BOWLER'?'isBowler':'isBatter'}"><span class="incomingKicker">${label}</span><b>${esc(name)}</b><small>${esc(team)}</small><em>${detail}</em></div>`;
 }
+function specialMomentMarkup(eventName,b){
+ const m=latestMatch||{},i=m.activeInnings||{},delivery=i.lastDelivery||{};
+ const wicket=b.wicketDetails||{};
+ const batter=String(wicket.batter||delivery.batter||'');
+ const bowler=String(wicket.bowler||delivery.bowler||'');
+ const dismissal=String(wicket.dismissal||delivery.wicket?.type||'');
+ const team=currentTeamName(i.battingId,m)||'';
+ const isWicket=eventName==='WICKET',isSix=eventName==='SIX';
+ const mark=isWicket?'OUT':isSix?'6':'4',title=isWicket?'WICKET':isSix?'SIX':'FOUR';
+ const kicker=isWicket?'WICKET FALL':isSix?'MAXIMUM':'BOUNDARY';
+ const detail=isWicket?[dismissal,bowler?'BOWLER '+bowler:'',team].filter(Boolean).join(' · '):[batter,team].filter(Boolean).join(' · ');
+ return `<div class="broadcastMoment ${isWicket?'momentWicket':isSix?'momentSix':'momentFour'}">
+   <div class="momentMark" aria-hidden="true">${mark}</div>
+   <div class="momentCopy"><small>${esc(kicker)}</small><b>${esc(title)}</b><em>${esc(detail|| (isWicket?'OUT!':isSix?'MAXIMUM!':'BOUNDARY!'))}</em></div>
+   <div class="momentSide"><span>JANGID</span><strong>CRICINFO</strong><small>LIVE EVENT</small></div>
+  </div>`;
+}
 function renderEvent(b){
  const el=document.getElementById('eventLayer'),cardEl=document.getElementById('cardLayer');
  if(!b.event){clearTimeout(el._hide);eventVisible=false;el.style.display='none';el.innerHTML='';el.classList.remove('incomingCornerLayer');lastEventId=b.eventId??lastEventId;if(!cardEl.classList.contains('isVisible'))flushPendingSponsor();return}
@@ -343,8 +360,12 @@ function renderEvent(b){
  if(cardEl.classList.contains('isVisible')){dismissedCardId=String(latestBroadcast?.cardId??'');cardEl.classList.remove('isVisible');cardEl.style.display='none';cardEl.innerHTML='';document.body.classList.remove('cardActive')}
  const eventName=String(b.event||'').toUpperCase();const corner=['NEW BATSMAN','NEW BOWLER'].includes(eventName);
  const animationTemplate=!corner?selectedStudioOverlay(b.animationDesign):null;
- if(corner){el.innerHTML=incomingCornerMarkup(eventName,b);el.className=`eventLayer incomingCornerLayer ${eventName==='NEW BOWLER'?'isBowler':'isBatter'}`;el.dataset.anim=b.animation||'fade';}
- else if(eventName==='WICKET'&&b.wicketDetails){const d=b.wicketDetails;el.innerHTML=`<div class="eventInner wicketEventInner detailedWicketEvent"><div class="eventTitle">WICKET</div><b class="eventPlayerName">${esc(d.batter||'Batter')}</b><div class="eventSub">${esc(d.dismissal||'OUT')}</div><small>${esc(d.bowler||'')} ${d.fielder?` · ${esc(d.fielder)}`:''}</small></div>`;el.className='eventLayer style-wicket';el.dataset.anim=b.animation||'slam';}
+ if(['FOUR','SIX','WICKET'].includes(eventName)){
+  el.innerHTML=specialMomentMarkup(eventName,b);
+  el.className=`eventLayer specialMomentLayer momentType-${eventName.toLowerCase()}`;
+  el.dataset.anim=b.eventAnimations?.[eventName]||b.animation||(eventName==='FOUR'?'boundaryArc':eventName==='SIX'?'skyLaunch':'stumpShock');
+ }
+ else if(corner){el.innerHTML=incomingCornerMarkup(eventName,b);el.className=`eventLayer incomingCornerLayer ${eventName==='NEW BOWLER'?'isBowler':'isBatter'}`;el.dataset.anim=b.animation||'fade';}
  else{el.innerHTML=animationTemplate?studioOverlayTemplateMarkup(animationTemplate,latestMatch||{}, {kind:'animation',event:b.event}):eventMarkup(b.event,b);el.className=`eventLayer style-${String(b.eventStyle||'generic').toLowerCase().replace(/\s+/g,'')}${animationTemplate?' studioAnimationEvent':''}`;el.dataset.anim=b.eventAnimations?.[b.event]||b.animation||'zoom';}
  el.dataset.eventType=eventName.toLowerCase().replace(/\s+/g,'-');el.style.animationDuration=`${b.duration||2200}ms`;el.style.display='grid';const inner=el.querySelector('.eventInner,.jlStudioOverlayRoot,.incomingPlayerToast');if(inner)inner.style.animationDuration=`${b.duration||2200}ms`;
  el._hide=setTimeout(()=>{eventVisible=false;el.style.display='none';el.innerHTML='';el.classList.remove('incomingCornerLayer');if(!cardEl.classList.contains('isVisible'))flushPendingSponsor()},Math.max(900,Number(b.duration||2200)-50));
