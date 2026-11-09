@@ -4,7 +4,7 @@ const SHELL=[
  './scorelayer.html','./scorelayer.css','./scorelayer-v6.css','./scorelayer-v7.css','./scorelayer-compact-pattern.css',
  './scorelayer-studio.css','./scorelayer-overlays-v446.css','./scorelayer-v4_4_11-fixes.css','./scorelayer-card-layout-v4414.css',
  './scorelayer.js','./control.js','./scoring-engine.js','./tournament-manager.js','./theme.js',
- './firebase-api-loader.js','./firebase-ready.js','./offline-store.js','./mobile-scoring-v2.css','./scorelayer-new-events.css',
+ './firebase-api-loader.js','./firebase-ready.js','./offline-store.js','./mobile-scoring-v2.css','./tournament-tabs-v2.css','./scorelayer-new-events.css','./scorelayer-new-layouts.css','./scorelayer-new-events-v2.css',
  './firebase/firebase-api-bridge.mjs'
 ];
 self.addEventListener('install',event=>{
