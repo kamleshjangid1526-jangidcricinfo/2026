@@ -1,0 +1,24 @@
+/* Offline/sync status badge and service-worker registration. */
+(() => {
+  const mount=()=>{
+    if(!document.body)return;
+    let bar=document.getElementById('jcOfflineStatus');
+    if(!bar){bar=document.createElement('div');bar.id='jcOfflineStatus';bar.className='jcOfflineStatus';bar.setAttribute('role','status');bar.setAttribute('aria-live','polite');bar.textContent='Checking connection…';const scoring=document.getElementById('scoring');if(scoring)scoring.prepend(bar);else document.body.append(bar);}
+    const update=event=>{
+      const d=event?.detail||{},online=navigator.onLine;
+      const state=d.state||(online?'synced':'offline');
+      bar.dataset.state=state;
+      const labels={offline:'● OFFLINE · Device में सुरक्षित',pending:'◷ SYNC PENDING · Internet पर Sync होगा',syncing:'↻ SYNCING · Firebase से जुड़ रहा है',synced:'✓ SYNCED · सभी बदलाव सुरक्षित'};
+      bar.textContent=labels[state]||labels[online?'synced':'offline'];
+      bar.title=d.detail||bar.textContent;
+    };
+    window.addEventListener('jc-offline-status',update);
+    update({detail:{state:navigator.onLine?'synced':'offline'}});
+    if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+      navigator.serviceWorker.register(new URL('./sw.js',location.href),{scope:'./'}).then(registration=>{
+        if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});
+      }).catch(error=>{console.warn('Offline cache could not be registered:',error);});
+    }
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
+})();
