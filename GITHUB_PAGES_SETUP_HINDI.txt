@@ -1,0 +1,12 @@
+GitHub Pages पर प्रकाशित करने के आसान कदम
+========================================
+
+1. GitHub में Public repository बनाएँ। Repository का नाम Jangid-Cricinfo रखें।
+2. इस ZIP को Extract करें।
+3. Extract folder के अंदर की सभी files/folders GitHub repository के main branch में upload करें।
+4. GitHub में repository → Settings → Pages खोलें।
+5. Build and deployment के Source में GitHub Actions चुनें।
+6. Actions tab में Pages workflow का Deploy सफल होने पर URL दिखेगा।
+7. Firebase Authentication → Settings → Authorized domains में YOUR-USERNAME.github.io जोड़ें।
+
+ध्यान दें: `data.json`, backups, .env, Password, Service Account JSON और Private Keys upload न करें।

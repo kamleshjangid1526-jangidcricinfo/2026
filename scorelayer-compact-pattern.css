@@ -1,0 +1,91 @@
+/* Jangid Cricinfo compact scorebug pattern based on the user's four Score Layer requirements.
+   The original twenty palette/shape classes stay on #scoreBar; this file only defines content order. */
+#scoreBar.scoreBar.jlCompactPattern{
+  position:fixed!important;left:2vw!important;right:2vw!important;top:auto!important;bottom:18px!important;
+  width:auto!important;max-width:96vw!important;min-width:0!important;height:auto!important;min-height:88px!important;
+  display:grid!important;grid-template-areas:"batters score bowler" "batters score balls"!important;
+  grid-template-columns:minmax(0,1.18fr) minmax(0,.84fr) minmax(0,1fr)!important;
+  grid-template-rows:minmax(42px,1fr) minmax(26px,.62fr)!important;
+  align-items:stretch!important;gap:4px!important;padding:7px 10px!important;overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+#scoreBar.scoreBar.jlCompactPattern:before{pointer-events:none!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBatters{
+  grid-area:batters!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;
+  gap:clamp(5px,.65cqi,11px)!important;padding:4px 6px!important;min-width:0!important;overflow:hidden!important;
+  background:var(--jl-panel,rgba(0,0,0,.16))!important;border:1px solid var(--jl-line,rgba(255,255,255,.18))!important;border-radius:var(--jl-inner-radius,8px)!important;
+}
+#scoreBar.scoreBar.jlCompactPattern .jlScoreLogo{
+  display:grid!important;place-items:center!important;flex:0 0 var(--jl-logo-size,clamp(23px,2.1cqi,36px))!important;width:var(--jl-logo-size,clamp(23px,2.1cqi,36px))!important;height:var(--jl-logo-size,clamp(23px,2.1cqi,36px))!important;
+  border:1px solid var(--accent)!important;border-radius:var(--jl-logo-radius,50%)!important;overflow:hidden!important;background:#fff!important;
+}
+#scoreBar.scoreBar.jlCompactPattern .jlScoreLogo img{width:100%!important;height:100%!important;object-fit:contain!important;background:#fff!important}
+#scoreBar.scoreBar.jlCompactPattern .jlScoreLogo i{font-style:normal!important;font-size:clamp(8px,1cqi,13px)!important;font-weight:1000!important;color:var(--accent)!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBatterList{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;justify-content:center!important;gap:5px!important;min-width:0!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBatterRow{
+  display:grid!important;grid-template-columns:clamp(12px,1.2cqi,19px) minmax(0,1fr) auto!important;align-items:center!important;gap:3px!important;
+  min-width:0!important;max-width:100%!important;padding:0!important;line-height:1.08!important;background:transparent!important;border:0!important;
+}
+#scoreBar.scoreBar.jlCompactPattern .jlStrikeIcon{display:block!important;width:clamp(12px,1.2cqi,19px)!important;text-align:center!important;font-size:clamp(9px,.95cqi,14px)!important;line-height:1!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBatterName{display:block!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:var(--jl-meta-font,clamp(9px,1.12cqi,16px))!important;line-height:1.12!important;font-weight:850!important;color:var(--jl-ink,#fff)!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBatterStats{display:flex!important;align-items:baseline!important;gap:2px!important;white-space:nowrap!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBatterRuns{font-size:var(--jl-stat-font,clamp(10px,1.15cqi,17px))!important;font-weight:1000!important;color:var(--jl-ink,#fff)!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBatterBalls{display:inline!important;font-size:var(--jl-small-font,clamp(7px,.72cqi,10px))!important;color:var(--jl-muted,#bdcfdf)!important}
+#scoreBar.scoreBar.jlCompactPattern .jlScoreWrap{
+  grid-area:score!important;grid-row:1/3!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;
+  gap:3px!important;min-width:0!important;padding:4px 7px!important;border:1px solid var(--jl-line,rgba(255,255,255,.2))!important;
+  border-radius:var(--jl-inner-radius,9px)!important;background:var(--jl-score-panel,rgba(0,0,0,.2))!important;text-align:center!important;overflow:hidden!important;
+}
+#scoreBar.scoreBar.jlCompactPattern .jlScoreTop{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:4px!important;min-width:0!important;min-height:13px!important}
+#scoreBar.scoreBar.jlCompactPattern .jlTargetBadge{display:inline-flex!important;align-items:center!important;justify-content:center!important;padding:2px 6px!important;white-space:nowrap!important;
+  font-size:var(--jl-small-font,clamp(7px,.7cqi,10px))!important;line-height:1!important;font-weight:1000!important;border-radius:var(--jl-inner-radius,4px 9px 4px 9px)!important;background:var(--accent)!important;color:#081521!important}
+#scoreBar.scoreBar.jlCompactPattern .jlPowerplayGroup{display:flex!important;align-items:center!important;gap:2px!important;justify-content:flex-end!important}
+#scoreBar.scoreBar.jlCompactPattern .jlPhaseTag{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:clamp(15px,1.5cqi,22px)!important;height:clamp(11px,1.05cqi,15px)!important;padding:0 3px!important;
+  border:1px solid var(--jl-line,rgba(255,255,255,.3))!important;border-radius:var(--jl-inner-radius,3px)!important;font-size:var(--jl-small-font,clamp(6px,.55cqi,8px))!important;line-height:1!important;font-weight:950!important;color:var(--jl-muted,#bdcfdf)!important;background:#ffffff0b!important}
+#scoreBar.scoreBar.jlCompactPattern .jlPhaseTag.isActive{color:#071521!important;background:var(--accent)!important;border-color:var(--accent)!important;box-shadow:0 0 7px color-mix(in srgb,var(--accent) 55%,transparent)!important}
+#scoreBar.scoreBar.jlCompactPattern .jlScoreMain{display:flex!important;align-items:baseline!important;justify-content:center!important;gap:2px!important;min-width:0!important;white-space:nowrap!important;line-height:1!important}
+#scoreBar.scoreBar.jlCompactPattern .jlRuns{font-size:var(--jl-score-font,clamp(24px,4.2cqi,56px))!important;line-height:.95!important;font-weight:1000!important;letter-spacing:-.045em!important;color:var(--jl-ink,#fff)!important}
+#scoreBar.scoreBar.jlCompactPattern .jlSlash{font-size:clamp(15px,2cqi,25px)!important;color:var(--jl-muted,#bdcfdf)!important}
+#scoreBar.scoreBar.jlCompactPattern .jlWickets{font-size:var(--jl-wicket-font,clamp(17px,2.65cqi,34px))!important;line-height:.95!important;font-weight:950!important;color:var(--jl-ink,#fff)!important}
+#scoreBar.scoreBar.jlCompactPattern .jlOversValue{display:inline-flex!important;align-items:center!important;margin-left:clamp(4px,.7cqi,10px)!important;padding-left:clamp(4px,.7cqi,10px)!important;
+  border-left:1px solid var(--jl-line,rgba(255,255,255,.3))!important;font-size:clamp(11px,1.55cqi,21px)!important;line-height:1!important;font-weight:900!important;color:var(--jl-muted,#bdcfdf)!important;font-variant-numeric:tabular-nums!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBowler{
+  grid-area:bowler!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:7px!important;min-width:0!important;
+  padding:4px 8px!important;border:1px solid var(--jl-line,rgba(255,255,255,.18))!important;border-radius:var(--jl-inner-radius,8px)!important;background:var(--jl-panel,rgba(0,0,0,.16))!important;overflow:hidden!important;
+}
+#scoreBar.scoreBar.jlCompactPattern .jlBowlerName{display:block!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:var(--jl-meta-font,clamp(10px,1.25cqi,18px))!important;line-height:1.1!important;font-weight:900!important;color:var(--jl-ink,#fff)!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBowlerFigures{display:block!important;flex:0 0 auto!important;white-space:nowrap!important;font-size:var(--jl-stat-font,clamp(9px,1.2cqi,16px))!important;line-height:1!important;font-weight:950!important;color:var(--accent)!important;font-variant-numeric:tabular-nums!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBalls{grid-area:balls!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;min-width:0!important;gap:0!important;padding:2px 6px!important;
+  border:1px solid var(--jl-line,rgba(255,255,255,.18))!important;border-radius:var(--jl-inner-radius,7px)!important;background:var(--jl-panel,rgba(0,0,0,.16))!important;overflow:hidden!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBallRail{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:clamp(3px,.38cqi,6px)!important;width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBallChip{display:grid!important;place-items:center!important;flex:0 1 clamp(17px,1.7cqi,26px)!important;width:clamp(17px,1.7cqi,26px)!important;height:clamp(17px,1.7cqi,26px)!important;min-width:0!important;min-height:0!important;
+  border-radius:var(--jl-ball-radius,5px)!important;font-size:var(--jl-small-font,clamp(7px,.7cqi,10px))!important;font-weight:1000!important;line-height:1!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBallEmpty{font-size:clamp(8px,.7cqi,10px)!important;color:var(--jl-muted,#bdcfdf)!important}
+#scoreBar.scoreBar.jlCompactPattern .jlBrandBay,#scoreBar.scoreBar.jlCompactPattern .jlBatTeam,#scoreBar.scoreBar.jlCompactPattern .jlBowlTeam,#scoreBar.scoreBar.jlCompactPattern .jlChase{display:none!important}
+@media(max-width:720px){
+ #scoreBar.scoreBar.jlCompactPattern{left:1vw!important;right:1vw!important;bottom:7px!important;min-height:69px!important;grid-template-columns:minmax(0,1.05fr) minmax(0,.82fr) minmax(0,.95fr)!important;grid-template-rows:minmax(34px,1fr) 21px!important;padding:4px!important;gap:3px!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBatters{gap:3px!important;padding:2px!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlScoreLogo{flex-basis:clamp(19px,var(--jl-logo-size,clamp(19px,4vw,27px)),clamp(27px,4vw,31px))!important;width:clamp(19px,var(--jl-logo-size,clamp(19px,4vw,27px)),clamp(27px,4vw,31px))!important;height:clamp(19px,var(--jl-logo-size,clamp(19px,4vw,27px)),clamp(27px,4vw,31px))!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBatterList{gap:3px!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBatterRow{grid-template-columns:10px minmax(0,1fr) auto!important;gap:2px!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlStrikeIcon{font-size:8px!important;width:10px!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBatterName{font-size:clamp(7px,var(--jl-meta-font,clamp(7px,1.2cqi,10px)),clamp(7px,1.2cqi,10px))!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBatterRuns{font-size:clamp(8px,var(--jl-stat-font,clamp(8px,1.2cqi,11px)),clamp(8px,1.2cqi,11px))!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBatterBalls{font-size:clamp(6px,var(--jl-small-font,6px),7px)!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlRuns{font-size:clamp(18px,var(--jl-score-font,clamp(18px,4.5cqi,31px)),clamp(18px,4.5cqi,31px))!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlWickets{font-size:clamp(13px,var(--jl-wicket-font,clamp(13px,2.3cqi,19px)),clamp(13px,2.3cqi,19px))!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlOversValue{font-size:clamp(8px,1.25cqi,11px)!important;margin-left:2px!important;padding-left:3px!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlTargetBadge{font-size:6px!important;padding:1px 3px!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlPhaseTag{font-size:5px!important;min-width:12px!important;height:9px!important;padding:0 2px!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBowler{padding:2px 4px!important;gap:3px!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBowlerName{font-size:clamp(7px,var(--jl-meta-font,clamp(7px,1.35cqi,10px)),clamp(7px,1.35cqi,10px))!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBowlerFigures{font-size:clamp(7px,var(--jl-stat-font,clamp(7px,1.2cqi,9px)),clamp(7px,1.2cqi,9px))!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBalls{padding:1px 3px!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBallRail{gap:2px!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBallChip{width:clamp(12px,2.6cqi,17px)!important;height:clamp(12px,2.6cqi,17px)!important;flex-basis:clamp(12px,2.6cqi,17px)!important;font-size:clamp(6px,var(--jl-small-font,6px),7px)!important}
+}
+@media(max-width:440px){
+ #scoreBar.scoreBar.jlCompactPattern{grid-template-columns:minmax(0,1fr) minmax(0,.76fr) minmax(0,.88fr)!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBatterBalls{display:none!important}
+ #scoreBar.scoreBar.jlCompactPattern .jlBowlerFigures{font-size:clamp(6px,var(--jl-stat-font,6px),7px)!important}
+}

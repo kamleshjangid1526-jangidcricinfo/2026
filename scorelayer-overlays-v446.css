@@ -1,0 +1,149 @@
+/* V4.4.5 broadcast overlay placement and compact cricket animations.
+   Every effect is clipped to its card/event safe area; the live camera remains visible. */
+.eventLayer{
+  position:fixed!important;inset:auto auto auto 50%!important;top:39%!important;bottom:auto!important;right:auto!important;
+  transform:translate(-50%,-50%)!important;width:min(74vw,920px)!important;max-width:calc(100vw - 28px)!important;
+  height:auto!important;min-height:0!important;max-height:29vh!important;padding:0!important;overflow:visible!important;
+  display:none;place-items:center;background:transparent!important;z-index:50;pointer-events:none;
+}
+.eventLayer::before,.eventLayer::after{content:"";position:absolute;inset:-5% -2%;border:1px solid #ffffff25;border-radius:18px;opacity:0;pointer-events:none;z-index:1}
+.eventLayer .eventInner{position:relative;z-index:2;width:100%;min-width:0;max-width:100%;max-height:29vh;overflow:hidden;padding:clamp(9px,1.35vw,18px);gap:5px;border-radius:15px;
+ background:linear-gradient(100deg,#061321c9,#102b43d9 52%,#061321c9);border:1px solid #ffffff30;box-shadow:0 12px 38px #0007;backdrop-filter:blur(2px)}
+.eventLayer .eventTitle{font-size:clamp(30px,6vw,74px);line-height:.94}
+.eventLayer .eventSub{font-size:clamp(10px,1.35vw,18px);letter-spacing:2px}
+.eventLayer .celebrateIcon{font-size:clamp(42px,7vw,100px)}
+.eventLayer .fireworks{inset:-8% 2%;font-size:clamp(18px,3vw,38px);letter-spacing:1.2vw}
+.cardLayer{position:fixed!important;inset:auto auto auto 50%!important;top:38%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;
+ width:min(86vw,1040px)!important;height:auto!important;max-height:46vh!important;padding:0!important;background:transparent!important;overflow:visible!important;z-index:70;pointer-events:none}
+.cardLayer.isVisible{display:grid!important;place-items:center}
+.cardLayer .broadcastCardStage{width:100%;max-height:46vh;overflow:auto;border-radius:17px;padding:clamp(10px,1.5vw,22px);pointer-events:auto}
+/* New player reveals are compact side cards, never large centre-screen cards. */
+.cardLayer.cardType-newBatter,.cardLayer.cardType-nextBatter{left:3vw!important;right:auto!important;top:40%!important;transform:translateY(-50%)!important;width:min(310px,29vw)!important;max-height:23vh!important}
+.cardLayer.cardType-newBowler{left:auto!important;right:3vw!important;top:40%!important;transform:translateY(-50%)!important;width:min(310px,29vw)!important;max-height:23vh!important}
+.cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .broadcastCardStage{max-height:23vh;padding:11px 13px;border-radius:13px}
+.cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .broadcastCardHead{font-size:8px;letter-spacing:1px;padding-bottom:6px}
+.cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .playerFeature{padding:5px 3px 3px}
+.cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .playerMedallion{font-size:27px;margin:2px auto 4px}
+.cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .playerFeature h1{font-size:clamp(17px,1.55vw,25px);margin:3px 0;overflow-wrap:anywhere}
+.cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .playerFeatureLabel{font-size:8px;letter-spacing:1px}
+.cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .playerTeamLabel{font-size:9px;letter-spacing:.6px}
+.cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .playerMiniStats{gap:5px;margin-top:6px}
+.cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .playerMiniStats span{min-width:48px;padding:4px 7px;border-radius:7px;font-size:13px}
+.cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .playerMiniStats small{font-size:7px;letter-spacing:.7px;margin-top:1px}
+/* Event-pattern effects are intentionally drawn inside the event card bounds. */
+.eventLayer[data-anim="fireworks"]::after{opacity:.95;background:radial-gradient(circle at 14% 25%,#ffe38d 0 2px,transparent 3px),radial-gradient(circle at 87% 22%,#7cecff 0 2px,transparent 3px),radial-gradient(circle at 22% 78%,#ff75be 0 2px,transparent 3px),radial-gradient(circle at 78% 76%,#8af0bd 0 2px,transparent 3px);animation:jcFireworkBurst .95s ease-out both}
+.eventLayer[data-anim="spark"]::after{opacity:.9;background:linear-gradient(110deg,transparent 0 12%,#fff9 14%,transparent 18% 42%,#ffe17caa 45%,transparent 49% 76%,#7cecff88 80%,transparent 84%);animation:jcSparkSweep .75s ease-out both}
+.eventLayer[data-anim="slam"]::before{opacity:.85;border:3px solid #ffdf6e;box-shadow:0 0 26px #ff9c3c99;animation:jcImpactRing .72s cubic-bezier(.12,.82,.2,1) both}
+.eventLayer[data-anim="shatter"]::after{opacity:.8;background:repeating-linear-gradient(125deg,transparent 0 17px,#ffffff28 18px 20px,transparent 21px 38px);animation:jcGlassShards .8s ease-out both}
+.eventLayer[data-anim="orbit"]::before{opacity:.75;border:2px dashed #7beaff;box-shadow:inset 0 0 28px #46c9ff55,0 0 24px #46c9ff66;animation:jcOrbitRing 1.1s ease-out both}
+.eventLayer[data-anim="spotlight"]::after{opacity:.9;background:conic-gradient(from 0deg at 50% 50%,transparent 0 15%,#ffe58a33 18%,transparent 24% 48%,#61ddff33 53%,transparent 62% 100%);animation:jcSpotlightSweep 1.1s ease both}
+.eventLayer[data-anim="pop"]::before{opacity:.9;border:2px dotted #ffffff85;animation:jcPopBorder .62s ease-out both}
+.eventLayer[data-anim="glitch"]::after{opacity:.6;background:repeating-linear-gradient(0deg,transparent 0 8px,#ff5f7b35 9px 11px),linear-gradient(90deg,#00e5ff22,#ff315d22);animation:jcGlitchPanel .5s steps(3,end) both}
+@keyframes jcFireworkBurst{0%{opacity:0;transform:scale(.45)}45%{opacity:1;transform:scale(1.08)}100%{opacity:0;transform:scale(1.22)}}
+@keyframes jcSparkSweep{0%{opacity:0;transform:translateX(-18%) skewX(-14deg)}35%{opacity:1}100%{opacity:0;transform:translateX(18%) skewX(-14deg)}}
+@keyframes jcImpactRing{0%{opacity:0;transform:scale(.55)}55%{opacity:1;transform:scale(1.02)}100%{opacity:0;transform:scale(1.14)}}
+@keyframes jcGlassShards{0%{opacity:0;clip-path:polygon(50% 0,50% 0,50% 100%,50% 100%)}55%{opacity:.9}100%{opacity:0;clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}}
+@keyframes jcOrbitRing{0%{opacity:0;transform:rotate(-28deg) scale(.68)}60%{opacity:.9;transform:rotate(8deg) scale(1.03)}100%{opacity:0;transform:rotate(26deg) scale(1.15)}}
+@keyframes jcSpotlightSweep{0%{opacity:0;transform:rotate(-32deg) scale(.8)}50%{opacity:.9}100%{opacity:0;transform:rotate(35deg) scale(1.12)}}
+@keyframes jcPopBorder{0%{opacity:0;transform:scale(.72)}65%{opacity:.9;transform:scale(1.04)}100%{opacity:0;transform:scale(1.1)}}
+@keyframes jcGlitchPanel{0%,100%{opacity:0;transform:translateX(0)}30%{opacity:.8;transform:translateX(5px)}65%{opacity:.5;transform:translateX(-4px)}}
+/* Card animation types use the card itself as the animated object (not the whole OBS screen). */
+.cardLayer[data-anim="fireworks"] .broadcastCardStage.cardEntering{animation:jcCardBurst .9s cubic-bezier(.2,.8,.2,1) both}
+.cardLayer[data-anim="spark"] .broadcastCardStage.cardEntering{animation:jcCardSpark .78s ease both}
+.cardLayer[data-anim="slam"] .broadcastCardStage.cardEntering{animation:jcCardSlam .66s cubic-bezier(.16,.85,.24,1) both}
+.cardLayer[data-anim="shatter"] .broadcastCardStage.cardEntering{animation:jcCardShatter .72s ease both}
+.cardLayer[data-anim="orbit"] .broadcastCardStage.cardEntering{animation:jcCardOrbit .82s ease both}
+.cardLayer[data-anim="spotlight"] .broadcastCardStage.cardEntering{animation:jcCardSpot .9s ease both}
+@keyframes jcCardBurst{0%{opacity:0;transform:scale(.72) rotate(-3deg);filter:brightness(.6)}58%{opacity:1;transform:scale(1.035) rotate(1deg);filter:brightness(1.4)}100%{opacity:1;transform:scale(1) rotate(0);filter:none}}
+@keyframes jcCardSpark{0%{opacity:0;transform:translateY(16px) scale(.9);filter:blur(7px)}70%{opacity:1;transform:translateY(-2px) scale(1.02);filter:blur(0) drop-shadow(0 0 16px #ffe27a)}100%{transform:none;filter:none}}
+@keyframes jcCardSlam{0%{opacity:0;transform:translateY(-44px) scale(1.12)}70%{opacity:1;transform:translateY(4px) scale(.985)}100%{transform:none}}
+@keyframes jcCardShatter{0%{opacity:0;clip-path:inset(0 50%);transform:scale(.96)}100%{opacity:1;clip-path:inset(0);transform:scale(1)}}
+@keyframes jcCardOrbit{0%{opacity:0;transform:rotate(-6deg) scale(.84)}70%{opacity:1;transform:rotate(1.5deg) scale(1.025)}100%{transform:none}}
+@keyframes jcCardSpot{0%{opacity:0;filter:brightness(.35);transform:scale(.93)}50%{opacity:1;filter:brightness(1.65) drop-shadow(0 0 20px #fff9)}100%{filter:brightness(1);transform:scale(1)}}
+@media(max-width:760px){
+ .eventLayer{top:37%!important;width:calc(100vw - 24px)!important;max-height:27vh!important}
+ .eventLayer .eventInner{max-height:27vh;padding:8px 10px}
+ .eventLayer .eventTitle{font-size:clamp(27px,8vw,48px)}
+ .eventLayer .celebrateIcon{font-size:clamp(38px,10vw,68px)}
+ .cardLayer{top:36%!important;width:calc(100vw - 24px)!important;max-height:43vh!important}
+ .cardLayer.cardType-newBatter,.cardLayer.cardType-nextBatter{left:8px!important;right:auto!important;top:37%!important;transform:translateY(-50%)!important;width:min(43vw,190px)!important;max-height:22vh!important}
+ .cardLayer.cardType-newBowler{left:auto!important;right:8px!important;top:37%!important;transform:translateY(-50%)!important;width:min(43vw,190px)!important;max-height:22vh!important}
+ .cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .broadcastCardStage{max-height:22vh;padding:7px;border-radius:10px}
+ .cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .playerFeature h1{font-size:clamp(13px,3.5vw,18px)}
+ .cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .playerMiniStats span{min-width:36px;padding:3px 4px;font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){.eventLayer::before,.eventLayer::after,.eventLayer .eventInner,.cardLayer .broadcastCardStage{animation:none!important;transition:none!important}}
+
+
+/* V4.4.5 visual pass: distinct, compact broadcast treatments for the full animation set.
+   Effects stay clipped to the event panel or individual card; they never cover the camera. */
+.eventLayer .eventInner{isolation:isolate;transform-origin:center;will-change:transform,opacity,filter}
+.eventLayer::before,.eventLayer::after{will-change:transform,opacity,clip-path}
+.eventLayer[data-anim="slideLeft"]::after{opacity:.85;background:linear-gradient(105deg,transparent 0 35%,#77e7ff66 48%,#ffffffaa 50%,transparent 63%);animation:jcEventStreakLeft .68s ease-out both}
+.eventLayer[data-anim="slideRight"]::after{opacity:.85;background:linear-gradient(105deg,transparent 0 35%,#ffd66c66 48%,#ffffffaa 50%,transparent 63%);animation:jcEventStreakRight .68s ease-out both}
+.eventLayer[data-anim="slideUp"]::before{opacity:.75;border:0;border-bottom:3px solid #6cecff;box-shadow:0 12px 28px #00caff44;animation:jcEventRise .75s ease-out both}
+.eventLayer[data-anim="slideDown"]::before{opacity:.75;border:0;border-top:3px solid #ffd36b;box-shadow:0 -12px 28px #ffbb4444;animation:jcEventDrop .75s ease-out both}
+.eventLayer[data-anim="fade"]::after{opacity:.8;background:radial-gradient(ellipse at center,#ffffff44,transparent 68%);animation:jcEventHalo .85s ease-out both}
+.eventLayer[data-anim="zoom"]::after{opacity:.8;border:2px solid #ffffff88;border-radius:50%;background:radial-gradient(circle,transparent 50%,#54dfff22 72%);animation:jcEventZoom .82s ease-out both}
+.eventLayer[data-anim="bounce"]::after{opacity:.75;border:2px dotted #73f5d2;border-radius:18px;animation:jcEventBounce .86s cubic-bezier(.2,.85,.2,1) both}
+.eventLayer[data-anim="flip"]::after{opacity:.8;background:linear-gradient(90deg,transparent,#ffffff55,transparent);animation:jcEventFlip .74s ease-in-out both}
+.eventLayer[data-anim="rotate"]::after{opacity:.7;border:3px dashed #ffe18b;border-radius:24px;animation:jcEventRotate .9s ease-out both}
+.eventLayer[data-anim="wipe"]::after{opacity:.8;background:linear-gradient(115deg,transparent 35%,#fff9 50%,#66ddff66 53%,transparent 68%);animation:jcEventWipe .75s ease both}
+.eventLayer[data-anim="flash"]::after{opacity:0;background:linear-gradient(110deg,#fff9,#ffdf7a66,#fff9);animation:jcEventFlash .48s steps(2,end) both}
+.eventLayer[data-anim="blur"]::after{opacity:.8;background:radial-gradient(ellipse,#ffffff33,transparent 70%);backdrop-filter:blur(3px);animation:jcEventBlur .8s ease-out both}
+.eventLayer[data-anim="none"] .eventInner{animation:none!important}
+@keyframes jcEventStreakLeft{0%{transform:translateX(24%) skewX(-15deg);opacity:0}45%{opacity:1}100%{transform:translateX(-18%) skewX(-15deg);opacity:0}}
+@keyframes jcEventStreakRight{0%{transform:translateX(-24%) skewX(15deg);opacity:0}45%{opacity:1}100%{transform:translateX(18%) skewX(15deg);opacity:0}}
+@keyframes jcEventRise{0%{transform:translateY(24px) scaleX(.65);opacity:0}65%{opacity:1}100%{transform:translateY(-8px) scaleX(1);opacity:0}}
+@keyframes jcEventDrop{0%{transform:translateY(-24px) scaleX(.65);opacity:0}65%{opacity:1}100%{transform:translateY(8px) scaleX(1);opacity:0}}
+@keyframes jcEventHalo{0%{transform:scale(.45);opacity:0}50%{opacity:.9}100%{transform:scale(1.3);opacity:0}}
+@keyframes jcEventZoom{0%{transform:scale(.28);opacity:0}55%{opacity:.9}100%{transform:scale(1.18);opacity:0}}
+@keyframes jcEventBounce{0%{transform:scale(.78) translateY(12px);opacity:0}55%{transform:scale(1.04) translateY(-4px);opacity:.9}100%{transform:scale(1.12);opacity:0}}
+@keyframes jcEventFlip{0%{transform:rotateY(80deg);opacity:0}45%{opacity:.9}100%{transform:rotateY(-35deg);opacity:0}}
+@keyframes jcEventRotate{0%{transform:rotate(-12deg) scale(.75);opacity:0}55%{opacity:.8}100%{transform:rotate(12deg) scale(1.12);opacity:0}}
+@keyframes jcEventWipe{0%{clip-path:inset(0 100% 0 0);opacity:0}25%{opacity:.9}100%{clip-path:inset(0 0 0 100%);opacity:0}}
+@keyframes jcEventFlash{0%,100%{opacity:0}20%,60%{opacity:.9}}
+@keyframes jcEventBlur{0%{filter:blur(10px);transform:scale(.96);opacity:0}55%{opacity:.8}100%{filter:blur(0);transform:scale(1.08);opacity:0}}
+
+/* More playful card-specific entrances; the camera remains fully visible around each card. */
+.cardLayer .broadcastCardStage{isolation:isolate;will-change:transform,opacity,filter}
+.cardLayer[data-anim="slideLeft"] .broadcastCardStage.cardEntering{animation:jcCardGlideLeft .72s cubic-bezier(.18,.8,.22,1) both}
+.cardLayer[data-anim="slideRight"] .broadcastCardStage.cardEntering{animation:jcCardGlideRight .72s cubic-bezier(.18,.8,.22,1) both}
+.cardLayer[data-anim="slideUp"] .broadcastCardStage.cardEntering{animation:jcCardLift .72s cubic-bezier(.18,.8,.22,1) both}
+.cardLayer[data-anim="slideDown"] .broadcastCardStage.cardEntering{animation:jcCardDrop .72s cubic-bezier(.18,.8,.22,1) both}
+.cardLayer[data-anim="flip"] .broadcastCardStage.cardEntering{animation:jcCardFlip .82s cubic-bezier(.2,.8,.2,1) both;transform-style:preserve-3d}
+.cardLayer[data-anim="rotate"] .broadcastCardStage.cardEntering{animation:jcCardRotate .82s cubic-bezier(.2,.8,.2,1) both}
+.cardLayer[data-anim="wipe"] .broadcastCardStage.cardEntering{animation:jcCardWipe .7s ease both}
+.cardLayer[data-anim="flash"] .broadcastCardStage.cardEntering{animation:jcCardFlash .58s steps(2,end) both}
+.cardLayer[data-anim="glitch"] .broadcastCardStage.cardEntering{animation:jcCardGlitch .62s steps(3,end) both}
+.cardLayer[data-anim="blur"] .broadcastCardStage.cardEntering{animation:jcCardBlur .78s ease-out both}
+.cardLayer[data-anim="none"] .broadcastCardStage.cardEntering{animation:none!important}
+@keyframes jcCardGlideLeft{0%{opacity:0;transform:translateX(58px) skewX(-6deg)}75%{opacity:1;transform:translateX(-4px)}100%{transform:translateX(0)}}
+@keyframes jcCardGlideRight{0%{opacity:0;transform:translateX(-58px) skewX(6deg)}75%{opacity:1;transform:translateX(4px)}100%{transform:translateX(0)}}
+@keyframes jcCardLift{0%{opacity:0;transform:translateY(48px) scale(.94)}75%{opacity:1;transform:translateY(-3px) scale(1.01)}100%{transform:translateY(0) scale(1)}}
+@keyframes jcCardDrop{0%{opacity:0;transform:translateY(-48px) scale(.94)}75%{opacity:1;transform:translateY(3px) scale(1.01)}100%{transform:translateY(0) scale(1)}}
+@keyframes jcCardFlip{0%{opacity:0;transform:perspective(900px) rotateY(68deg) scale(.92)}65%{opacity:1;transform:perspective(900px) rotateY(-8deg) scale(1.02)}100%{transform:perspective(900px) rotateY(0) scale(1)}}
+@keyframes jcCardRotate{0%{opacity:0;transform:rotate(-7deg) scale(.82)}70%{opacity:1;transform:rotate(2deg) scale(1.03)}100%{transform:rotate(0) scale(1)}}
+@keyframes jcCardWipe{0%{opacity:0;clip-path:inset(0 100% 0 0);transform:translateX(-12px)}100%{opacity:1;clip-path:inset(0);transform:translateX(0)}}
+@keyframes jcCardFlash{0%{opacity:0;filter:brightness(2.2)}35%{opacity:1;filter:brightness(1.65)}100%{filter:brightness(1)}}
+@keyframes jcCardGlitch{0%{opacity:0;transform:translateX(-7px);filter:hue-rotate(80deg)}30%{opacity:1;transform:translateX(5px)}65%{transform:translateX(-2px);filter:hue-rotate(-20deg)}100%{transform:none;filter:none}}
+@keyframes jcCardBlur{0%{opacity:0;filter:blur(12px);transform:scale(.95)}65%{opacity:1;filter:blur(0);transform:scale(1.02)}100%{transform:scale(1)}}
+
+/* V4.4.9 animated sponsor treatment: transparent, compact and mutually exclusive with event/cards. */
+.jcSponsorLayer{position:fixed;inset:0;z-index:76;display:none;place-items:center;pointer-events:none;overflow:hidden;padding:3vw;text-align:center;color:#fff}
+.jcSponsorLayer.isVisible{display:grid}
+.jcSponsorFrame{position:relative;isolation:isolate;width:min(78vw,1050px);max-height:34vh;min-height:110px;display:flex;align-items:center;justify-content:center;gap:clamp(12px,2.2vw,30px);padding:clamp(12px,2vw,26px);overflow:visible;perspective:1000px;transform-origin:center;filter:drop-shadow(0 16px 22px #000b)}
+.jcSponsorFrame.position-left{margin-right:auto;margin-left:1vw;width:min(62vw,780px)}.jcSponsorFrame.position-right{margin-left:auto;margin-right:1vw;width:min(62vw,780px)}.jcSponsorFrame.position-top-center{align-self:start;margin-top:7vh}.jcSponsorFrame.position-bottom-center{align-self:end;margin-bottom:13vh}
+.jcSponsorFrame:before{content:"";position:absolute;z-index:-1;inset:14% 3%;border-radius:50%;background:radial-gradient(ellipse at center,#ffffff1a,transparent 70%);filter:blur(14px);opacity:.95}
+.jcSponsorEnergy{position:absolute;z-index:-1;inset:0;overflow:hidden;opacity:.9;pointer-events:none}.jcSponsorEnergy i{position:absolute;width:6px;height:6px;border-radius:50%;background:#fff6cf;box-shadow:0 0 10px 3px #ffe8a8aa;animation:jcSponsorParticle 1.8s ease-out infinite}.jcSponsorEnergy i:nth-child(1){left:12%;top:65%;animation-delay:.1s}.jcSponsorEnergy i:nth-child(2){left:80%;top:19%;animation-delay:.45s}.jcSponsorEnergy i:nth-child(3){left:68%;top:78%;animation-delay:.8s}.jcSponsorEnergy i:nth-child(4){left:31%;top:18%;animation-delay:1.1s}.jcSponsorEnergy i:nth-child(5){left:92%;top:55%;animation-delay:1.4s}
+.jcSponsorLogoBox{flex:0 1 30%;max-width:30%;max-height:24vh;display:grid;place-items:center;transform-style:preserve-3d;filter:drop-shadow(0 10px 13px #000c)}.jcSponsorLogoBox img{max-width:100%;max-height:22vh;object-fit:contain;display:block}
+.jcSponsorCopy{min-width:0;max-width:68%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(3px,.7vh,9px)}.jcSponsorEyebrow{font-size:clamp(8px,.75vw,12px);font-weight:1000;letter-spacing:clamp(2px,.45vw,6px);color:#fff1c2;text-shadow:0 2px 9px #000;opacity:.88}.jcSponsorName{font-size:clamp(27px,5.6vw,82px);line-height:.96;max-width:100%;overflow-wrap:anywhere;font-weight:1000;letter-spacing:-.025em;text-transform:uppercase;background:linear-gradient(180deg,#fffde9 0%,#ffe7a1 22%,#e8b84f 45%,#9a641c 62%,#fff0ad 78%,#805016 100%);background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent;text-shadow:0 1px 0 #fff8,0 3px 0 #83561c,0 5px 0 #432a0c,0 10px 20px #000d;filter:drop-shadow(0 5px 10px #000b);transform:rotateX(8deg)}.jcSponsorTagline{font-size:clamp(10px,1.25vw,18px);max-width:70ch;line-height:1.2;font-weight:800;letter-spacing:.08em;color:#fff;text-shadow:0 2px 8px #000c;overflow-wrap:anywhere}
+.jcSponsorFrame.style-silver .jcSponsorName{background-image:linear-gradient(180deg,#fff 0%,#d8e3ef 25%,#8297ad 48%,#35495f 63%,#fff 78%,#71839a 100%);text-shadow:0 1px 0 #fff9,0 3px 0 #53677d,0 6px 0 #25374b,0 10px 20px #000d}
+.jcSponsorFrame.style-chrome .jcSponsorName{background-image:linear-gradient(180deg,#fff 0%,#d8f5ff 20%,#668b9f 42%,#f9ffff 55%,#456174 72%,#fff 89%);text-shadow:0 1px 0 #fff9,0 3px 0 #4a6678,0 6px 0 #1e3447,0 10px 20px #000d}
+.jcSponsorFrame.style-neon .jcSponsorName{background:none;color:#fff;-webkit-text-fill-color:#f4ffff;text-shadow:0 0 4px #fff,0 0 11px #51f5ff,0 0 24px #51baff,0 0 45px #8b5bff;filter:none}
+.jcSponsorFrame.style-emerald .jcSponsorName{background-image:linear-gradient(180deg,#edfff2,#9affc2 28%,#20a86b 52%,#075c3c 68%,#dcffeb 88%);text-shadow:0 1px 0 #fff9,0 3px 0 #075d3b,0 6px 0 #053d2b,0 10px 20px #000d}
+.jcSponsorSweep{position:absolute;inset:4% 0;overflow:hidden;pointer-events:none;opacity:0}.jcSponsorSweep:before{content:"";position:absolute;left:-25%;top:-15%;height:130%;width:16%;transform:skewX(-18deg);background:linear-gradient(90deg,transparent,#ffffffa8,transparent);filter:blur(4px)}
+.jcSponsorLayer[data-animation="reveal"] .jcSponsorFrame{animation:jcSponsor3DReveal var(--jc-sponsor-intro,1100ms) cubic-bezier(.16,.82,.2,1) both}.jcSponsorLayer[data-animation="spotlight"] .jcSponsorFrame{animation:jcSponsorLightReveal var(--jc-sponsor-intro,1100ms) ease both}.jcSponsorLayer[data-animation="orbit"] .jcSponsorFrame{animation:jcSponsorOrbitReveal var(--jc-sponsor-intro,1100ms) cubic-bezier(.2,.8,.2,1) both}.jcSponsorLayer[data-animation="flip"] .jcSponsorFrame{animation:jcSponsorFlipReveal var(--jc-sponsor-intro,1100ms) cubic-bezier(.18,.8,.2,1) both}.jcSponsorLayer[data-animation="zoom"] .jcSponsorFrame{animation:jcSponsorZoomReveal var(--jc-sponsor-intro,1100ms) cubic-bezier(.15,.8,.2,1) both}.jcSponsorLayer[data-animation="particles"] .jcSponsorFrame{animation:jcSponsorParticleReveal var(--jc-sponsor-intro,1100ms) ease both}.jcSponsorLayer[data-animation="sweep"] .jcSponsorFrame{animation:jcSponsorSweepReveal var(--jc-sponsor-intro,1100ms) ease both}.jcSponsorLayer[data-animation="sweep"] .jcSponsorSweep{opacity:1}.jcSponsorLayer.isExiting .jcSponsorFrame{animation:jcSponsorExit var(--jc-sponsor-outro,700ms) ease-in both!important}
+@keyframes jcSponsor3DReveal{0%{opacity:0;transform:translateY(35px) rotateX(70deg) scale(.72);filter:blur(12px) drop-shadow(0 0 0 transparent)}65%{opacity:1;transform:translateY(-4px) rotateX(-5deg) scale(1.035);filter:blur(0) drop-shadow(0 16px 22px #000b)}100%{opacity:1;transform:rotateX(0) scale(1)}}@keyframes jcSponsorLightReveal{0%{opacity:0;transform:translateX(-10%) scale(.92);filter:brightness(.2)}45%{opacity:1;filter:brightness(1.8)}100%{transform:none;filter:brightness(1)}}@keyframes jcSponsorOrbitReveal{0%{opacity:0;transform:rotateY(75deg) rotateZ(-5deg) scale(.7)}65%{opacity:1;transform:rotateY(-8deg) rotateZ(1deg) scale(1.04)}100%{transform:none}}@keyframes jcSponsorFlipReveal{0%{opacity:0;transform:perspective(1000px) rotateX(-85deg) translateY(-22px)}65%{opacity:1;transform:perspective(1000px) rotateX(8deg)}100%{transform:perspective(1000px) rotateX(0)}}@keyframes jcSponsorZoomReveal{0%{opacity:0;transform:scale(.3);filter:blur(9px)}60%{opacity:1;transform:scale(1.06);filter:blur(0)}100%{transform:scale(1)}}@keyframes jcSponsorParticleReveal{0%{opacity:0;transform:translateY(25px) scale(.82);filter:brightness(.45)}55%{opacity:1;filter:brightness(1.65)}100%{transform:none;filter:none}}@keyframes jcSponsorSweepReveal{0%{opacity:0;transform:translateX(-8%) skewX(-8deg)}45%{opacity:1}100%{opacity:1;transform:none}}@keyframes jcSponsorExit{0%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}100%{opacity:0;transform:translateY(-16px) scale(.94);filter:blur(8px)}}@keyframes jcSponsorParticle{0%{opacity:0;transform:translateY(8px) scale(.4)}35%{opacity:.85}100%{opacity:0;transform:translateY(-25px) scale(1.6)}}
+@media(max-width:760px){.jcSponsorFrame{width:min(92vw,720px);max-height:29vh;min-height:80px;gap:9px;padding:8px}.jcSponsorFrame.position-left,.jcSponsorFrame.position-right{width:min(82vw,580px)}.jcSponsorLogoBox{max-width:26%;max-height:18vh}.jcSponsorLogoBox img{max-height:16vh}.jcSponsorName{font-size:clamp(20px,6vw,42px)}.jcSponsorTagline{font-size:clamp(8px,2vw,12px)}.jcSponsorEyebrow{font-size:7px;letter-spacing:1.5px}}
+@media(prefers-reduced-motion:reduce){.jcSponsorFrame,.jcSponsorEnergy i{animation:none!important}.jcSponsorLayer.isExiting .jcSponsorFrame{opacity:0}}

@@ -1,0 +1,43 @@
+JANGID CRICINFO — सबसे पहले यह पढ़ें
+====================================
+
+आपके भेजे Firebase screenshots की Web App जानकारी इस वेबसाइट में पहले से भर दी गई है। अब इसे बार-बार config में डालने की जरूरत नहीं।
+
+A. Firebase में एक बार सेटिंग
+-----------------------------
+1. Firebase Console में Jangid Cricinfo project खोलें।
+2. Build → Authentication → Sign-in method में जाएँ और Email/Password चालू करें।
+3. Build → Firestore Database → Create database दबाएँ। अगर database पहले से है, तो इसे दोबारा न बनाएँ।
+4. Region पूछे तो asia-southeast1 (Singapore) चुनें। Production mode चुनें।
+5. Firestore → Rules खोलें। इस ZIP की `firestore.rules` फाइल का पूरा text वहाँ डालें और Publish दबाएँ। Rules को कभी सबके लिए खुला (`allow read, write: if true`) न करें।
+
+B. GitHub पर वेबसाइट डालना
+--------------------------
+1. GitHub में नया Public repository बनाएँ; नाम `Jangid-Cricinfo` रखें।
+2. इस ZIP को Extract करें। Extract हुए folder के अंदर की सभी files और folders repository के main branch में डालें। ZIP को अकेले upload न करें।
+3. GitHub repository में Settings → Pages खोलें। Source में GitHub Actions चुनें।
+4. Actions tab में Deploy job पूरा होने दें। GitHub वहीं वेबसाइट का URL दिखाएगा।
+
+C. Firebase को GitHub URL की अनुमति
+----------------------------------
+1. Firebase → Authentication → Settings → Authorized domains खोलें।
+2. GitHub Pages URL में `https://` और repository path से पहले जो host आता है, वही जोड़ें: `YOUR-USERNAME.github.io`।
+
+D. अपना Admin बनाना
+------------------
+1. वेबसाइट के `register.html` पन्ने पर अपना account बनाएँ। इसमें अपना नाम, मोबाइल, Email और Password भरें।
+2. Firebase → Authentication → Users में अपना नया account खोलें और UID copy करें।
+3. Firestore → Data में `admins` नाम की collection बनाएँ। Document ID में वही UID रखें।
+4. उसमें `enabled` नाम का Boolean field बनाएँ और उसकी value `true` रखें।
+5. अब वेबसाइट के `admin.html` पन्ने पर उसी Email और Password से Admin Login करें।
+
+E. जरूरी बातें
+--------------
+- यह वेबसाइट Email/Password Login उपयोग करती है; Firebase Spark Free में Phone OTP/SMS आधारित Login इस build में नहीं है।
+- `data.json` पुराने local records हैं; इसे Public GitHub पर upload न करें। पुरानी copy अलग सुरक्षित रखें।
+- Firebase Web API key browser की सार्वजनिक पहचान है, private Admin key नहीं। Service Account JSON, Private Key या Password कभी upload न करें।
+- GitHub Pages वेबसाइट को Public रूप से दिखाता है।
+- Cloud Firestore और Authentication चालू होने तथा Rules Publish होने से पहले Login/Save काम नहीं करेंगे।
+- GitHub में files डालना या Firebase Console के Publish बटन को दबाना आप अपने खाते में ही कर सकते हैं। यह package अपने आप आपके खातों में Login या Publish नहीं कर सकता।
+
+इस release की JavaScript syntax और HTML local-file references जाँचे गए हैं। इसे आपके Firebase project से वास्तविक browser login, दूसरे device, OBS और public deployment पर अभी end-to-end test नहीं किया गया है।

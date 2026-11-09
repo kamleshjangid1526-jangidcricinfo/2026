@@ -1,0 +1,6 @@
+/* Optional user-controlled Score Layer styling. Disabled by default so all 20 original presets remain unchanged until explicitly enabled. */
+#scoreBar.scoreBar[data-custom="true"]{box-sizing:border-box!important;transition:width .18s ease,transform .18s ease,border-radius .18s ease,background-color .18s ease}
+#scoreBar.scoreBar[data-custom="true"] .jlTeam,#scoreBar.scoreBar[data-custom="true"] .jlScoreWrap,#scoreBar.scoreBar[data-custom="true"] .jlBatters,#scoreBar.scoreBar[data-custom="true"] .jlBowler,#scoreBar.scoreBar[data-custom="true"] .jlBalls,#scoreBar.scoreBar[data-custom="true"] .jlChase{transition:background-color .18s ease,border-color .18s ease}
+#cardLayer.cardLayer[data-custom="true"] .broadcastCardStage{transition:font-family .15s ease,border-radius .15s ease,border-color .15s ease}
+@media(max-width:800px){#scoreBar.scoreBar[data-custom="true"] .jlRuns{max-width:100%;overflow:hidden;text-overflow:clip}}
+@media(prefers-reduced-motion:reduce){#scoreBar.scoreBar[data-custom="true"],#scoreBar.scoreBar[data-custom="true"] *{transition:none!important}}

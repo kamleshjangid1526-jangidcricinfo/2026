@@ -1,0 +1,39 @@
+
+/* V4.4.11: keep temporary graphics mutually exclusive and cards content-safe. */
+.cardLayer{overflow:visible!important;max-height:calc(100vh - 18px)!important;padding:8px!important;align-items:center!important;box-sizing:border-box!important}
+.cardLayer.isVisible{display:grid!important}
+.cardLayer .broadcastCardStage{width:max-content;max-width:min(96vw,1180px)!important;height:auto!important;max-height:calc(100vh - 28px)!important;overflow:auto!important;box-sizing:border-box!important;padding:clamp(12px,1.5vw,24px)!important;overflow-wrap:anywhere;scrollbar-width:thin}
+.cardLayer :is(.broadcastCardStage *, .jlStudioOverlayRoot *){box-sizing:border-box;min-width:0;overflow-wrap:anywhere}
+.cardLayer :is(.broadcastCardStage td,.broadcastCardStage th,.broadcastCardStage b,.broadcastCardStage span){max-width:100%;overflow-wrap:anywhere}
+.cardLayer :is(.broadcastCardTitle,.broadcastCardName,.broadcastCardValue){line-height:1.18;white-space:normal}
+.eventLayer.incomingCornerLayer{inset:clamp(12px,2.2vh,28px) clamp(12px,2.2vw,36px) auto auto!important;transform:none!important;width:min(31vw,420px)!important;max-width:calc(100vw - 24px)!important;height:auto!important;max-height:none!important;min-height:0!important;padding:0!important;display:grid;place-items:stretch;text-align:left!important;background:transparent!important;overflow:visible!important;z-index:55}
+.incomingPlayerToast{position:relative;display:flex;flex-direction:column;gap:4px;padding:clamp(10px,1.1vw,17px) clamp(13px,1.5vw,22px);border:1px solid #ffffff55;border-left:4px solid #52e3c2;border-radius:12px;background:linear-gradient(115deg,#061827ed,#102f43e8 65%,#123d4ce6);box-shadow:0 10px 30px #0009;color:#fff;animation:jcIncomingToast .45s cubic-bezier(.2,.85,.25,1) both;backdrop-filter:blur(4px)}
+.incomingPlayerToast.isBowler{border-left-color:#ffd166;background:linear-gradient(115deg,#211a08ed,#40300fe8 65%,#534013e6)}
+.incomingPlayerToast .incomingKicker{font-size:clamp(8px,.7vw,11px);letter-spacing:1.6px;font-weight:900;color:#7debd5}
+.incomingPlayerToast.isBowler .incomingKicker{color:#ffe09a}
+.incomingPlayerToast b{font-size:clamp(15px,1.35vw,24px);line-height:1.12;font-weight:950;overflow-wrap:anywhere}
+.incomingPlayerToast small{font-size:clamp(9px,.78vw,13px);color:#c6d9e5}
+.incomingPlayerToast em{font-size:clamp(8px,.72vw,11px);font-style:normal;color:#e7f1f8;letter-spacing:.5px}
+@keyframes jcIncomingToast{0%{opacity:0;transform:translateY(-12px) scale(.96);filter:blur(4px)}70%{opacity:1;transform:translateY(2px) scale(1.01);filter:blur(0)}100%{opacity:1;transform:none}}
+@media(max-width:650px){.eventLayer.incomingCornerLayer{width:min(52vw,280px)!important;top:8px!important;right:8px!important}.incomingPlayerToast{padding:8px 10px;gap:3px}.cardLayer .broadcastCardStage{max-width:calc(100vw - 16px)!important;max-height:calc(100vh - 20px)!important;padding:10px!important}}
+
+/* V4.4.11 final card fit: reserve bottom room and let content determine intrinsic height. */
+.cardLayer{inset:0!important;padding:clamp(8px,1.5vh,18px)!important;align-items:center!important;justify-items:center!important}
+.cardLayer .broadcastCardStage{height:auto!important;min-height:0!important;max-height:calc(100vh - 36px)!important;overflow:auto!important;overscroll-behavior:contain!important;scrollbar-width:thin!important;padding:clamp(14px,2vw,28px)!important;line-height:1.2!important}
+.cardLayer .broadcastCardStage :is(.broadcastCardTitle,.broadcastCardName,.broadcastCardValue,.playerBigStat,.playerStat,.statValue,td,th){line-height:1.2!important;white-space:normal!important;overflow-wrap:anywhere!important}
+.eventLayer.incomingCornerLayer::before,.eventLayer.incomingCornerLayer::after{display:none!important;content:none!important}
+@media(max-width:650px){.cardLayer{padding:7px!important}.cardLayer .broadcastCardStage{max-height:calc(100vh - 24px)!important;padding:12px!important}}
+
+
+/* V4.4.13: protect card lower statistics and give event art a transparent broadcast finish. */
+.cardLayer .broadcastCardStage{max-height:calc(100vh - 24px)!important;max-width:calc(100vw - 16px)!important;height:auto!important;min-height:0!important;overflow:auto!important;overflow-x:hidden!important;overscroll-behavior:contain!important;box-sizing:border-box!important;padding:clamp(15px,2vw,30px)!important}
+.cardLayer .broadcastCardStage :is(.broadcastCardBody,.playerMiniStats,.cardStats,.statGrid,.statRow){min-height:0!important;overflow:visible!important;flex-wrap:wrap!important}
+.cardLayer .broadcastCardStage :is(.playerMiniStats span,.cardStat,.statItem,td,th){min-width:0!important;max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important}
+.eventLayer:is(.style-four,.style-six,.style-wicket) .eventInner{background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;overflow:visible!important;text-shadow:0 3px 18px #000e,0 0 25px #071a2d!important}
+.eventLayer.style-four .eventInner{filter:drop-shadow(0 0 18px #42d9ff99)}
+.eventLayer.style-six .eventInner{filter:drop-shadow(0 0 23px #ffd65ebb)}
+.eventLayer.style-wicket .eventInner{filter:drop-shadow(0 0 18px #ff4c6faa)}
+.eventLayer:is(.style-four,.style-six,.style-wicket)::before,.eventLayer:is(.style-four,.style-six,.style-wicket)::after{border:0!important;background:transparent!important;box-shadow:none!important}
+.eventLayer .resultEventInner{background:linear-gradient(110deg,#071a2be8,#12334de8)!important;border:1px solid #f6d57499!important;border-radius:15px!important;padding:clamp(12px,1.6vw,22px)!important;box-shadow:0 12px 36px #0009!important;display:flex;flex-direction:column;align-items:center;gap:5px}
+.eventLayer .resultScores{font-size:clamp(9px,1.05vw,15px);font-weight:800;color:#f3f7fb;text-shadow:0 2px 8px #000;overflow-wrap:anywhere;text-align:center}
+@media(max-width:650px){.cardLayer .broadcastCardStage{max-height:calc(100vh - 18px)!important;padding:12px!important}.eventLayer:is(.style-four,.style-six,.style-wicket){max-width:calc(100vw - 20px)!important;width:88vw!important}}

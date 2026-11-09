@@ -1,0 +1,25 @@
+JANGID CRICINFO — FIRESTORE RULES SETUP
+
+आपने Firestore Database बना लिया है। अब उसके Rules लगाने हैं।
+
+1. Firebase Console खोलें: https://console.firebase.google.com/
+2. jangidcricinfolive प्रोजेक्ट चुनें।
+3. Build → Firestore Database खोलें।
+4. ऊपर Rules टैब चुनें।
+5. इस ZIP में मौजूद firestore.rules फाइल Notepad में खोलें।
+6. पूरी फाइल का टेक्स्ट Copy करें।
+7. Firebase Rules Editor में पुराना टेक्स्ट पूरा Select करके हटाएँ और नया टेक्स्ट Paste करें।
+8. Publish दबाएँ।
+
+ये Rules:
+- दर्शकों को केवल Public Match और Public Tournament पढ़ने देते हैं।
+- Login किए सक्रिय यूजर को केवल अपने निजी डेटा पर काम करने देते हैं।
+- दूसरे यूजर का निजी डेटा रोकते हैं।
+- Tournament के Public और Private Fixtures के लिए भी नियम रखते हैं।
+- Admin की अनुमति केवल admins/{uid} रिकॉर्ड से देते हैं।
+
+महत्वपूर्ण:
+- read/write true न करें।
+- Admin record अभी न बनाएँ; पहले ऐप का पहला account बने और उसका सही UID मिले।
+- ये Firestore Rules हैं; Realtime Database के Rules अलग होते हैं।
+- Spark Free में browser-based subscription/admin system को पूर्ण server-side सुरक्षा नहीं मिलती। Commercial plan enforcement के लिए trusted backend की जरूरत होगी।

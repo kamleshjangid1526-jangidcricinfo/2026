@@ -1,0 +1,181 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function self(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function profileExists(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid));
+    }
+    function activeOwner(uid) {
+      return self(uid)
+        && profileExists(uid)
+        && get(/databases/$(database)/documents/users/$(uid)).data.status == 'active';
+    }
+    function adminExists(uid) {
+      return exists(/databases/$(database)/documents/admins/$(uid))
+        && get(/databases/$(database)/documents/admins/$(uid)).data.enabled == true;
+    }
+    function isAdmin() {
+      return signedIn() && adminExists(request.auth.uid);
+    }
+    function onlyProfileFields() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['fullName', 'address', 'lastLoginAt', 'updatedAt']);
+    }
+    function canRedeemCode(uid) {
+      return signedIn()
+        && resource.data.status == 'active'
+        && request.resource.data.subscription is map
+        && request.resource.data.subscription.activationId is string
+        && getAfter(/databases/$(database)/documents/activationCodes/$(request.resource.data.subscription.activationId)).data.usedBy == uid
+        && getAfter(/databases/$(database)/documents/activationCodes/$(request.resource.data.subscription.activationId)).data.used == true;
+    }
+    function publicParentOwned(tournamentId) {
+      return exists(/databases/$(database)/documents/publicTournaments/$(tournamentId))
+        && get(/databases/$(database)/documents/publicTournaments/$(tournamentId)).data.published == true
+        && get(/databases/$(database)/documents/publicTournaments/$(tournamentId)).data.ownerUid == request.auth.uid;
+    }
+
+    // User profile. A new account is created as active but has no paid/activated plan.
+    // Only the profile owner can create it; the browser cannot grant a subscription or admin role.
+    match /users/{uid} {
+      allow get: if self(uid) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if self(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.status == 'active'
+        && request.resource.data.subscription == null
+        && request.resource.data.keys().hasAll(['uid', 'email', 'mobile', 'fullName', 'status', 'subscription', 'createdAt']);
+      allow update: if isAdmin()
+        || (self(uid) && onlyProfileFields())
+        || (self(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['subscription', 'updatedAt'])
+          && canRedeemCode(uid));
+      allow delete: if false;
+
+      // Private owner data: teams, tournaments, matches, drafts, broadcasts, metadata,
+      // and designer libraries. The account must remain enabled.
+      match /{collectionName}/{documentId} {
+        allow read, write: if isAdmin()
+          || (activeOwner(uid)
+            && get(/databases/$(database)/documents/users/$(uid)).data.status == 'active');
+      }
+
+      // Private tournament fixture documents are one level deeper than normal user data.
+      match /tournaments/{tournamentId}/fixtures/{fixtureId} {
+        allow read, write: if isAdmin() || activeOwner(uid);
+      }
+    }
+
+    // Admin membership is created manually by the project owner in Firestore Console.
+    // Browser clients can never add or modify their own admin permission.
+    match /admins/{uid} {
+      allow get: if self(uid) || isAdmin();
+      allow list: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    // Activation IDs: private to admin and the intended mobile-number owner.
+    match /activationCodes/{code} {
+      allow get: if isAdmin()
+        || (signedIn() && profileExists(request.auth.uid)
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.mobile == resource.data.mobile);
+      allow list: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.used != true
+          && resource.data.status == 'pending'
+          && request.resource.data.used == true
+          && request.resource.data.usedBy == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'usedAt', 'usedBy', 'startsAt', 'expiresAt'])
+          && profileExists(request.auth.uid)
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active'
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.mobile == resource.data.mobile
+          && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.subscription.activationId == code);
+    }
+
+    // Public spectator snapshots. Public read only; only the owning active account writes.
+    match /publicMatches/{matchId} {
+      allow read: if true;
+      allow create: if (activeOwner(request.auth.uid) && request.resource.data.ownerUid == request.auth.uid)
+        || (isAdmin() && request.resource.data.ownerUid is string);
+      allow update: if (activeOwner(request.auth.uid)
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == request.auth.uid)
+        || (isAdmin() && request.resource.data.ownerUid == resource.data.ownerUid);
+      allow delete: if (activeOwner(resource.data.ownerUid) && resource.data.ownerUid == request.auth.uid)
+        || isAdmin();
+    }
+
+    match /publicTournaments/{tournamentId} {
+      allow read: if true;
+      allow create: if (activeOwner(request.auth.uid) && request.resource.data.ownerUid == request.auth.uid)
+        || (isAdmin() && request.resource.data.ownerUid is string);
+      allow update: if (activeOwner(request.auth.uid)
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == request.auth.uid)
+        || (isAdmin() && request.resource.data.ownerUid == resource.data.ownerUid);
+      allow delete: if (activeOwner(resource.data.ownerUid) && resource.data.ownerUid == request.auth.uid)
+        || isAdmin();
+    }
+    match /publicTournaments/{tournamentId}/fixtures/{fixtureId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin()
+        || (activeOwner(request.auth.uid) && publicParentOwned(tournamentId));
+    }
+
+    match /publicTeams/{teamId} {
+      allow read: if true;
+      allow create: if (activeOwner(request.auth.uid) && request.resource.data.ownerUid == request.auth.uid)
+        || (isAdmin() && request.resource.data.ownerUid is string);
+      allow update: if (activeOwner(request.auth.uid)
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == request.auth.uid)
+        || (isAdmin() && request.resource.data.ownerUid == resource.data.ownerUid);
+      allow delete: if isAdmin() || (activeOwner(resource.data.ownerUid) && resource.data.ownerUid == request.auth.uid);
+    }
+    match /publicBroadcasts/{uid} {
+      allow read: if true;
+      allow create, update: if (activeOwner(uid) && request.auth.uid == uid && request.resource.data.ownerUid == uid)
+        || (isAdmin() && request.resource.data.ownerUid == uid);
+      allow delete: if isAdmin() || (activeOwner(uid) && request.auth.uid == uid);
+    }
+    match /publicBroadcastDesigns/{designId} {
+      allow read: if true;
+      allow create: if (activeOwner(request.auth.uid) && request.resource.data.ownerUid == request.auth.uid)
+        || (isAdmin() && request.resource.data.ownerUid is string);
+      allow update: if (activeOwner(request.auth.uid)
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == request.auth.uid)
+        || (isAdmin() && request.resource.data.ownerUid == resource.data.ownerUid);
+      allow delete: if isAdmin() || (activeOwner(resource.data.ownerUid) && resource.data.ownerUid == request.auth.uid);
+    }
+
+    // Admin-published global templates and libraries are public read-only.
+    match /globalLibraries/{libraryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /globalStudioTemplates/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /globalCardTemplates/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /globalAnimationTemplates/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /globalSponsors/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

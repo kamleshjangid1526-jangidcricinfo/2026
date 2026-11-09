@@ -1,0 +1,10 @@
+Firebase Web App की पहचान जोड़ दी गई है
+=======================================
+
+आपके भेजे Firebase Console screenshots से वेबसाइट की सार्वजनिक Web App configuration जोड़ दी गई है। अब config screenshot दोबारा भेजने की जरूरत नहीं है।
+
+यह केवल वेबसाइट की पहचान है। Firebase Authentication में Email/Password चालू करना, Cloud Firestore database बनाना (यदि पहले से नहीं है), `firestore.rules` Publish करना और GitHub Pages domain को Authorized domains में जोड़ना बाकी है।
+
+इस release में मुख्य application data Cloud Firestore में save होता है। पुराने Realtime Database का URL config में रखा है, लेकिन main API Firestore इस्तेमाल करती है।
+
+Admin को पहली बार बनाने के क्लिक-दर-क्लिक निर्देश `START_HERE_HINDI.txt` में हैं। Service Account JSON या Private Key कभी सार्वजनिक न करें।

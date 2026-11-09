@@ -1,0 +1,15 @@
+पहला Admin सुरक्षित तरीके से चालू करना
+=====================================
+
+यह कदम केवल पहली बार करना है:
+
+1. वेबसाइट पर अपना सामान्य account बनाएँ और Email से Login करें।
+2. Firebase Console → Authentication → Users में अपना account खोलें और उसका UID copy करें।
+3. Firestore Database → Data में admins नाम की collection बनाएँ।
+4. Document ID में अपना वही UID रखें।
+5. Field बनाएँ:
+   enabled  |  boolean  |  true
+6. Save करें।
+7. अब वेबसाइट के admin.html पेज पर उसी Email और Password से Login करें।
+
+किसी दूसरे user को Admin न बनाएँ। `admins` document वेबसाइट से नहीं बन सकता; यह जानबूझकर Console से ही बनाया जाता है ताकि कोई user खुद को Admin न बना सके।

@@ -1,0 +1,77 @@
+/* V4.4.14 — restore the original card compositions and keep every card on-screen.
+   Automatic incoming Batter/Bowler corner notices remain on #eventLayer. Manually
+   selected Cards always use the same centered broadcast stage. */
+#cardLayer.cardLayer{
+  position:fixed!important;
+  inset:0!important;
+  left:0!important;right:0!important;top:0!important;bottom:0!important;
+  width:100vw!important;height:100vh!important;
+  min-width:0!important;min-height:0!important;
+  display:none;place-items:center!important;
+  padding:clamp(12px,2.2vw,34px)!important;
+  margin:0!important;
+  transform:none!important;
+  background:transparent!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  z-index:70;pointer-events:none;
+}
+#cardLayer.cardLayer.isVisible{display:grid!important;place-items:center!important}
+#cardLayer.cardLayer .broadcastCardStage{
+  position:relative!important;
+  display:block!important;
+  width:min(92vw,1320px)!important;
+  max-width:calc(100vw - 32px)!important;
+  height:auto!important;min-height:0!important;
+  max-height:84vh!important;
+  margin:0 auto!important;
+  padding:clamp(20px,2.4vw,38px)!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+  box-sizing:border-box!important;
+  overflow-wrap:normal;
+}
+/* Preserve the pre-existing card information order and grouping. Only let the
+   overall stage grow; do not force child rows into a new wrap/stack layout. */
+#cardLayer.cardLayer .broadcastCardStage :is(.playerFeature,.broadcastCardTitle,.broadcastCardFoot,.playerMiniStats,.chaseGraphicCard){
+  min-width:0;max-width:100%;
+}
+#cardLayer.cardLayer .broadcastCardStage .broadcastTableWrap{width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden}
+#cardLayer.cardLayer .broadcastCardStage .broadcastTable{min-width:640px}
+/* Manually selected New Batter/New Bowler cards are regular cards too.
+   The automatic incoming-player notices use eventLayer.incomingCornerLayer. */
+#cardLayer.cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler){
+  position:fixed!important;inset:0!important;left:0!important;right:0!important;top:0!important;bottom:0!important;
+  width:100vw!important;height:100vh!important;transform:none!important;
+  padding:clamp(12px,2.2vw,34px)!important;place-items:center!important;
+}
+#cardLayer.cardLayer:is(.cardType-newBatter,.cardType-nextBatter,.cardType-newBowler) .broadcastCardStage{
+  width:min(88vw,1120px)!important;max-width:calc(100vw - 32px)!important;max-height:76vh!important;
+}
+/* Studio-authored Cards retain their saved aspect ratio and element composition,
+   while the overall template becomes larger and remains inside the viewport. */
+#cardLayer.cardLayer.hasStudioCard .broadcastCardStage.studioCardStage{
+  display:block!important;width:min(92vw,1320px)!important;max-width:calc(100vw - 32px)!important;
+  max-height:84vh!important;overflow:auto!important;padding:0!important;
+  margin:0 auto!important;background:transparent!important;border:0!important;box-shadow:none!important;
+}
+#cardLayer.cardLayer .jlStudioOverlayRoot.jlStudioCardRoot{
+  display:block!important;width:min(92vw,1320px)!important;max-width:100%!important;
+  max-height:80vh!important;height:auto!important;overflow:hidden!important;margin:0 auto!important;
+}
+@media(max-width:760px){
+  #cardLayer.cardLayer{padding:10px!important}
+  #cardLayer.cardLayer .broadcastCardStage{width:96vw!important;max-width:calc(100vw - 20px)!important;max-height:86vh!important;padding:clamp(16px,4vw,24px)!important}
+  #cardLayer.cardLayer .broadcastTableWrap{overflow-x:auto!important}
+  #cardLayer.cardLayer .broadcastTable{min-width:600px}
+  #cardLayer.cardLayer.hasStudioCard .broadcastCardStage.studioCardStage{width:96vw!important;max-width:calc(100vw - 20px)!important}
+  #cardLayer.cardLayer .jlStudioOverlayRoot.jlStudioCardRoot{width:96vw!important;max-width:100%!important;max-height:82vh!important}
+}
+@media(max-width:420px){
+  #cardLayer.cardLayer .broadcastCardStage{padding:14px!important;max-height:88vh!important}
+  #cardLayer.cardLayer .broadcastCardHead{gap:6px;letter-spacing:1px;font-size:9px}
+  #cardLayer.cardLayer .playerFeature{padding:18px 6px 16px}
+  #cardLayer.cardLayer .playerFeature h1{font-size:clamp(25px,8vw,38px)}
+  #cardLayer.cardLayer .playerMiniStats{gap:7px}
+  #cardLayer.cardLayer .playerMiniStats span{min-width:74px;padding:9px 10px}
+}

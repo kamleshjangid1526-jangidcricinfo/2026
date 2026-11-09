@@ -1,0 +1,435 @@
+/* JANGID CRICINFO SCOREBUG v6 — stable in OBS, resized windows and fullscreen.
+   Data remains wired to scorelayer.js. Body/page canvas is transparent; only the bug panels are painted. */
+html,html:root,body.scoreLayerBody{width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:transparent!important;background-color:transparent!important}
+body.scoreLayerBody{font-family:Inter,"Segoe UI",Arial,sans-serif!important}
+#scoreBar.scoreBar{container-type:inline-size!important;position:fixed!important;top:auto!important;left:clamp(7px,1.8vw,34px)!important;right:clamp(7px,1.8vw,34px)!important;bottom:clamp(6px,1.5vh,18px)!important;transform:none!important;width:auto!important;max-width:none!important;min-width:0!important;height:auto!important;min-height:clamp(98px,14vh,140px)!important;max-height:none!important;display:grid!important;align-items:stretch!important;align-content:stretch!important;gap:5px!important;padding:8px 10px!important;box-sizing:border-box!important;overflow:hidden!important;isolation:isolate!important;line-height:1.1!important;font-variant-numeric:tabular-nums!important;transition:background .2s,border-color .2s,box-shadow .2s!important;border-radius:14px!important;border:1px solid var(--jl-line,#ffffff30)!important;border-bottom:3px solid var(--accent,#38bdf8)!important;box-shadow:0 12px 34px #0008!important;grid-template-columns:minmax(0,1fr) minmax(180px,1.1fr) minmax(0,1fr)!important;grid-template-rows:clamp(24px,3.2vh,34px) clamp(45px,6.4vh,64px) clamp(18px,2.4vh,25px)!important;grid-template-areas:"batteam score bowlteam" "batters score bowler" "balls balls chase"!important}
+#scoreBar.scoreBar,#scoreBar.scoreBar *{box-sizing:border-box!important}
+#scoreBar.scoreBar:before{pointer-events:none!important;z-index:0!important}
+#scoreBar.scoreBar .jlTeam,#scoreBar.scoreBar .jlScoreWrap,#scoreBar.scoreBar .jlBatters,#scoreBar.scoreBar .jlBowler,#scoreBar.scoreBar .jlBalls,#scoreBar.scoreBar .jlChase,#scoreBar.scoreBar .jlBrandBay{min-width:0!important;max-width:100%!important;min-height:0!important;max-height:100%!important;overflow:hidden!important;position:relative!important;z-index:1!important;align-self:stretch!important}
+#scoreBar.scoreBar .jlTeam{display:flex!important;align-items:center!important;gap:clamp(4px,.4cqi,9px)!important;padding:3px clamp(5px,.5cqi,11px)!important;border-radius:9px!important;flex-direction:row!important;text-align:left!important}
+#scoreBar.scoreBar .jlBatTeam{grid-area:batteam!important;flex-direction:row!important;text-align:left!important;border-inline-start:3px solid var(--accent)!important}
+#scoreBar.scoreBar .jlBowlTeam{grid-area:bowlteam!important;flex-direction:row-reverse!important;text-align:right!important;border-inline-end:3px solid var(--accent)!important}
+#scoreBar.scoreBar .jlTeamCopy{display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;gap:2px!important;flex:1 1 0!important}
+#scoreBar.scoreBar .jlBowlTeam .jlTeamCopy{align-items:flex-end!important}
+#scoreBar.scoreBar .jlTeamLogo{position:relative!important;display:grid!important;place-items:center!important;flex:0 0 clamp(24px,2.1cqi,40px)!important;width:clamp(24px,2.1cqi,40px)!important;height:clamp(24px,2.1cqi,40px)!important;min-width:0!important;min-height:0!important;border-radius:50%!important;overflow:hidden!important}
+#scoreBar.scoreBar .jlTeamLogo img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important;padding:2px!important;border-radius:inherit!important}
+#scoreBar.scoreBar .jlTeamLogo i{font-size:clamp(9px,.62cqi,13px)!important;font-style:normal!important;font-weight:1000!important}
+#scoreBar.scoreBar .jlTeamName,#scoreBar.scoreBar .jlScoreTeamName{display:block!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:clamp(10px,.78cqi,16px)!important;font-weight:950!important;line-height:1.15!important;letter-spacing:0!important}
+#scoreBar.scoreBar .jlTeamName.isLong,#scoreBar.scoreBar .jlScoreTeamName.isLong{font-size:clamp(9px,.68cqi,13px)!important;letter-spacing:-.02em!important}
+#scoreBar.scoreBar .jlRoleTag,#scoreBar.scoreBar .jlSectionLabel,#scoreBar.scoreBar .jlRecentLabel{display:block!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:clamp(8px,.47cqi,10px)!important;line-height:1.1!important;letter-spacing:.07em!important;font-weight:950!important;color:var(--jl-muted,#b5cde0)!important}
+#scoreBar.scoreBar .jlTeam.noLogo .jlTeamLogo{flex:1 1 0!important;width:auto!important;max-width:100%!important;height:100%!important;min-height:0!important;min-width:0!important;border-radius:8px!important;padding:3px 7px!important;background:var(--jl-logo-bg,#10283b)!important;box-shadow:inset 0 0 0 1px var(--jl-line,#ffffff2b)!important}
+#scoreBar.scoreBar .jlTeam.noLogo .jlTeamLogo i{display:none!important}
+#scoreBar.scoreBar .jlTeam.noLogo .jlLogoFallbackName{display:block!important;width:100%!important;min-width:0!important;overflow:hidden!important}
+#scoreBar.scoreBar .jlTeam.noLogo .jlFallbackTrack{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important;animation:none!important;font-size:clamp(10px,.8cqi,16px)!important;font-weight:1000!important;line-height:1.15!important}
+#scoreBar.scoreBar .jlTeam.noLogo .jlFallbackTrack.isLong{display:block!important;animation:jcTeamSlide 8s linear infinite!important;text-overflow:clip!important}
+#scoreBar.scoreBar .jlTeam.noLogo .jlTeamCopy{display:none!important}
+@keyframes jcTeamSlide{0%,12%{transform:translateX(0)}72%,88%{transform:translateX(calc(-100% + 100cqi))}100%{transform:translateX(0)}}
+#scoreBar.scoreBar .jlScoreWrap{grid-area:score!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;min-width:0!important;min-height:0!important;padding:3px clamp(4px,.5cqi,10px)!important;border-radius:10px!important;text-align:center!important;overflow:hidden!important}
+#scoreBar.scoreBar .jlScoreKicker{display:flex!important;align-items:center!important;justify-content:center!important;gap:clamp(3px,.28cqi,6px)!important;width:100%!important;min-width:0!important;overflow:hidden!important;white-space:nowrap!important;font-size:clamp(8px,.48cqi,10px)!important;line-height:1!important;font-weight:900!important}
+#scoreBar.scoreBar .jlScoreKicker>b{max-width:45%!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+#scoreBar.scoreBar .jlScoreLogo{display:inline-grid!important;place-items:center!important;flex:0 0 clamp(14px,.9cqi,20px)!important;width:clamp(14px,.9cqi,20px)!important;height:clamp(14px,.9cqi,20px)!important;min-width:0!important;min-height:0!important;border-radius:50%!important;overflow:hidden!important}
+#scoreBar.scoreBar .jlScoreLogo img{width:100%!important;height:100%!important;object-fit:contain!important}
+#scoreBar.scoreBar .jlScoreLogo i{font-size:7px!important;font-style:normal!important;font-weight:900!important}
+#scoreBar.scoreBar .jlScoreMain{display:flex!important;align-items:baseline!important;justify-content:center!important;gap:clamp(2px,.18cqi,5px)!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow:visible!important;white-space:nowrap!important;line-height:1!important}
+#scoreBar.scoreBar .jlRuns{display:block!important;flex:0 1 auto!important;min-width:0!important;font-size:clamp(24px,min(3.3cqi,6.8vh),66px)!important;font-weight:1000!important;line-height:.98!important;letter-spacing:-.045em!important;font-variant-numeric:tabular-nums!important;text-shadow:0 1px 0 #0002!important}
+#scoreBar.scoreBar .jlSlash{font-size:clamp(17px,min(1.9cqi,4.2vh),34px)!important;line-height:1!important;font-weight:800!important}
+#scoreBar.scoreBar .jlWickets{font-size:clamp(21px,min(2.45cqi,5.2vh),43px)!important;line-height:1!important;font-weight:1000!important}
+#scoreBar.scoreBar .jlScoreMeta{display:flex!important;align-items:center!important;justify-content:center!important;flex-wrap:nowrap!important;gap:clamp(4px,.65cqi,11px)!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;white-space:nowrap!important;font-size:clamp(8px,.55cqi,11px)!important;line-height:1.1!important;font-weight:850!important}
+#scoreBar.scoreBar .jlScoreMeta span{white-space:nowrap!important}
+#scoreBar.scoreBar .jlScoreMeta b{font-size:1.05em!important;font-weight:1000!important}
+#scoreBar.scoreBar .jlInningsPill,#scoreBar.scoreBar .jlTargetBadge,#scoreBar.scoreBar .jlTargetMini{display:inline-flex!important;align-items:center!important;justify-content:center!important;max-width:100%!important;padding:2px 5px!important;border-radius:5px!important;font-size:clamp(8px,.45cqi,10px)!important;line-height:1.05!important;font-weight:1000!important;white-space:nowrap!important}
+#scoreBar.scoreBar .jlLiveDot{font-size:8px!important;line-height:1!important}
+#scoreBar.scoreBar .jlBatters{grid-area:batters!important;display:flex!important;flex-direction:column!important;justify-content:center!important;gap:3px!important;min-width:0!important;padding:4px clamp(5px,.5cqi,10px)!important;border-radius:8px!important;overflow:hidden!important}
+#scoreBar.scoreBar .jlBatterRow{display:grid!important;grid-template-columns:clamp(19px,1.25cqi,25px) minmax(0,1fr) auto auto!important;align-items:center!important;gap:clamp(2px,.3cqi,5px)!important;width:100%!important;min-width:0!important;max-width:100%!important;line-height:1.12!important}
+#scoreBar.scoreBar .jlBatterRole{font-size:clamp(8px,.45cqi,10px)!important;white-space:nowrap!important}
+#scoreBar.scoreBar .jlBatterName,#scoreBar.scoreBar .jlBowlerName{display:block!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:clamp(9px,.72cqi,14px)!important;line-height:1.12!important;font-weight:850!important}
+#scoreBar.scoreBar .jlBatterName.isLong,#scoreBar.scoreBar .jlBowlerName.isLong{font-size:clamp(8px,.62cqi,12px)!important}
+#scoreBar.scoreBar .jlBatterRuns{font-size:clamp(10px,.9cqi,16px)!important;line-height:1!important;font-weight:1000!important;white-space:nowrap!important}
+#scoreBar.scoreBar .jlBatterBalls{font-size:clamp(8px,.5cqi,11px)!important;white-space:nowrap!important}
+#scoreBar.scoreBar .jlBatterBoundaries{display:none!important}
+#scoreBar.scoreBar .jlBowler{grid-area:bowler!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:clamp(9px,.6cqi,12px) minmax(0,1fr) clamp(9px,.6cqi,12px)!important;align-items:center!important;column-gap:clamp(4px,.4cqi,8px)!important;row-gap:1px!important;min-width:0!important;padding:4px clamp(5px,.5cqi,10px)!important;border-radius:8px!important;overflow:hidden!important}
+#scoreBar.scoreBar .jlBowler .jlSectionLabel{grid-column:1/-1!important}
+#scoreBar.scoreBar .jlBowlerName{grid-column:1/2!important;grid-row:2/3!important}
+#scoreBar.scoreBar .jlBowlerFigures{grid-column:2/3!important;grid-row:2/3!important;font-size:clamp(12px,1.05cqi,19px)!important;font-weight:1000!important;white-space:nowrap!important}
+#scoreBar.scoreBar .jlBowlerMeta{grid-column:1/-1!important;grid-row:3/4!important;font-size:clamp(8px,.48cqi,10px)!important;line-height:1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#scoreBar.scoreBar .jlBalls{grid-area:balls!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:clamp(4px,.5cqi,10px)!important;min-width:0!important;overflow:hidden!important;padding:2px clamp(5px,.5cqi,10px)!important;border-radius:8px!important}
+#scoreBar.scoreBar .jlBallRail{display:flex!important;align-items:center!important;gap:clamp(3px,.35cqi,7px)!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
+#scoreBar.scoreBar .jlBallChip{display:grid!important;place-items:center!important;flex:0 0 clamp(20px,1.55cqi,29px)!important;width:clamp(20px,1.55cqi,29px)!important;height:clamp(20px,1.55cqi,29px)!important;max-width:100%!important;border-radius:50%!important;font-size:clamp(8px,.5cqi,10px)!important;line-height:1!important;font-weight:1000!important;white-space:nowrap!important;overflow:hidden!important}
+#scoreBar.scoreBar .jlBallEmpty{font-size:clamp(8px,.5cqi,10px)!important;white-space:nowrap!important}
+#scoreBar.scoreBar .jlChase{grid-area:chase!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:clamp(4px,.5cqi,9px)!important;min-width:0!important;overflow:hidden!important;padding:3px clamp(5px,.5cqi,10px)!important;border-inline-start:3px solid var(--accent)!important;border-radius:7px!important;font-size:clamp(8px,.5cqi,10px)!important;font-weight:900!important;line-height:1.1!important;white-space:nowrap!important}
+#scoreBar.scoreBar .jlChase b{font-size:clamp(11px,.92cqi,17px)!important;line-height:1!important;font-weight:1000!important}
+#scoreBar.scoreBar .jlChase>*{min-width:0!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#scoreBar.scoreBar .jlBrandBay{display:none;grid-area:brand!important;align-items:center!important;justify-content:center!important;text-align:center!important;min-width:0!important;overflow:hidden!important;font-size:clamp(10px,.68cqi,13px)!important;letter-spacing:.05em!important}
+#scoreBar.scoreBar .jlBrandBay small{font-size:clamp(7px,.43cqi,9px)!important;letter-spacing:.04em!important}
+
+/* Palette tokens: colour presets never alter geometry. */
+#scoreBar.scoreBar.color1{--jl-ink:#f5fbff;--jl-muted:#b4cee1;--jl-panel:#10293df0;--jl-score-panel:#071a2bf7;--jl-line:#82c7f24e;--jl-logo-bg:#0d2437}
+#scoreBar.scoreBar.color2{--jl-ink:#effff7;--jl-muted:#b3e9d0;--jl-panel:#103b2ded;--jl-score-panel:#06271ef7;--jl-line:#6deab24d;--jl-logo-bg:#0b3325}
+#scoreBar.scoreBar.color3{--jl-ink:#fff4f6;--jl-muted:#ffd0da;--jl-panel:#43182beF;--jl-score-panel:#2b0e20f7;--jl-line:#ff8b9e55;--jl-logo-bg:#3a1226}
+#scoreBar.scoreBar.color4{--jl-ink:#fff8ed;--jl-muted:#f6d6b1;--jl-panel:#482a14ee;--jl-score-panel:#2d190bf7;--jl-line:#efb36c60;--jl-logo-bg:#35200f}
+#scoreBar.scoreBar.color5{--jl-ink:#fbf7ff;--jl-muted:#d7c4f3;--jl-panel:#291b48ee;--jl-score-panel:#160f2bf7;--jl-line:#c3a1ff55;--jl-logo-bg:#21143b}
+#scoreBar.scoreBar.color6{--jl-ink:#fffde8;--jl-muted:#eadca7;--jl-panel:#373017ee;--jl-score-panel:#24200af7;--jl-line:#e7ce6d55;--jl-logo-bg:#27220c}
+#scoreBar.scoreBar.color7{--jl-ink:#152b40;--jl-muted:#40596f;--jl-panel:#edf4f9f7;--jl-score-panel:#fffffffa;--jl-line:#9fb4c6;--jl-logo-bg:#fff;background:linear-gradient(110deg,#f4f8fcf7,#dce8f2f7 52%,#f4f8fcf7)!important}
+#scoreBar.scoreBar.color8{--jl-ink:#efffff;--jl-muted:#b6e6e5;--jl-panel:#0d383eee;--jl-score-panel:#052329f7;--jl-line:#44e1d55b;--jl-logo-bg:#07363b}
+#scoreBar.scoreBar.color9{--jl-ink:#fff5f8;--jl-muted:#f2c1d0;--jl-panel:#401a2ded;--jl-score-panel:#280e1bf7;--jl-line:#ef849360;--jl-logo-bg:#351222}
+#scoreBar.scoreBar.color10{--jl-ink:#f7fafc;--jl-muted:#c7d2dd;--jl-panel:#25313df0;--jl-score-panel:#121b24f7;--jl-line:#b2c0cc50;--jl-logo-bg:#1c2832}
+#scoreBar.scoreBar .jlTeamName,#scoreBar.scoreBar .jlScoreTeamName,#scoreBar.scoreBar .jlBatterName,#scoreBar.scoreBar .jlBowlerName,#scoreBar.scoreBar .jlRuns,#scoreBar.scoreBar .jlSlash,#scoreBar.scoreBar .jlWickets,#scoreBar.scoreBar .jlBatterRuns,#scoreBar.scoreBar .jlBowlerFigures{color:var(--jl-ink)!important}
+#scoreBar.scoreBar .jlBatterRuns,#scoreBar.scoreBar .jlBowlerFigures,#scoreBar.scoreBar .jlScoreMeta b{color:var(--accent)!important}
+#scoreBar.scoreBar .jlScoreWrap{background:var(--jl-score-panel)!important;border-color:var(--jl-line)!important}
+#scoreBar.scoreBar .jlTeam,#scoreBar.scoreBar .jlBatters,#scoreBar.scoreBar .jlBowler,#scoreBar.scoreBar .jlBalls,#scoreBar.scoreBar .jlChase,#scoreBar.scoreBar .jlBrandBay{background:var(--jl-panel)!important;border-color:var(--jl-line)!important;color:var(--jl-ink)!important}
+#scoreBar.scoreBar .jlRoleTag,#scoreBar.scoreBar .jlSectionLabel,#scoreBar.scoreBar .jlRecentLabel,#scoreBar.scoreBar .jlBatterBalls,#scoreBar.scoreBar .jlBatterBoundaries,#scoreBar.scoreBar .jlBowlerMeta,#scoreBar.scoreBar .jlChase{color:var(--jl-muted)!important}
+#scoreBar.scoreBar .jlInningsPill,#scoreBar.scoreBar .jlTargetBadge,#scoreBar.scoreBar .jlTargetMini{background:var(--accent)!important;color:#071725!important}
+
+/* 01 Gemini pill with balanced left/right athlete panels. */
+#scoreBar.scoreBar.layer1{grid-template-areas:"batteam score bowlteam" "batters score bowler" "balls balls chase"!important;grid-template-columns:minmax(0,1fr) minmax(220px,1.02fr) minmax(0,1fr)!important;grid-template-rows:34px 63px 25px!important;min-height:140px!important;border-radius:35px!important;padding:8px 12px!important;background:linear-gradient(95deg,#0e70b9,#071b32 28%,#0b1f35 70%,#cf9316)!important;border:2px solid #52d2ee!important;box-shadow:0 8px 0 #021122aa,0 14px 35px #0009!important}
+#scoreBar.scoreBar.layer1 .jlTeam{background:#031a2beF!important;border-color:#ffffff35!important;border-radius:24px!important}
+#scoreBar.scoreBar.layer1 .jlScoreWrap{grid-row:1/3!important;background:linear-gradient(140deg,#0b55aa,#09205d)!important;border:1px solid #6cddff!important;border-radius:18px!important}
+#scoreBar.scoreBar.layer1 .jlRuns{font-size:clamp(40px,3.7cqi,72px)!important}
+/* 02 Center split: broad center score tile, separate square side panels. */
+#scoreBar.scoreBar.layer2{grid-template-areas:"batteam score bowlteam" "batters score bowler" "chase balls balls"!important;grid-template-columns:minmax(0,1fr) minmax(250px,1.18fr) minmax(0,1fr)!important;grid-template-rows:36px 61px 27px!important;min-height:140px!important;border-radius:10px!important;padding:8px 11px!important;background:linear-gradient(90deg,#07192b,#0a2340 50%,#07192b)!important;border-top:2px solid #39c9ff!important}
+#scoreBar.scoreBar.layer2 .jlTeam{border-radius:4px!important;background:#102c42!important}
+#scoreBar.scoreBar.layer2 .jlScoreWrap{grid-row:1/3!important;border:3px solid #f6d36b!important;border-radius:17px!important;background:linear-gradient(140deg,#102c94,#0b4dcc)!important}
+/* 03 Compact two-row TV scoreboard with lower stat rail. */
+#scoreBar.scoreBar.layer3{grid-template-areas:"batteam score bowlteam" "batters balls bowler" "chase chase chase"!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:34px 52px 25px!important;min-height:124px!important;border-radius:5px!important;padding:6px 8px!important;background:linear-gradient(180deg,#eef4f8,#d7e1eb)!important;--jl-ink:#12283e;--jl-muted:#455f76;--jl-panel:#ffffffd9;--jl-score-panel:#fffffffa;--jl-line:#a8b9c7}
+#scoreBar.scoreBar.layer3 .jlScoreWrap{background:transparent!important;border:0!important}
+#scoreBar.scoreBar.layer3 .jlTeam{border-radius:2px!important;background:#0b3150!important;--jl-ink:#fff;--jl-muted:#b8d5e4}
+#scoreBar.scoreBar.layer3 .jlBallChip{width:clamp(18px,1.3cqi,25px)!important;height:clamp(18px,1.3cqi,25px)!important;flex-basis:clamp(18px,1.3cqi,25px)!important}
+/* 04 Center focus: big score with side information. */
+#scoreBar.scoreBar.layer4{grid-template-areas:"batteam score bowlteam bowlteam" "batters score bowler bowler" "balls balls chase chase"!important;grid-template-columns:minmax(0,.85fr) minmax(220px,1.15fr) minmax(0,.75fr) minmax(0,.4fr)!important;grid-template-rows:34px 58px 25px!important;min-height:138px!important;border-radius:20px!important;padding:8px 15px!important;background:linear-gradient(120deg,#063a6e,#091e33 38%,#091e33 62%,#8a5d10)!important;border:1px solid #d0a74a!important}
+#scoreBar.scoreBar.layer4 .jlScoreWrap{grid-row:1/3!important;background:transparent!important;border-inline:3px solid #f5d36d!important;border-radius:14px!important}
+#scoreBar.scoreBar.layer4 .jlRuns{font-size:clamp(44px,4.2cqi,78px)!important}
+/* 05 ticker layout: seven compact segments, converted to cards at tablet size. */
+#scoreBar.scoreBar.layer5{top:8px!important;bottom:auto!important;left:0!important;right:0!important;border-radius:0 0 12px 12px!important;grid-template-areas:"batteam score batters bowlteam bowler balls chase"!important;grid-template-columns:minmax(112px,.85fr) minmax(135px,.8fr) minmax(140px,1fr) minmax(112px,.85fr) minmax(135px,.95fr) minmax(125px,.9fr) minmax(100px,.7fr)!important;grid-template-rows:73px!important;min-height:85px!important;max-height:none!important;padding:5px 9px 7px!important;gap:4px!important;border-top:3px solid var(--accent)!important}
+#scoreBar.scoreBar.layer5 .jlTeam{flex-direction:column!important;justify-content:center!important;text-align:center!important;gap:3px!important;border-radius:4px!important}
+#scoreBar.scoreBar.layer5 .jlTeamCopy,#scoreBar.scoreBar.layer5 .jlBowlTeam .jlTeamCopy{align-items:center!important}
+#scoreBar.scoreBar.layer5 .jlScoreWrap{background:transparent!important;border:0!important}
+#scoreBar.scoreBar.layer5 .jlBatters{gap:4px!important}
+/* 06 Glass deck, lower centred recent balls and softened cards. */
+#scoreBar.scoreBar.layer6{grid-template-areas:"batteam score bowlteam" "batters score bowler" "balls chase chase"!important;grid-template-columns:minmax(0,1fr) minmax(220px,1.1fr) minmax(0,1fr)!important;grid-template-rows:34px 63px 25px!important;min-height:140px!important;border-radius:20px!important;padding:9px 12px!important;background:linear-gradient(120deg,#123c53d9,#4e6e79d9,#1b3154d9)!important;backdrop-filter:blur(14px)!important;border:1px solid #e6fbff80!important}
+#scoreBar.scoreBar.layer6 .jlTeam,#scoreBar.scoreBar.layer6 .jlBatters,#scoreBar.scoreBar.layer6 .jlBowler,#scoreBar.scoreBar.layer6 .jlChase{background:#ffffff1b!important;border:1px solid #ffffff3d!important;border-radius:12px!important;backdrop-filter:blur(8px)!important}
+#scoreBar.scoreBar.layer6 .jlScoreWrap{grid-row:1/3!important;border-radius:15px!important;background:#ffffff1a!important;border:1px solid #ffffff4a!important}
+/* 07 angular polygon panels. */
+#scoreBar.scoreBar.layer7{grid-template-areas:"batteam score score bowlteam" "batters score score bowler" "balls balls chase chase"!important;grid-template-columns:minmax(0,.9fr) minmax(0,.85fr) minmax(0,.85fr) minmax(0,.9fr)!important;grid-template-rows:35px 61px 26px!important;min-height:139px!important;border-radius:3px!important;padding:8px 12px!important;background:linear-gradient(100deg,#081329,#16386d,#09142a)!important;clip-path:polygon(0 0,98% 0,100% 22%,100% 100%,2% 100%,0 78%);border:0!important;box-shadow:inset 0 -3px var(--accent),0 14px 30px #0009!important}
+#scoreBar.scoreBar.layer7 .jlTeam{border-radius:3px!important;transform:skewX(-2deg)}
+#scoreBar.scoreBar.layer7 .jlScoreWrap{grid-row:1/3!important;grid-column:2/4!important;border-radius:3px!important;border-inline:3px solid var(--accent)!important}
+#scoreBar.scoreBar.layer7 .jlBallChip{border-radius:5px!important}
+/* 08 left anchored info dock, tall team column. */
+#scoreBar.scoreBar.layer8{left:16px!important;right:auto!important;width:min(1120px,calc(100vw - 32px))!important;grid-template-areas:"batteam score bowlteam" "batteam batters bowler" "chase balls balls"!important;grid-template-columns:minmax(150px,.62fr) minmax(0,1.08fr) minmax(0,1fr)!important;grid-template-rows:37px 56px 25px!important;min-height:137px!important;border-radius:12px!important;background:linear-gradient(110deg,#0c243c,#142b48 65%,#32184a)!important;border-left:5px solid var(--accent)!important}
+#scoreBar.scoreBar.layer8 .jlBatTeam{grid-row:1/3!important;flex-direction:column!important;justify-content:center!important;text-align:center!important;border:0!important;background:transparent!important}
+#scoreBar.scoreBar.layer8 .jlBatTeam .jlTeamCopy{align-items:center!important}
+#scoreBar.scoreBar.layer8 .jlScoreWrap{border:0!important;background:transparent!important}
+/* 09 Classic TV ticker, one single row with white scoreboard contrast. */
+#scoreBar.scoreBar.layer9{grid-template-areas:"batteam batteam score bowlteam" "batters balls score bowler" "chase chase chase chase"!important;grid-template-columns:minmax(0,1fr) minmax(0,.65fr) minmax(200px,1.15fr) minmax(0,.95fr)!important;grid-template-rows:34px 58px 25px!important;min-height:138px!important;max-height:none!important;border-radius:2px!important;padding:5px!important;gap:3px!important;background:linear-gradient(180deg,#f9fbfd,#d9e4ed)!important;--jl-ink:#132c42;--jl-muted:#526a7e;--jl-panel:#ffffffea;--jl-score-panel:#fff;--jl-line:#aabac7;border-top:2px solid var(--accent)!important;border-bottom:4px solid var(--accent)!important}
+#scoreBar.scoreBar.layer9 .jlTeam{flex-direction:column!important;justify-content:center!important;text-align:center!important;border-radius:0!important;background:#173650!important;--jl-ink:#fff;--jl-muted:#cbdce9}
+#scoreBar.scoreBar.layer9 .jlTeamCopy,#scoreBar.scoreBar.layer9 .jlBowlTeam .jlTeamCopy{align-items:center!important}
+#scoreBar.scoreBar.layer9 .jlScoreWrap{border-radius:0!important;border-inline:2px solid var(--accent)!important}
+#scoreBar.scoreBar.layer9 .jlBalls{justify-content:center!important}
+/* 10 score rail to the far left spanning the entire deck. */
+#scoreBar.scoreBar.layer10{grid-template-areas:"score batteam bowlteam" "score batters bowler" "score balls chase"!important;grid-template-columns:minmax(155px,.78fr) minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:34px 60px 26px!important;min-height:138px!important;border-radius:4px!important;padding:7px!important;background:linear-gradient(180deg,#132034,#07111d)!important;font-family:ui-monospace,Consolas,monospace!important;border-bottom:3px solid var(--accent)!important}
+#scoreBar.scoreBar.layer10 .jlScoreWrap{grid-row:1/4!important;border:1px solid var(--accent)!important;border-radius:4px!important;background:#0007!important}
+#scoreBar.scoreBar.layer10 .jlRuns,#scoreBar.scoreBar.layer10 .jlWickets{letter-spacing:0!important}
+#scoreBar.scoreBar.layer10 .jlTeamLogo{border-radius:4px!important}
+#scoreBar.scoreBar.layer10 .jlBallChip{border-radius:2px!important}
+/* 11 stadium-wide bar: batting side gets extra width; score becomes a double-deck column. */
+#scoreBar.scoreBar.layer11{grid-template-areas:"batteam batteam score bowlteam" "batters batters score bowler" "balls balls chase chase"!important;grid-template-columns:minmax(0,1fr) minmax(0,.7fr) minmax(210px,1.05fr) minmax(0,.9fr)!important;grid-template-rows:34px 60px 26px!important;min-height:138px!important;border-radius:7px!important;border-left:7px solid var(--accent)!important;padding:7px 10px!important;background:linear-gradient(180deg,#1e293b,#0f172a)!important}
+#scoreBar.scoreBar.layer11 .jlScoreWrap{grid-column:3!important;grid-row:1/3!important;border:1px solid var(--jl-line)!important;border-radius:4px!important;background:linear-gradient(180deg,#f1f5f9,#cbd5e1)!important;--jl-ink:#101c2b;--jl-muted:#51677c}
+#scoreBar.scoreBar.layer11 .jlRuns{color:#111827!important}
+#scoreBar.scoreBar.layer11 .jlWickets{color:#075985!important}
+/* 12 split score tile spans two columns; tracker and chase get their own lower deck. */
+#scoreBar.scoreBar.layer12{grid-template-areas:"score score batteam bowlteam" "score score batters bowler" "balls balls chase chase"!important;grid-template-columns:minmax(0,.62fr) minmax(0,.62fr) minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:34px 60px 26px!important;min-height:138px!important;border-radius:12px!important;padding:7px!important;background:linear-gradient(115deg,#08233b,#0b324b,#092033)!important}
+#scoreBar.scoreBar.layer12 .jlScoreWrap{grid-column:1/3!important;grid-row:1/3!important;border:2px solid var(--accent)!important;border-radius:12px!important;background:linear-gradient(135deg,#fff,#e8eef5)!important;--jl-ink:#12263a;--jl-muted:#546a7f}
+#scoreBar.scoreBar.layer12 .jlRuns{color:#12263a!important}
+#scoreBar.scoreBar.layer12 .jlBalls{justify-content:center!important}
+/* 13 chase equation moves into center row, balls make a full-width final line. */
+#scoreBar.scoreBar.layer13{grid-template-areas:"batteam score bowlteam" "batters chase bowler" "balls balls balls"!important;grid-template-columns:minmax(0,1fr) minmax(245px,1.15fr) minmax(0,1fr)!important;grid-template-rows:34px 60px 26px!important;min-height:138px!important;border-radius:14px!important;border-top:3px solid var(--accent)!important;padding:7px!important;background:linear-gradient(120deg,#0c1b31,#102b48,#0c1b31)!important}
+#scoreBar.scoreBar.layer13 .jlScoreWrap{border:0!important;background:transparent!important}
+#scoreBar.scoreBar.layer13 .jlChase{flex-wrap:wrap!important;border:2px solid var(--accent)!important;border-radius:8px!important;background:#0003!important;justify-content:center!important;white-space:normal!important}
+#scoreBar.scoreBar.layer13 .jlBalls{justify-content:center!important}
+/* 14 circular emblem panels with a centered score medal. */
+#scoreBar.scoreBar.layer14{grid-template-areas:"batteam batteam score bowlteam bowlteam" "batters batters score bowler bowler" "chase chase balls balls balls"!important;grid-template-columns:minmax(0,.8fr) minmax(0,.35fr) minmax(215px,1fr) minmax(0,.35fr) minmax(0,.8fr)!important;grid-template-rows:37px 58px 25px!important;min-height:137px!important;border-radius:25px!important;padding:7px 12px!important;background:linear-gradient(110deg,#050d18,#153047,#050d18)!important}
+#scoreBar.scoreBar.layer14 .jlBatTeam,#scoreBar.scoreBar.layer14 .jlBowlTeam{flex-direction:column!important;justify-content:center!important;gap:2px!important;text-align:center!important;background:transparent!important;border:0!important}
+#scoreBar.scoreBar.layer14 .jlTeamCopy,#scoreBar.scoreBar.layer14 .jlBowlTeam .jlTeamCopy{align-items:center!important}
+#scoreBar.scoreBar.layer14 .jlTeamLogo{width:clamp(27px,2.4cqi,45px)!important;height:clamp(27px,2.4cqi,45px)!important;flex-basis:clamp(27px,2.4cqi,45px)!important}
+#scoreBar.scoreBar.layer14 .jlRoleTag{display:none!important}
+#scoreBar.scoreBar.layer14 .jlTeamName{text-align:center!important;font-size:clamp(9px,.7cqi,13px)!important}
+#scoreBar.scoreBar.layer14 .jlScoreWrap{grid-row:1/3!important;border:2px solid var(--accent)!important;border-radius:16px!important;background:#0003!important}
+#scoreBar.scoreBar.layer14 .jlBalls{justify-content:center!important}
+/* 15 tall scoreboard dock at the left. Unlike the other 19 it is intentionally vertical. */
+#scoreBar.scoreBar.layer15{left:12px!important;right:auto!important;bottom:10px!important;width:min(680px,calc(100vw - 24px))!important;grid-template-areas:"batteam score" "bowlteam score" "batters bowler" "balls balls" "chase chase"!important;grid-template-columns:minmax(0,1fr) minmax(185px,.85fr)!important;grid-template-rows:34px 34px 52px 26px 24px!important;min-height:0!important;border-radius:15px!important;padding:8px!important;gap:4px!important;background:linear-gradient(135deg,#101c4b,#3e72c0)!important;border-top:3px solid var(--accent)!important}
+#scoreBar.scoreBar.layer15 .jlScoreWrap{grid-column:2!important;grid-row:1/3!important;border:1px solid var(--accent)!important;background:linear-gradient(130deg,#163c5a,#091b2c)!important}
+#scoreBar.scoreBar.layer15 .jlRuns{font-size:clamp(36px,3.3cqi,56px)!important}
+#scoreBar.scoreBar.layer15 .jlBalls{justify-content:center!important}
+/* 16 Neon HUD: split telemetry panels, crisp outlines. */
+#scoreBar.scoreBar.layer16{grid-template-areas:"brand score score bowlteam" "brand batteam batters bowler" "brand balls chase chase"!important;grid-template-columns:minmax(58px,.22fr) minmax(0,.85fr) minmax(0,1fr) minmax(0,.9fr)!important;grid-template-rows:34px 58px 25px!important;min-height:138px!important;border-radius:5px!important;border:1px solid var(--accent)!important;box-shadow:0 0 8px var(--accent),0 0 26px color-mix(in srgb,var(--accent) 28%,transparent),inset 0 0 16px #0008!important;background:#020912f7!important}
+#scoreBar.scoreBar.layer16 .jlTeam,#scoreBar.scoreBar.layer16 .jlScoreWrap,#scoreBar.scoreBar.layer16 .jlBatters,#scoreBar.scoreBar.layer16 .jlBowler,#scoreBar.scoreBar.layer16 .jlBalls,#scoreBar.scoreBar.layer16 .jlChase{background:#061321e0!important;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent)!important;border-radius:5px!important}
+/* 17 equal three-zone columns: score in the top center, stats below. */
+#scoreBar.scoreBar.layer17{grid-template-areas:"batteam batteam score bowlteam bowlteam" "batters balls score bowler bowler" "chase chase chase chase chase"!important;grid-template-columns:minmax(0,.95fr) minmax(0,.65fr) minmax(0,1.05fr) minmax(0,.7fr) minmax(0,1fr)!important;grid-template-rows:34px 58px 25px!important;min-height:138px!important;border-radius:10px!important;padding:7px 11px!important;background:linear-gradient(90deg,#132b40,#10253d 50%,#132b40)!important}
+#scoreBar.scoreBar.layer17 .jlBatTeam,#scoreBar.scoreBar.layer17 .jlBowlTeam{background:transparent!important;border:0!important}
+#scoreBar.scoreBar.layer17 .jlBalls{flex-direction:column!important;justify-content:center!important;gap:5px!important;border-inline:1px solid var(--jl-line)!important}
+#scoreBar.scoreBar.layer17 .jlChase{justify-content:center!important;border:0!important;border-top:1px solid var(--jl-line)!important;border-radius:0!important}
+/* 18 premium oversized center score spans two rows with side rails. */
+#scoreBar.scoreBar.layer18{grid-template-areas:"batteam batteam score bowlteam" "batters balls score bowler" "chase chase score bowler"!important;grid-template-columns:minmax(0,1fr) minmax(0,.8fr) minmax(0,1.2fr) minmax(0,1fr)!important;grid-template-rows:34px 52px 25px!important;min-height:138px!important;border-radius:18px!important;padding:9px 15px!important;border:2px solid var(--accent)!important;background:linear-gradient(100deg,#080d22,#211348 50%,#081426)!important;box-shadow:0 0 0 5px #ffffff08,0 18px 38px #0007!important}
+#scoreBar.scoreBar.layer18 .jlScoreWrap{grid-row:1/3!important;border:0!important;background:linear-gradient(125deg,#241141,#423080)!important;border-radius:15px!important}
+#scoreBar.scoreBar.layer18 .jlRuns{font-size:clamp(45px,4.1cqi,73px)!important}
+/* 19 sponsor bay uses its own full-height left rail. */
+#scoreBar.scoreBar.layer19{grid-template-areas:"brand score batteam bowlteam" "brand score batters bowler" "brand score balls chase"!important;grid-template-columns:minmax(68px,.27fr) minmax(200px,1fr) minmax(0,1fr) minmax(0,.9fr)!important;grid-template-rows:34px 60px 26px!important;min-height:138px!important;border-radius:7px!important;border-bottom:4px solid var(--accent)!important;padding:7px 9px!important;background:linear-gradient(90deg,#111a34,#3575b8,#111a34)!important}
+#scoreBar.scoreBar.layer19 .jlBrandBay{display:flex!important;grid-column:1!important;grid-row:1/4!important;flex-direction:column!important;background:#09172beF!important;color:var(--accent)!important;border-right:1px dashed var(--jl-line)!important}
+#scoreBar.scoreBar.layer19 .jlScoreWrap{grid-column:2!important;grid-row:1/4!important;border-inline:1px solid var(--jl-line)!important;border-radius:8px!important}
+#scoreBar.scoreBar.layer19 .jlRuns{font-size:clamp(37px,3.3cqi,65px)!important}
+/* 20 Dual-deck broadcast: score occupies a central rail while ball strip takes a whole row. */
+#scoreBar.scoreBar.layer20{grid-template-areas:"batteam score score bowlteam" "batters score score bowler" "balls balls chase bowler"!important;grid-template-columns:minmax(0,.9fr) minmax(0,1.05fr) minmax(0,1.05fr) minmax(0,.9fr)!important;grid-template-rows:34px 46px 26px!important;min-height:138px!important;border-radius:10px!important;border-top:2px solid var(--accent)!important;border-bottom:2px solid var(--accent)!important;background:linear-gradient(105deg,#11151c,#343a48,#11151c)!important;padding:7px 10px!important}
+#scoreBar.scoreBar.layer20 .jlScoreWrap{grid-column:3!important;grid-row:1/4!important;border-inline:1px solid var(--jl-line)!important;border-radius:7px!important;background:linear-gradient(110deg,#ffffff05,#ffffff19,#ffffff05)!important}
+#scoreBar.scoreBar.layer20 .jlBalls{justify-content:center!important;border-block:1px solid var(--jl-line)!important}
+
+/* Desktop-only structural corrections make all 20 layouts genuinely distinct. */
+@media(min-width:851px){
+ #scoreBar.scoreBar.layer4 .jlScoreWrap{grid-row:1/3!important;grid-column:3!important}
+ #scoreBar.scoreBar.layer9 .jlScoreWrap{grid-row:1/3!important;grid-column:3!important}
+ #scoreBar.scoreBar.layer16 .jlBrandBay{display:flex!important;grid-area:brand!important;grid-row:1/4!important;flex-direction:column!important;align-items:center!important;justify-content:center!important}
+ #scoreBar.scoreBar.layer17 .jlScoreWrap{grid-row:1/3!important;grid-column:3!important}
+ #scoreBar.scoreBar.layer18 .jlScoreWrap{grid-row:1/4!important;grid-column:3!important}
+}
+
+/* Responsive fallback: preserve readable labels and compact the composition without overlap. */
+@media(max-width:1200px){
+ #scoreBar.scoreBar[class*="layer"]{left:6px!important;right:6px!important;bottom:6px!important;grid-template-rows:31px 53px 23px!important;min-height:121px!important;gap:3px!important;padding:5px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlTeamName,#scoreBar.scoreBar[class*="layer"] .jlScoreTeamName{font-size:clamp(9px,.85cqi,14px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterName,#scoreBar.scoreBar[class*="layer"] .jlBowlerName{font-size:clamp(9px,.73cqi,12px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlRoleTag,#scoreBar.scoreBar[class*="layer"] .jlSectionLabel,#scoreBar.scoreBar[class*="layer"] .jlRecentLabel{font-size:8px!important;letter-spacing:.025em!important}
+ #scoreBar.scoreBar[class*="layer"] .jlRuns{font-size:clamp(32px,3.2cqi,53px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBallChip{width:clamp(18px,1.65cqi,24px)!important;height:clamp(18px,1.65cqi,24px)!important;flex-basis:clamp(18px,1.65cqi,24px)!important}
+}
+@media(max-width:850px){
+ #scoreBar.scoreBar[class*="layer"]:not(.layer5):not(.layer9):not(.layer15):not(.layer19){left:4px!important;right:4px!important;bottom:4px!important;grid-template-columns:minmax(0,1fr) minmax(110px,.85fr) minmax(0,1fr)!important;grid-template-rows:29px 43px 24px!important;grid-template-areas:"batteam score bowlteam" "batters score bowler" "balls balls chase"!important;min-height:109px!important;gap:2px!important;padding:4px!important;border-radius:8px!important}
+ #scoreBar.scoreBar[class*="layer"].layer5,#scoreBar.scoreBar[class*="layer"].layer9{top:4px!important;bottom:auto!important;grid-template-columns:minmax(0,1fr) minmax(110px,.82fr) minmax(0,1fr)!important;grid-template-rows:27px 41px 23px!important;grid-template-areas:"batteam score bowlteam" "batters balls bowler" "chase chase chase"!important;min-height:105px!important;max-height:none!important}
+ #scoreBar.scoreBar[class*="layer"].layer15{left:5px!important;right:auto!important;width:min(650px,calc(100vw - 10px))!important;grid-template-rows:29px 29px 47px 24px 22px!important;min-height:0!important}
+ #scoreBar.scoreBar[class*="layer"].layer19{grid-template-columns:35px minmax(0,1fr) minmax(0,.9fr)!important;grid-template-rows:27px 41px 23px!important;grid-template-areas:"brand score batteam" "brand score batters" "brand balls chase"!important;min-height:105px!important}
+ #scoreBar.scoreBar[class*="layer"].layer19 .jlBrandBay{grid-row:1/4!important}
+ #scoreBar.scoreBar[class*="layer"].layer20{grid-template-columns:minmax(0,1fr) minmax(100px,.9fr) minmax(0,1fr)!important;grid-template-rows:27px 41px 23px!important;grid-template-areas:"batteam score bowlteam" "batters score bowler" "balls balls chase"!important;min-height:105px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlTeamLogo{flex-basis:clamp(17px,3vw,25px)!important;width:clamp(17px,3vw,25px)!important;height:clamp(17px,3vw,25px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlTeamName,#scoreBar.scoreBar[class*="layer"] .jlScoreTeamName{font-size:clamp(9px,1.25vw,12px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterName,#scoreBar.scoreBar[class*="layer"] .jlBowlerName{font-size:clamp(9px,1.1vw,12px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlRuns{font-size:clamp(30px,4vw,42px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlWickets{font-size:clamp(22px,3vw,29px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlScoreMeta{font-size:8px!important;gap:4px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterRole,#scoreBar.scoreBar[class*="layer"] .jlBatterBalls{display:none!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterRow{grid-template-columns:minmax(0,1fr) auto!important;gap:3px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterRuns{font-size:10px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBowlerMeta{font-size:8px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBallChip{width:clamp(15px,2.1vw,19px)!important;height:clamp(15px,2.1vw,19px)!important;flex-basis:clamp(15px,2.1vw,19px)!important;font-size:8px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlChase{font-size:8px!important;gap:3px!important}
+}
+@media(max-width:500px){
+ #scoreBar.scoreBar[class*="layer"]{left:0!important;right:0!important;bottom:0!important;padding:3px!important;gap:2px!important;grid-template-rows:25px 40px 22px!important;min-height:99px!important;border-radius:7px 7px 0 0!important}
+ #scoreBar.scoreBar[class*="layer"] .jlTeam{gap:2px!important;padding:1px 2px!important;border-radius:4px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlTeamLogo{flex-basis:17px!important;width:17px!important;height:17px!important;border-width:1px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlTeamName,#scoreBar.scoreBar[class*="layer"] .jlScoreTeamName{font-size:clamp(8px,2vw,10px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlRoleTag,#scoreBar.scoreBar[class*="layer"] .jlSectionLabel,#scoreBar.scoreBar[class*="layer"] .jlRecentLabel{font-size:7px!important;letter-spacing:0!important}
+ #scoreBar.scoreBar[class*="layer"] .jlRuns{font-size:clamp(28px,6vw,35px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlSlash{font-size:19px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlWickets{font-size:clamp(19px,4vw,25px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlScoreKicker{font-size:7px!important;gap:2px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlInningsPill,#scoreBar.scoreBar[class*="layer"] .jlTargetBadge,#scoreBar.scoreBar[class*="layer"] .jlTargetMini{font-size:7px!important;padding:1px 3px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlScoreMeta{font-size:7px!important;gap:3px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterName,#scoreBar.scoreBar[class*="layer"] .jlBowlerName{font-size:8px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterRuns,#scoreBar.scoreBar[class*="layer"] .jlBowlerFigures{font-size:9px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBowlerMeta{font-size:7px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBallChip{width:14px!important;height:14px!important;flex-basis:14px!important;font-size:7px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlChase{font-size:7px!important;padding:1px 3px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlChase b{font-size:9px!important}
+ #scoreBar.scoreBar[class*="layer"].layer5,#scoreBar.scoreBar[class*="layer"].layer9{grid-template-columns:minmax(0,1fr) minmax(89px,.8fr) minmax(0,1fr)!important;grid-template-rows:25px 39px 22px!important;min-height:98px!important}
+ #scoreBar.scoreBar[class*="layer"].layer15{left:0!important;width:min(530px,100vw)!important;grid-template-rows:26px 26px 43px 22px 21px!important}
+ #scoreBar.scoreBar[class*="layer"].layer19{grid-template-columns:25px minmax(0,1fr) minmax(0,.9fr)!important;grid-template-rows:25px 39px 22px!important;min-height:98px!important}
+ #scoreBar.scoreBar[class*="layer"].layer20{grid-template-rows:25px 39px 22px!important;min-height:98px!important}
+}
+/* Day mode is deliberately high-contrast; canvas outside the bar stays transparent. */
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar{--jl-ink:#152b40!important;--jl-muted:#40596f!important;--jl-panel:#edf4f9f7!important;--jl-score-panel:#fffffffa!important;--jl-line:#9fb4c6!important;--jl-logo-bg:#fff!important;box-shadow:0 10px 28px #17354b25!important}
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlTeamName,
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlScoreTeamName,
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlBatterName,
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlBowlerName,
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlRuns,
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlSlash,
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlWickets,
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlBatterRuns,
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlBowlerFigures{color:#152b40!important;text-shadow:none!important}
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlScoreMeta b,
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlBatterRuns,
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlBowlerFigures{color:#075b8d!important}
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlInningsPill,
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlTargetBadge,
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlTargetMini{color:#071b2c!important}
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlBallChip:not(.isFour):not(.isSix):not(.isWicket):not(.isWide):not(.isNoBall):not(.isLegBye):not(.isBye){background:#e1eaf2!important;color:#173047!important;border-color:#9eb1c1!important}
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlTeam.noLogo .jlTeamLogo{background:#fff!important}
+html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlTeam.noLogo .jlFallbackTrack{color:#183247!important}
+
+/* Low-height OBS previews (e.g. a docked 1920x230 window): higher-specificity rules intentionally override old per-layout heights and font declarations. */
+@media (min-width: 851px) and (max-height: 320px) {
+ #scoreBar.scoreBar[class*="layer"]:not(.layer5):not(.layer15):not(.layer19){min-height:0!important;grid-template-rows:28px 50px 23px!important;gap:3px!important;padding:5px 8px!important;bottom:4px!important}
+ #scoreBar.scoreBar.layer5{grid-template-rows:66px!important;min-height:0!important;padding:4px 8px!important;gap:3px!important;top:4px!important;bottom:auto!important}
+ #scoreBar.scoreBar.layer9,#scoreBar.scoreBar.layer19,#scoreBar.scoreBar.layer20{grid-template-rows:26px 47px 22px!important;min-height:0!important;gap:3px!important;padding:5px 7px!important;bottom:4px!important}
+ #scoreBar.scoreBar.layer15{min-height:0!important;grid-template-rows:27px 27px 42px 21px 20px!important;gap:3px!important;padding:5px!important;bottom:4px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlTeamLogo{flex-basis:clamp(20px,1.7cqi,30px)!important;width:clamp(20px,1.7cqi,30px)!important;height:clamp(20px,1.7cqi,30px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlTeamName,#scoreBar.scoreBar[class*="layer"] .jlScoreTeamName{font-size:clamp(10px,.72cqi,14px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlRoleTag,#scoreBar.scoreBar[class*="layer"] .jlSectionLabel,#scoreBar.scoreBar[class*="layer"] .jlRecentLabel{font-size:9px!important;letter-spacing:.02em!important}
+ #scoreBar.scoreBar[class*="layer"] .jlScoreKicker{font-size:9px!important;gap:3px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlRuns{font-size:clamp(34px,3.1cqi,57px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlSlash{font-size:clamp(21px,1.8cqi,31px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlWickets{font-size:clamp(22px,2cqi,36px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlScoreMeta{font-size:9px!important;gap:5px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlInningsPill,#scoreBar.scoreBar[class*="layer"] .jlTargetBadge,#scoreBar.scoreBar[class*="layer"] .jlTargetMini{font-size:8px!important;padding:2px 4px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterName,#scoreBar.scoreBar[class*="layer"] .jlBowlerName{font-size:clamp(10px,.68cqi,13px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterRuns,#scoreBar.scoreBar[class*="layer"] .jlBowlerFigures{font-size:clamp(10px,.75cqi,14px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterBalls,#scoreBar.scoreBar[class*="layer"] .jlBatterBoundaries,#scoreBar.scoreBar[class*="layer"] .jlBowlerMeta{font-size:8px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBallChip{width:clamp(16px,1.35cqi,23px)!important;height:clamp(16px,1.35cqi,23px)!important;flex-basis:clamp(16px,1.35cqi,23px)!important;font-size:9px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlChase{font-size:8px!important;padding:2px 4px!important;gap:4px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlChase b{font-size:11px!important}
+}
+/* Phone-width overlays keep a legible minimum instead of shrinking labels to 5–7px. */
+@media(max-width:500px){
+ #scoreBar.scoreBar[class*="layer"]{min-height:108px!important;grid-template-rows:27px 43px 23px!important;padding:3px!important;gap:2px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlTeamLogo{flex-basis:18px!important;width:18px!important;height:18px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlTeamName,#scoreBar.scoreBar[class*="layer"] .jlScoreTeamName{font-size:9px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlRoleTag,#scoreBar.scoreBar[class*="layer"] .jlSectionLabel,#scoreBar.scoreBar[class*="layer"] .jlRecentLabel{font-size:8px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlScoreKicker,#scoreBar.scoreBar[class*="layer"] .jlScoreMeta{font-size:8px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlRuns{font-size:clamp(28px,7vw,36px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterName,#scoreBar.scoreBar[class*="layer"] .jlBowlerName{font-size:9px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterRuns,#scoreBar.scoreBar[class*="layer"] .jlBowlerFigures{font-size:9px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterBalls,#scoreBar.scoreBar[class*="layer"] .jlBatterBoundaries,#scoreBar.scoreBar[class*="layer"] .jlBowlerMeta{font-size:8px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBallChip{width:15px!important;height:15px!important;flex-basis:15px!important;font-size:8px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlChase{font-size:8px!important;padding:1px 3px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlChase b{font-size:10px!important}
+}
+
+/* Keep the unique layouts' spanning score panels aligned to their own grid areas. */
+@media(min-width:851px){
+ #scoreBar.scoreBar.layer4 .jlScoreWrap{grid-row:1/3!important;grid-column:2!important}
+ #scoreBar.scoreBar.layer9 .jlScoreWrap{grid-row:1/3!important;grid-column:3!important}
+ #scoreBar.scoreBar.layer16 .jlBrandBay{display:flex!important;grid-area:brand!important;grid-row:1/4!important;flex-direction:column!important;align-items:center!important;justify-content:center!important}
+ #scoreBar.scoreBar.layer17 .jlScoreWrap{grid-row:1/3!important;grid-column:3!important}
+ #scoreBar.scoreBar.layer18 .jlScoreWrap{grid-row:1/4!important;grid-column:3!important}
+ #scoreBar.scoreBar.layer20 .jlScoreWrap{grid-column:2/4!important;grid-row:1/3!important}
+}
+
+/* Short OBS preview/browser windows: scale content with viewport height and let rows size safely. */
+@media(max-height:260px){
+ #scoreBar.scoreBar[class*="layer"]{grid-template-rows:clamp(20px,12vh,30px) clamp(37px,23vh,54px) clamp(17px,9vh,23px)!important;min-height:0!important;padding:4px 7px!important;gap:2px!important;bottom:3px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlScoreWrap{padding:2px 3px!important;gap:1px!important}
+ #scoreBar.scoreBar[class*="layer"] .jlRuns{font-size:clamp(24px,11vh,34px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlSlash{font-size:clamp(15px,7vh,23px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlWickets{font-size:clamp(18px,9vh,28px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlScoreKicker,#scoreBar.scoreBar[class*="layer"] .jlScoreMeta{font-size:clamp(7px,3.8vh,9px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlTeamName,#scoreBar.scoreBar[class*="layer"] .jlScoreTeamName{font-size:clamp(8px,4.4vh,11px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterName,#scoreBar.scoreBar[class*="layer"] .jlBowlerName{font-size:clamp(8px,4.2vh,11px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBatterRuns,#scoreBar.scoreBar[class*="layer"] .jlBowlerFigures{font-size:clamp(8px,4.2vh,11px)!important}
+ #scoreBar.scoreBar[class*="layer"] .jlBallChip{width:clamp(14px,7vh,19px)!important;height:clamp(14px,7vh,19px)!important;flex-basis:clamp(14px,7vh,19px)!important;font-size:clamp(7px,3.7vh,9px)!important}
+}
+
+
+/* Reference era scoreboards 01–07: year-inspired styles are palette-locked to the supplied visual reference. */
+#scoreBar.scoreBar.layer1{--accent:#00c7dc!important;left:4vw!important;right:4vw!important;bottom:14px!important;grid-template-areas:"brand batteam score bowlteam" "brand batters score bowler" "brand balls balls chase"!important;grid-template-columns:minmax(76px,.32fr) minmax(0,1fr) minmax(170px,.78fr) minmax(0,1fr)!important;grid-template-rows:25px 35px 20px!important;min-height:84px!important;padding:4px 7px!important;gap:2px!important;border:2px solid #c5d3dc!important;border-bottom:4px solid #0d7b91!important;border-radius:5px!important;background:linear-gradient(180deg,#e8eef4 0 20%,#0b2c3b 21% 100%)!important;box-shadow:0 6px 22px #0008!important;font-family:Arial,Helvetica,sans-serif!important}
+#scoreBar.scoreBar.layer1 .jlBrandBay{display:flex!important;grid-area:brand!important;grid-row:1/4!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;background:#102b52!important;color:#f2f7ff!important;font-size:clamp(11px,.95cqi,17px)!important;border-right:3px solid #ec1593!important;letter-spacing:.03em!important}
+#scoreBar.scoreBar.layer1 .jlBrandBay small{font-size:7px!important;color:#f1cfdd!important}
+#scoreBar.scoreBar.layer1 .jlTeam{border-radius:2px!important;background:linear-gradient(90deg,#eef5fb,#9eb6c7)!important;color:#18283d!important;border:1px solid #c9d6df!important;padding:2px 5px!important;gap:5px!important}
+#scoreBar.scoreBar.layer1 .jlTeamName,#scoreBar.scoreBar.layer1 .jlScoreTeamName{color:#15273a!important;font-family:Arial,Helvetica,sans-serif!important;font-weight:900!important;letter-spacing:0!important}
+#scoreBar.scoreBar.layer1 .jlRoleTag{color:#546979!important}
+#scoreBar.scoreBar.layer1 .jlBatters,#scoreBar.scoreBar.layer1 .jlBowler{border-radius:1px!important;background:linear-gradient(90deg,#071e2b,#0b6379)!important;color:#f4fbff!important;border:1px solid #1689a3!important;padding:2px 5px!important}
+#scoreBar.scoreBar.layer1 .jlScoreWrap{grid-column:3!important;grid-row:1/3!important;border-radius:2px!important;background:linear-gradient(180deg,#bcecf1,#0c7088)!important;border:1px solid #eafaff!important;padding:2px 7px!important;box-shadow:inset 0 2px #ffffff90!important}
+#scoreBar.scoreBar.layer1 .jlRuns,#scoreBar.scoreBar.layer1 .jlSlash,#scoreBar.scoreBar.layer1 .jlWickets{color:#fff!important;text-shadow:0 2px 3px #062436!important}
+#scoreBar.scoreBar.layer1 .jlScoreMeta,#scoreBar.scoreBar.layer1 .jlScoreKicker{color:#e9fdff!important}
+#scoreBar.scoreBar.layer1 .jlBalls{background:#061926!important;border:1px solid #247489!important;border-radius:2px!important}
+#scoreBar.scoreBar.layer1 .jlChase{background:#084e66!important;border-radius:2px!important;color:#f4feff!important}
+
+#scoreBar.scoreBar.layer2{--accent:#d6b34b!important;left:5vw!important;right:5vw!important;bottom:15px!important;grid-template-areas:"brand batteam score bowlteam" "brand batters score bowler" "balls balls chase chase"!important;grid-template-columns:minmax(85px,.34fr) minmax(0,1fr) minmax(185px,.9fr) minmax(0,1fr)!important;grid-template-rows:25px 35px 19px!important;min-height:84px!important;padding:4px 6px!important;gap:2px!important;border:3px solid #101217!important;border-radius:5px!important;background:linear-gradient(180deg,#0b0e13,#1a1d21 75%,#050607)!important;box-shadow:0 6px 24px #000b,inset 0 1px #ffffff30!important;font-family:Arial,Helvetica,sans-serif!important}
+#scoreBar.scoreBar.layer2 .jlBrandBay{display:flex!important;grid-area:brand!important;grid-row:1/4!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;color:#ead7a3!important;background:#070809!important;border-right:2px solid #b99a36!important;font-size:clamp(10px,.9cqi,15px)!important}
+#scoreBar.scoreBar.layer2 .jlBrandBay small{color:#c1c7cd!important;font-size:7px!important}
+#scoreBar.scoreBar.layer2 .jlTeam{background:linear-gradient(180deg,#f5f5f1,#bfc3c7)!important;color:#16191c!important;border:1px solid #ffffff!important;border-radius:1px!important;padding:2px 5px!important}
+#scoreBar.scoreBar.layer2 .jlTeamName,#scoreBar.scoreBar.layer2 .jlScoreTeamName{color:#15181b!important;font-weight:1000!important}
+#scoreBar.scoreBar.layer2 .jlScoreWrap{grid-column:3!important;grid-row:1/3!important;background:linear-gradient(180deg,#f3e7c5,#c4bca7)!important;border:2px solid #d8ba56!important;border-radius:2px!important;padding:2px 6px!important}
+#scoreBar.scoreBar.layer2 .jlRuns,#scoreBar.scoreBar.layer2 .jlSlash,#scoreBar.scoreBar.layer2 .jlWickets{color:#131518!important;text-shadow:none!important}
+#scoreBar.scoreBar.layer2 .jlScoreMeta,#scoreBar.scoreBar.layer2 .jlScoreKicker{color:#25272b!important}
+#scoreBar.scoreBar.layer2 .jlBatters,#scoreBar.scoreBar.layer2 .jlBowler{background:#14171b!important;border:1px solid #44484b!important;border-radius:1px!important;padding:2px 5px!important}
+#scoreBar.scoreBar.layer2 .jlBalls{background:#060708!important;border:1px solid #575047!important;border-radius:2px!important}
+#scoreBar.scoreBar.layer2 .jlBallChip{border-radius:1px!important;background:#dedfe0!important;color:#121416!important}
+#scoreBar.scoreBar.layer2 .jlBallChip.isFour{background:#d5b449!important;color:#121212!important}
+#scoreBar.scoreBar.layer2 .jlBallChip.isSix{background:#fff!important;color:#121212!important}
+#scoreBar.scoreBar.layer2 .jlBallChip.isWicket{background:#af2435!important;color:#fff!important}
+#scoreBar.scoreBar.layer2 .jlChase{background:#25282b!important;border-left:2px solid #d6b34b!important;color:#f2e4bd!important}
+
+#scoreBar.scoreBar.layer3{--accent:#8c9daa!important;left:6vw!important;right:6vw!important;bottom:16px!important;grid-template-areas:"brand batteam score bowlteam" "brand batters score bowler" "balls balls chase chase"!important;grid-template-columns:minmax(66px,.24fr) minmax(0,1.1fr) minmax(165px,.76fr) minmax(0,1.1fr)!important;grid-template-rows:25px 35px 20px!important;min-height:84px!important;padding:4px 6px!important;gap:2px!important;border:2px solid #9baab3!important;border-radius:5px!important;background:linear-gradient(180deg,#e8edf0,#a8b4bc 55%,#65747c)!important;box-shadow:0 7px 22px #0008!important;font-family:Arial,Helvetica,sans-serif!important}
+#scoreBar.scoreBar.layer3 .jlBrandBay{display:flex!important;grid-area:brand!important;grid-row:1/4!important;justify-content:center!important;align-items:center!important;flex-direction:column!important;background:#f6f7f8!important;color:#1c2c36!important;border-right:2px solid #62727b!important;font-size:10px!important;letter-spacing:.02em!important}
+#scoreBar.scoreBar.layer3 .jlBrandBay small{color:#4c626d!important;font-size:6px!important}
+#scoreBar.scoreBar.layer3 .jlTeam{background:linear-gradient(180deg,#fafafa,#c1c7ca)!important;color:#1c252a!important;border:1px solid #84939b!important;border-radius:2px!important;padding:2px 5px!important}
+#scoreBar.scoreBar.layer3 .jlTeamName,#scoreBar.scoreBar.layer3 .jlScoreTeamName{color:#17232a!important;font-weight:1000!important}
+#scoreBar.scoreBar.layer3 .jlScoreWrap{grid-column:3!important;grid-row:1/3!important;background:linear-gradient(180deg,#f8fbfd,#b7c2c9)!important;border:2px solid #f6f8f9!important;border-radius:2px!important;box-shadow:inset 0 0 0 1px #657782!important;padding:2px 6px!important}
+#scoreBar.scoreBar.layer3 .jlRuns,#scoreBar.scoreBar.layer3 .jlSlash,#scoreBar.scoreBar.layer3 .jlWickets{color:#17252d!important;text-shadow:none!important}
+#scoreBar.scoreBar.layer3 .jlScoreMeta,#scoreBar.scoreBar.layer3 .jlScoreKicker{color:#374c58!important}
+#scoreBar.scoreBar.layer3 .jlBatters,#scoreBar.scoreBar.layer3 .jlBowler{background:#f1f4f5!important;border:1px solid #85959e!important;border-radius:2px!important;color:#182b35!important;padding:2px 5px!important}
+#scoreBar.scoreBar.layer3 .jlBatterName,#scoreBar.scoreBar.layer3 .jlBowlerName,#scoreBar.scoreBar.layer3 .jlBatterRuns,#scoreBar.scoreBar.layer3 .jlBowlerFigures{color:#142833!important}
+#scoreBar.scoreBar.layer3 .jlBalls{background:#254c35!important;border:1px solid #9daeb0!important;border-radius:2px!important}
+#scoreBar.scoreBar.layer3 .jlChase{background:#dfe5e8!important;color:#1b303c!important;border:1px solid #81929a!important;border-radius:2px!important}
+
+#scoreBar.scoreBar.layer4{--accent:#23a4da!important;left:5vw!important;right:5vw!important;bottom:16px!important;grid-template-areas:"brand batteam score bowlteam" "brand batters score bowler" "brand balls balls chase"!important;grid-template-columns:minmax(84px,.27fr) minmax(0,1fr) minmax(170px,.8fr) minmax(0,1fr)!important;grid-template-rows:25px 36px 20px!important;min-height:85px!important;padding:5px 7px!important;gap:2px!important;border:2px solid #f0f3f5!important;border-bottom:4px solid #1379a9!important;border-radius:4px!important;background:linear-gradient(180deg,#31573a 0 34%,#14385a 35% 100%)!important;box-shadow:0 8px 25px #0009!important;font-family:Arial,Helvetica,sans-serif!important}
+#scoreBar.scoreBar.layer4 .jlBrandBay{display:flex!important;grid-area:brand!important;grid-row:1/4!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;background:#0e2e4d!important;color:#fff!important;border-right:3px solid #28a6d7!important;font-size:11px!important}
+#scoreBar.scoreBar.layer4 .jlBrandBay small{font-size:6px!important;color:#bceaff!important}
+#scoreBar.scoreBar.layer4 .jlTeam{background:linear-gradient(180deg,#eff5f6,#a8bac0)!important;color:#142936!important;border:1px solid #f7fcff!important;border-radius:2px!important;padding:2px 5px!important}
+#scoreBar.scoreBar.layer4 .jlTeamName,#scoreBar.scoreBar.layer4 .jlScoreTeamName{color:#132632!important;font-weight:1000!important}
+#scoreBar.scoreBar.layer4 .jlScoreWrap{grid-column:3!important;grid-row:1/3!important;background:linear-gradient(180deg,#f0f7f9,#99b5c5)!important;border:2px solid #159dd4!important;border-radius:2px!important;padding:2px 6px!important}
+#scoreBar.scoreBar.layer4 .jlRuns,#scoreBar.scoreBar.layer4 .jlSlash,#scoreBar.scoreBar.layer4 .jlWickets{color:#0d2b41!important;text-shadow:none!important}
+#scoreBar.scoreBar.layer4 .jlScoreMeta,#scoreBar.scoreBar.layer4 .jlScoreKicker{color:#28495d!important}
+#scoreBar.scoreBar.layer4 .jlBatters,#scoreBar.scoreBar.layer4 .jlBowler{background:linear-gradient(90deg,#0b2e4d,#0b5074)!important;border:1px solid #247eaa!important;border-radius:2px!important;padding:2px 5px!important}
+#scoreBar.scoreBar.layer4 .jlBalls{background:#0b2f4a!important;border:1px solid #268ab3!important;border-radius:2px!important}
+#scoreBar.scoreBar.layer4 .jlChase{background:#dbeaf0!important;color:#12344a!important;border-radius:2px!important}
+
+#scoreBar.scoreBar.layer5{--accent:#e81d87!important;left:3vw!important;right:3vw!important;top:auto!important;bottom:16px!important;grid-template-areas:"batteam score bowlteam brand" "batters score bowler brand" "balls balls chase chase"!important;grid-template-columns:minmax(0,1fr) minmax(190px,.9fr) minmax(0,1fr) minmax(65px,.25fr)!important;grid-template-rows:31px 36px 22px!important;min-height:92px!important;padding:5px 8px!important;gap:3px!important;border:1px solid #d8dce2!important;border-radius:14px!important;background:linear-gradient(180deg,#fff,#e7edf1)!important;box-shadow:0 8px 28px #0006!important;font-family:Inter,Arial,sans-serif!important;color:#172335!important}
+#scoreBar.scoreBar.layer5:before{opacity:1!important;inset:auto 0 auto 0!important;height:5px!important;background:linear-gradient(90deg,#168b53 0 18%,#e81d87 18% 42%,#dfb642 42% 62%,#e6edf2 62% 82%,#108a50 82% 100%)!important}
+#scoreBar.scoreBar.layer5 .jlBrandBay{display:flex!important;grid-area:brand!important;grid-row:1/3!important;flex-direction:column!important;justify-content:center!important;align-items:center!important;border-radius:10px!important;background:#fff!important;color:#12334b!important;border:1px solid #d6dce2!important;font-size:11px!important;font-weight:1000!important}
+#scoreBar.scoreBar.layer5 .jlBrandBay small{font-size:6px!important;color:#566d7f!important}
+#scoreBar.scoreBar.layer5 .jlTeam{background:#fff!important;color:#152a3a!important;border:1px solid #d7dfe5!important;border-radius:9px!important;padding:2px 6px!important}
+#scoreBar.scoreBar.layer5 .jlTeamName,#scoreBar.scoreBar.layer5 .jlScoreTeamName{color:#172a3c!important;font-weight:1000!important}
+#scoreBar.scoreBar.layer5 .jlScoreWrap{grid-column:2!important;grid-row:1/3!important;border-radius:12px!important;border:2px solid #e81d87!important;background:linear-gradient(110deg,#fff,#f9ecf2)!important;padding:3px 8px!important}
+#scoreBar.scoreBar.layer5 .jlRuns,#scoreBar.scoreBar.layer5 .jlSlash,#scoreBar.scoreBar.layer5 .jlWickets{color:#1b2637!important;text-shadow:none!important}
+#scoreBar.scoreBar.layer5 .jlScoreMeta,#scoreBar.scoreBar.layer5 .jlScoreKicker{color:#4e6173!important}
+#scoreBar.scoreBar.layer5 .jlBatters,#scoreBar.scoreBar.layer5 .jlBowler{background:#fff!important;border:1px solid #d8dfe4!important;border-radius:8px!important;padding:2px 6px!important}
+#scoreBar.scoreBar.layer5 .jlBatterName,#scoreBar.scoreBar.layer5 .jlBowlerName,#scoreBar.scoreBar.layer5 .jlBatterRuns,#scoreBar.scoreBar.layer5 .jlBowlerFigures{color:#162b3e!important}
+#scoreBar.scoreBar.layer5 .jlBalls{background:#fff!important;border:1px solid #d8dfe4!important;border-radius:9px!important}
+#scoreBar.scoreBar.layer5 .jlChase{background:#f5f7f9!important;border:1px solid #d8dfe4!important;border-radius:9px!important;color:#253a4e!important}
+
+#scoreBar.scoreBar.layer6{--accent:#df2e8c!important;left:3vw!important;right:3vw!important;bottom:16px!important;grid-template-areas:"brand batteam score bowlteam" "brand batters score bowler" "brand balls balls chase"!important;grid-template-columns:minmax(72px,.26fr) minmax(0,1fr) minmax(175px,.8fr) minmax(0,1fr)!important;grid-template-rows:30px 37px 21px!important;min-height:91px!important;padding:5px 7px!important;gap:3px!important;border:1px solid #cbd4dc!important;border-bottom:4px solid #14975c!important;border-radius:7px!important;background:linear-gradient(180deg,#f8fafb,#dce5eb)!important;box-shadow:0 8px 25px #0005!important;font-family:Inter,Arial,sans-serif!important;color:#182a39!important}
+#scoreBar.scoreBar.layer6 .jlBrandBay{display:flex!important;grid-area:brand!important;grid-row:1/4!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;background:#16874f!important;border-radius:3px!important;color:#fff!important;font-size:10px!important}
+#scoreBar.scoreBar.layer6 .jlBrandBay small{font-size:6px!important;color:#edfff5!important}
+#scoreBar.scoreBar.layer6 .jlTeam{background:#fff!important;border:1px solid #c4cfd8!important;border-radius:4px!important;color:#172b3a!important;padding:2px 5px!important}
+#scoreBar.scoreBar.layer6 .jlTeamName,#scoreBar.scoreBar.layer6 .jlScoreTeamName{color:#162938!important;font-weight:1000!important}
+#scoreBar.scoreBar.layer6 .jlScoreWrap{grid-column:3!important;grid-row:1/3!important;background:linear-gradient(120deg,#fff,#f5ebf2)!important;border:2px solid #e5a3c6!important;border-radius:5px!important;padding:2px 7px!important}
+#scoreBar.scoreBar.layer6 .jlRuns,#scoreBar.scoreBar.layer6 .jlSlash,#scoreBar.scoreBar.layer6 .jlWickets{color:#152b3a!important;text-shadow:none!important}
+#scoreBar.scoreBar.layer6 .jlScoreMeta,#scoreBar.scoreBar.layer6 .jlScoreKicker{color:#536877!important}
+#scoreBar.scoreBar.layer6 .jlBatters,#scoreBar.scoreBar.layer6 .jlBowler{background:#fff!important;border:1px solid #c7d1da!important;border-radius:4px!important;color:#1b3040!important;padding:2px 5px!important}
+#scoreBar.scoreBar.layer6 .jlBatterName,#scoreBar.scoreBar.layer6 .jlBowlerName,#scoreBar.scoreBar.layer6 .jlBatterRuns,#scoreBar.scoreBar.layer6 .jlBowlerFigures{color:#152b3b!important}
+#scoreBar.scoreBar.layer6 .jlBalls{background:#fff!important;border:1px solid #c7d1da!important;border-radius:4px!important}
+#scoreBar.scoreBar.layer6 .jlChase{background:#fbeaf2!important;border:1px solid #ebbad3!important;border-radius:4px!important;color:#6e244a!important}
+
+#scoreBar.scoreBar.layer7{--accent:#138d45!important;left:3vw!important;right:3vw!important;bottom:17px!important;grid-template-areas:"brand batteam score bowlteam" "brand batters score bowler" "brand balls balls chase"!important;grid-template-columns:minmax(72px,.24fr) minmax(0,1fr) minmax(185px,.82fr) minmax(0,1fr)!important;grid-template-rows:30px 37px 21px!important;min-height:91px!important;padding:5px 7px!important;gap:3px!important;border:1px solid #cfd5db!important;border-bottom:4px solid #138d45!important;border-radius:5px!important;background:linear-gradient(180deg,#fff,#e4eaf0)!important;box-shadow:0 7px 25px #0005!important;font-family:Inter,Arial,sans-serif!important;color:#172b3c!important;clip-path:none!important}
+#scoreBar.scoreBar.layer7 .jlBrandBay{display:flex!important;grid-area:brand!important;grid-row:1/4!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;background:#0a1e54!important;border-right:3px solid #e91e8a!important;color:#fff!important;font-size:10px!important}
+#scoreBar.scoreBar.layer7 .jlBrandBay small{font-size:6px!important;color:#dbe6ff!important}
+#scoreBar.scoreBar.layer7 .jlTeam{background:#fff!important;border:1px solid #d4dce3!important;border-radius:4px!important;color:#172a39!important;padding:2px 5px!important}
+#scoreBar.scoreBar.layer7 .jlTeamName,#scoreBar.scoreBar.layer7 .jlScoreTeamName{color:#142837!important;font-weight:1000!important}
+#scoreBar.scoreBar.layer7 .jlScoreWrap{grid-column:3!important;grid-row:1/3!important;background:linear-gradient(180deg,#ffffff,#dfe8ef)!important;border:2px solid #1c8a4a!important;border-radius:4px!important;padding:2px 7px!important}
+#scoreBar.scoreBar.layer7 .jlRuns,#scoreBar.scoreBar.layer7 .jlSlash,#scoreBar.scoreBar.layer7 .jlWickets{color:#102b3d!important;text-shadow:none!important}
+#scoreBar.scoreBar.layer7 .jlScoreMeta,#scoreBar.scoreBar.layer7 .jlScoreKicker{color:#506779!important}
+#scoreBar.scoreBar.layer7 .jlBatters,#scoreBar.scoreBar.layer7 .jlBowler{background:#fff!important;border:1px solid #d4dce3!important;border-radius:4px!important;color:#1a3040!important;padding:2px 5px!important}
+#scoreBar.scoreBar.layer7 .jlBatterName,#scoreBar.scoreBar.layer7 .jlBowlerName,#scoreBar.scoreBar.layer7 .jlBatterRuns,#scoreBar.scoreBar.layer7 .jlBowlerFigures{color:#142b3c!important}
+#scoreBar.scoreBar.layer7 .jlBalls{background:#fff!important;border:1px solid #d4dce3!important;border-radius:4px!important}
+#scoreBar.scoreBar.layer7 .jlChase{background:#eaf5ed!important;border:1px solid #b5d9bf!important;border-radius:4px!important;color:#14552e!important}
+
+/* Keep reference layouts readable and undistorted as OBS canvas sizes change. */
+@media(max-width:850px){
+ #scoreBar.scoreBar.layer1,#scoreBar.scoreBar.layer2,#scoreBar.scoreBar.layer3,#scoreBar.scoreBar.layer4,#scoreBar.scoreBar.layer5,#scoreBar.scoreBar.layer6,#scoreBar.scoreBar.layer7{left:2px!important;right:2px!important;bottom:3px!important;grid-template-columns:minmax(42px,.22fr) minmax(0,1fr) minmax(88px,.75fr) minmax(0,1fr)!important;grid-template-rows:22px 31px 19px!important;min-height:76px!important;padding:3px!important;gap:2px!important;border-radius:4px!important}
+ #scoreBar.scoreBar.layer5{grid-template-areas:"batteam score bowlteam brand" "batters score bowler brand" "balls balls chase chase"!important;grid-template-columns:minmax(0,1fr) minmax(88px,.8fr) minmax(0,1fr) minmax(35px,.22fr)!important}
+ #scoreBar.scoreBar.layer1 .jlBrandBay,#scoreBar.scoreBar.layer2 .jlBrandBay,#scoreBar.scoreBar.layer3 .jlBrandBay,#scoreBar.scoreBar.layer4 .jlBrandBay,#scoreBar.scoreBar.layer6 .jlBrandBay,#scoreBar.scoreBar.layer7 .jlBrandBay{font-size:8px!important}
+ #scoreBar.scoreBar.layer1 .jlBrandBay small,#scoreBar.scoreBar.layer2 .jlBrandBay small,#scoreBar.scoreBar.layer3 .jlBrandBay small,#scoreBar.scoreBar.layer4 .jlBrandBay small,#scoreBar.scoreBar.layer5 .jlBrandBay small,#scoreBar.scoreBar.layer6 .jlBrandBay small,#scoreBar.scoreBar.layer7 .jlBrandBay small{font-size:5px!important}
+ #scoreBar.scoreBar.layer1 .jlRuns,#scoreBar.scoreBar.layer2 .jlRuns,#scoreBar.scoreBar.layer3 .jlRuns,#scoreBar.scoreBar.layer4 .jlRuns,#scoreBar.scoreBar.layer5 .jlRuns,#scoreBar.scoreBar.layer6 .jlRuns,#scoreBar.scoreBar.layer7 .jlRuns{font-size:clamp(24px,4.8vw,36px)!important}
+ #scoreBar.scoreBar.layer1 .jlScoreWrap,#scoreBar.scoreBar.layer2 .jlScoreWrap,#scoreBar.scoreBar.layer3 .jlScoreWrap,#scoreBar.scoreBar.layer4 .jlScoreWrap,#scoreBar.scoreBar.layer5 .jlScoreWrap,#scoreBar.scoreBar.layer6 .jlScoreWrap,#scoreBar.scoreBar.layer7 .jlScoreWrap{padding:2px 3px!important}
+}
+@media(max-height:320px) and (min-width:851px){
+ #scoreBar.scoreBar.layer1,#scoreBar.scoreBar.layer2,#scoreBar.scoreBar.layer3,#scoreBar.scoreBar.layer4,#scoreBar.scoreBar.layer5,#scoreBar.scoreBar.layer6,#scoreBar.scoreBar.layer7{grid-template-rows:clamp(20px,12vh,28px) clamp(32px,19vh,43px) clamp(16px,8vh,21px)!important;min-height:0!important;padding:3px 5px!important}
+}
