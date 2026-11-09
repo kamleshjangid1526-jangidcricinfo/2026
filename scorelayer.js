@@ -194,12 +194,13 @@ function renderBar(m,b){
  if(savedStudio){renderStudioBar(layer,m,b,savedStudio);return;}
  layer.dataset.studio='false';
  const layout=Math.max(1,Math.min(20,Number(b.layer)||1)),color=Math.max(1,Math.min(10,Number(b.color)||1));
- layer.className=`scoreBar layer${layout} jlCompactPattern color${color}${layout<=7?` referenceEra${layout}`:''}`;layer.dataset.layout=String(layout);layer.dataset.family='compact';layer.dataset.color=String(color);
- const referenceAccents={1:'#00c7dc',2:'#d6b34b',3:'#8c9daa',4:'#23a4da',5:'#e81d87',6:'#df2e8c',7:'#138d45'};
- layer.style.setProperty('--accent',layout<=7?referenceAccents[layout]:(accentByColor[color]||accentByColor[1]));
+ layer.className=`scoreBar layer${layout} jlCompactPattern jlNewTwenty color${color}`;layer.dataset.layout=String(layout);layer.dataset.family='compact';layer.dataset.color=String(color);
+ const freshAccents=['#53d9ee','#46d69b','#ff526f','#ff9a50','#a58bff','#f5ce58','#1e5a84','#4de3d5','#ff6c91','#c6d2df'];
+ layer.style.setProperty('--accent',freshAccents[color-1]||accentByColor[1]);
  applyScoreDesign(b.design||{});
  const battingId=i.battingId??m.teamA;
  const batting=teamMeta(battingId,m,'BAT');
+ const bowling=teamMeta(i.bowlingId??m.teamB,m,'BOWL');
  const s=i.batStats?.[i.striker],n=i.batStats?.[i.nonStriker],bw=i.bowlStats?.[i.currentBowler];
  const runs=Number(i.score)||0,wickets=Number(i.wickets)||0,balls=Number(i.balls)||0;
  const overs=fmtOvers(balls);
@@ -222,6 +223,7 @@ function renderBar(m,b){
    <div class="jlScoreMain"><strong class="jlRuns">${runs}</strong><span class="jlSlash">/</span><strong class="jlWickets">${wickets}</strong><span class="jlOversValue">${overs}</span></div>
   </div>
   <div class="jlBowler">
+   ${compactLogo(bowling)}
    <b class="jlBowlerName ${String(bw?.name||'').length>15?'isLong':''}">${esc(bw?.name||'—')}</b>
    <strong class="jlBowlerFigures">${bowlerOvers} – ${bowlerRuns} – ${bowlerWickets}</strong>
   </div>
@@ -363,6 +365,8 @@ function renderCard(b,m){
  const custom=cardTemplate?studioOverlayTemplateMarkup(cardTemplate,m,{kind:'card',card}):cardMarkup(card,m);
  el.innerHTML=`<div class="broadcastCardStage${newCard?' cardEntering':''}${cardTemplate?' studioCardStage':''}" data-anim="${esc(anim)}" style="animation-duration:${Number(b.cardDurations?.[type]||b.cardDuration||1800)}ms">${custom}</div>`;
  el.dataset.anim=anim;el.classList.add('isVisible');el.style.display=eventVisible?'none':'grid';document.body.classList.add('cardActive');if(newCard)lastCardId=b.cardId??Date.now();
+ const closeButton=document.createElement('button');closeButton.type='button';closeButton.className='broadcastCardClose';closeButton.setAttribute('aria-label','Close card');closeButton.textContent='×';el.querySelector('.broadcastCardStage')?.prepend(closeButton);
+ closeButton.addEventListener('click',async event=>{event.preventDefault();event.stopPropagation();dismissedCardId=currentCardId;el.classList.remove('isVisible');el.style.display='none';el.innerHTML='';document.body.classList.remove('cardActive');const payload={...(latestBroadcast||b||{}),card:null,cardId:Date.now(),event:null,eventId:Date.now()};try{await fetch('/api/broadcast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});}catch(error){console.warn('Card close could not sync yet:',error);}});
 }
 
 function render(m,b){if(!m?.activeInnings)return;latestMatch=m;latestBroadcast=b||{};renderBar(m,b||{});renderCard(b||{},m);renderEvent(b||{});processSponsorBroadcast(m,b||{});lastRenderMatchId=m.id;}
