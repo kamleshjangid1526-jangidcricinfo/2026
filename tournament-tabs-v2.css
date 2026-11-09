@@ -1,0 +1,36 @@
+/* Tournament workspace tabs: all six sections stay visible; no horizontal carousel. */
+.tm-workspace>.tm-tabs{
+ display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ overflow:visible!important;overscroll-behavior:initial!important;
+ white-space:normal!important;gap:5px!important;padding:5px!important;
+}
+.tm-workspace>.tm-tabs button{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ min-width:0!important;width:100%!important;max-width:100%!important;min-height:42px!important;
+ flex:initial!important;padding:7px 4px!important;text-align:center!important;
+ white-space:normal!important;overflow-wrap:normal!important;word-break:normal!important;
+ line-height:1.15!important;font-size:clamp(10px,.9vw,13px)!important;
+ writing-mode:horizontal-tb!important;text-orientation:mixed!important;transform:none!important;
+}
+.tm-workspace .tm-tab-content{min-width:0!important;width:100%!important;overflow:visible}
+#tmRoot .tm-team-head h3,#tmRoot .tm-team-head small,#tmRoot .tm-team-head .tm-chip,
+#tmRoot .tm-inline-panel h4,#tmRoot .tm-form-grid label,#tmRoot .tm-form-grid select,
+#tmRoot select[data-tm-group-team]{
+ writing-mode:horizontal-tb!important;text-orientation:mixed!important;
+ word-break:normal!important;overflow-wrap:break-word!important;white-space:normal!important;
+ transform:none!important;letter-spacing:normal!important;
+}
+#tmRoot select[data-tm-group-team]{display:block!important;width:100%!important;min-width:0!important;min-height:42px!important;padding:9px 34px 9px 10px!important;font-size:14px!important;line-height:1.25!important}
+#tmRoot .tm-team-head{align-items:center!important;flex-wrap:nowrap!important;min-width:0!important}
+#tmRoot .tm-team-head>div{flex:1 1 auto!important;min-width:0!important;width:auto!important}
+#tmRoot .tm-team-head h3{display:block!important;max-width:100%!important;overflow:visible!important}
+#tmRoot .tm-chip{display:inline-flex!important;align-items:center!important;max-width:100%!important;white-space:normal!important}
+@media(max-width:760px){
+ .tm-workspace>.tm-tabs{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important;padding:4px!important}
+ .tm-workspace>.tm-tabs button{min-height:39px!important;padding:6px 3px!important;font-size:11px!important;border-radius:8px!important}
+}
+@media(max-width:380px){
+ .tm-workspace>.tm-tabs button{font-size:10px!important;min-height:37px!important}
+ #tmRoot select[data-tm-group-team]{font-size:13px!important}
+}
