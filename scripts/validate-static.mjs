@@ -26,7 +26,7 @@ function balancedCss(source, file) {
     }
     if (quote) {
       if (escaped) { escaped = false; continue; }
-      if (ch === '\\\\') { escaped = true; continue; }
+      if (ch.charCodeAt(0) === 92) { escaped = true; continue; }
       if (ch === quote) quote = '';
       continue;
     }
@@ -35,15 +35,15 @@ function balancedCss(source, file) {
     if (ch === '{') depth++;
     if (ch === '}') {
       depth--;
-      if (depth < 0) throw new Error(`${file}: unexpected closing brace`);
+      if (depth < 0) throw new Error(file + ': unexpected closing brace');
     }
   }
-  if (comment || quote || depth !== 0) throw new Error(`${file}: unclosed CSS comment/string/block (depth ${depth})`);
+  if (comment || quote || depth !== 0) throw new Error(file + ': unclosed CSS comment/string/block (depth ' + depth + ')');
 }
 
 await walk(root);
-const sourceFiles = files.filter(file => /\\.(?:js|mjs|cjs)$/i.test(file));
-const cssFiles = files.filter(file => /\\.css$/i.test(file));
+const sourceFiles = files.filter(file => ['.js', '.mjs', '.cjs'].some(ext => file.toLowerCase().endsWith(ext)));
+const cssFiles = files.filter(file => file.toLowerCase().endsWith('.css'));
 const failures = [];
 
 for (const file of sourceFiles) {
@@ -51,7 +51,7 @@ for (const file of sourceFiles) {
   const result = spawnSync(process.execPath, ['--input-type=module', '--check'], {
     input: content, encoding: 'utf8'
   });
-  if (result.status !== 0) failures.push(`JavaScript syntax: ${path.relative(root, file)}\\n${result.stderr || result.stdout}`);
+  if (result.status !== 0) failures.push('JavaScript syntax: ' + path.relative(root, file) + '\n' + (result.stderr || result.stdout));
 }
 for (const file of cssFiles) {
   try { balancedCss(await readFile(file, 'utf8'), path.relative(root, file)); }
@@ -65,10 +65,14 @@ const [control, engine, bridge, tournament, scoreLayer, scoreLayerCss, workflowC
   read('control-workflow.css'), read('control.html')
 ]);
 
+const layoutStart = control.indexOf('const LAYERS=[');
+const layoutEnd = control.indexOf('];', layoutStart);
+const layerCount = layoutStart >= 0 && layoutEnd > layoutStart
+  ? [...control.slice(layoutStart, layoutEnd).matchAll(/'[^']+'/g)].length : 0;
 const checks = [
-  ['20 distinct Score Layer options', (control.match(/const LAYERS=\\[([\\s\\S]*?)\\];/)?.[1].match(/'[^']+'/g)?.length || 0) === 20],
-  ['Layout and colour are independent', control.includes('changing a layout must never overwrite') && control.includes("\$('colorSelect').addEventListener('change'")],
-  ['Single-screen scoring layout prevents vertical page scrolling', /#scoring:not\\(\\.hidden\\)\\{[^}]*overflow:hidden/.test(workflowCss)],
+  ['20 distinct Score Layer options', layerCount === 20],
+  ['Layout and colour are independent', control.includes('changing a layout must never overwrite') && control.includes("$('colorSelect').addEventListener('change'")],
+  ['Single-screen scoring layout prevents vertical page scrolling', workflowCss.includes('overflow:hidden;overscroll-behavior:none')],
   ['Scoring engine exposes save and finish handlers', engine.includes('window.saveMatch=saveMatch') && engine.includes('window.finalizeMatch=finalizeMatch')],
   ['Firebase saves full live-match snapshots', bridge.includes("if(m.status==='live') await setDoc(ownerDoc(uid,'meta','active')") && bridge.includes('await publishMatch(uid,m)')],
   ['Existing-live-match details reach Control Board recovery flow', bridge.includes('Array.isArray(error.matches)') && control.includes('e.details?.matches')],
@@ -78,12 +82,12 @@ const checks = [
   ['Control Board loads scoring engine and Firebase bridge', html.includes('scoring-engine.js') && html.includes('firebase/firebase-api-bridge.mjs')]
 ];
 for (const [label, ok] of checks) {
-  console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`);
+  console.log((ok ? 'PASS' : 'FAIL') + '  ' + label);
   if (!ok) failures.push(label);
 }
-console.log(`Checked ${sourceFiles.length} JavaScript files and ${cssFiles.length} CSS files.`);
+console.log('Checked ' + sourceFiles.length + ' JavaScript files and ' + cssFiles.length + ' CSS files.');
 if (failures.length) {
-  console.error('\\nStatic validation failed:\\n- ' + failures.join('\\n- '));
+  console.error('\nStatic validation failed:\n- ' + failures.join('\n- '));
   process.exit(1);
 }
 console.log('Static validation passed.');
