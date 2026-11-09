@@ -59,12 +59,12 @@ for (const file of cssFiles) {
 }
 
 const read = async name => readFile(path.join(root, name), 'utf8');
-const [control, engine, bridge, tournament, scoreLayer, scoreLayerCss, workflowCss, html, offlineStore, offlineLoader, serviceWorker, mobileCss, eventCss, offlineUi] = await Promise.all([
+const [control, engine, bridge, tournament, scoreLayer, scoreLayerCss, workflowCss, html, offlineStore, offlineLoader, serviceWorker, mobileCss, eventCss, offlineUi, freshScoreCss] = await Promise.all([
   read('control.js'), read('scoring-engine.js'), read('firebase/firebase-api-bridge.mjs'),
   read('tournament-manager.js'), read('scorelayer.js'), read('scorelayer.css'),
   read('control-workflow.css'), read('control.html'), read('offline-store.js'),
   read('firebase-api-loader.js'), read('sw.js'), read('mobile-scoring-v2.css'),
-  read('event-animation-themes.css'), read('offline-status-ui.js')
+  read('event-animation-themes.css'), read('offline-status-ui.js'), read('scorelayer-broadcast-v2.css')
 ]);
 
 const layoutStart = control.indexOf('const LAYERS=[');
@@ -95,10 +95,10 @@ const checks = [
   ['Public match pages can show a cached match snapshot offline', offlineLoader.includes('public:match:') && offlineLoader.includes('last saved copy') === false && offlineLoader.includes('इस Scoreboard का पिछला Match snapshot'),
   ['Static assets use a scoped service worker cache', serviceWorker.includes("addEventListener('fetch'") && serviceWorker.includes('skipWaiting') && offlineUi.includes("navigator.serviceWorker.register"),
   ['Mobile scoring layout is loaded and selected only on scoring page', html.includes('mobile-scoring-v2.css') && control.includes("body.classList.toggle('jc-scoring-view',id==='scoring')") && mobileCss.includes('overflow:hidden;overscroll-behavior:none'),
-  ['Twenty fresh Score Layer geometry rules are present', scoreLayerCss.includes('.scoreBar.jlNewTwenty.layer20') && scoreLayerCss.includes('.scoreBar.jlNewTwenty.color10')],
+  ['Twenty fresh Score Layer geometry rules are present', freshScoreCss.includes('.scoreBar.jlNewTwenty.layer20') && freshScoreCss.includes('.scoreBar.jlNewTwenty.color10')],
   ['Independent FOUR, SIX and WICKET motion themes are connected', control.includes('eventThemeFour') && control.includes('eventThemeSix') && control.includes('eventThemeWicket') && eventCss.includes('jcRipple') && eventCss.includes('jcSurge') && eventCss.includes('jcShards')],
-  ['Broadcast cards include an explicit close action', scoreLayer.includes('broadcastCardClose') && scoreLayer.includes("setAttribute('aria-label','Close card')")),
-  ['Tournament Schedule is a separate action with dedicated wickets and best-player tabs', tournament.includes("['wickets','Wickets']") && tournament.includes("['best','Best Players']") && tournament.includes('data-tm-tab="schedule"')),
+  ['Broadcast cards include an explicit close action', scoreLayer.includes('broadcastCardClose') && scoreLayer.includes("setAttribute('aria-label','Close card')")],
+  ['Tournament Schedule is a separate action with dedicated wickets and best-player tabs', tournament.includes("['wickets','Wickets']") && tournament.includes("['best','Best Players']") && tournament.includes('data-tm-tab="schedule"')],
   ['Realtime listener starts without a false Promise catch', bridge.includes('subscribePublic();') && !bridge.includes('subscribePublic().catch(')]
 ];
 for (const [label, ok] of checks) {
