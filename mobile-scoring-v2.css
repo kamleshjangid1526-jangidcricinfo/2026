@@ -81,3 +81,25 @@
  body.jc-scoring-view .scoreActionGrid button{min-height:30px;font-size:10px}
  body.jc-scoring-view .currentPlayerCard>div{padding:3px}
 }
+
+/* Fixed, low-height status and responsive name placements. */
+.jcOfflineStatus{display:flex;align-items:center;min-height:25px;padding:4px 9px;margin:0 0 5px;border:1px solid #ffffff1e;border-radius:8px;background:#102337;color:#c9deed;font:800 10px/1.25 system-ui,sans-serif;letter-spacing:.3px}
+.jcOfflineStatus[data-state="offline"]{background:#422419;color:#ffddb9;border-color:#a15a31}
+.jcOfflineStatus[data-state="pending"]{background:#3b3118;color:#ffe9a5;border-color:#8c7136}
+.jcOfflineStatus[data-state="syncing"]{background:#15324e;color:#b9e4ff;border-color:#397eaf}
+.jcOfflineStatus[data-state="synced"]{background:#123526;color:#b9f5ce;border-color:#387c5b}
+.scoreCommandTeamNameMobile{display:none}
+@media(max-width:700px){
+ body.jc-scoring-view .jcOfflineStatus{box-sizing:border-box;min-height:21px;padding:3px 7px;margin:0 0 1px;font-size:9px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+ body.jc-scoring-view .scoreCommandTeamNameMobile{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-size:clamp(11px,3.2vw,15px);font-weight:950;line-height:1.1;color:#dcf5ff;margin:1px 0 0}
+ body.jc-scoring-view .scoreCommandCenterTop>span{display:none}
+ body.jc-scoring-view .scoreCommandCenterTop{min-height:15px}
+}
+@media(max-height:650px) and (max-width:700px){
+ body.jc-scoring-view #currentPlayers>.currentPlayerGroups{gap:3px}
+ body.jc-scoring-view .currentPlayerGroup{padding:3px 4px}
+ body.jc-scoring-view .currentPlayerCard>div{padding:2px 3px}
+ body.jc-scoring-view .scoreManagementBar{padding:3px}
+ body.jc-scoring-view .scoreActionGrid button{min-height:28px}
+ body.jc-scoring-view .scoringCardSummary{min-height:25px;padding:5px 8px}
+}
