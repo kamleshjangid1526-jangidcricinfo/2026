@@ -148,3 +148,105 @@
 .currentPlayerGroup .currentPlayerCard{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}
 .currentPlayerGroup .currentPlayerCard>div{min-width:0}
 @media(max-width:700px){.tournamentControlHead,.tournamentControlActions{display:grid;grid-template-columns:1fr;justify-content:stretch}.tournamentControlActions>*{width:100%}.teamListCard{align-items:stretch;flex-direction:column}.teamCardActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.currentPlayerGroups{grid-template-columns:1fr}.teamPlayerRow{align-items:stretch;flex-direction:column}.teamPlayerRow .rowBtns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Jangid Cricinfo — compact single-screen scoring desk (2026-11-09).
+   Keep the scoring workflow visible without page-level vertical scrolling. */
+body:has(#scoring:not(.hidden)){overflow:hidden}
+#app main:has(#scoring:not(.hidden)){height:calc(100dvh - 66px);min-height:0;overflow:hidden;padding-bottom:0}
+#scoring:not(.hidden){height:100%;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:6px;padding:8px 12px}
+#scoring>.pageHead{flex:0 0 auto;margin:0;min-height:30px}
+#scoring>.pageHead h2{font-size:clamp(17px,1.5vw,22px);margin:0}
+#scoring>#scoreHeader{flex:0 0 auto;min-height:0;margin:0}
+#scoring .scoreCommandBoard{padding:8px 10px;gap:6px;border-radius:13px}
+#scoring .scoreCommandTop{padding:0 1px 5px;gap:8px}
+#scoring .scoreCommandEyebrow{font-size:8px}
+#scoring .scoreCommandTitle h3{font-size:clamp(12px,1.05vw,16px)}
+#scoring .scoreCommandTitle>span:last-child{font-size:8px}
+#scoring .scoreCommandMainGrid{grid-template-columns:minmax(0,1fr) minmax(145px,.85fr) minmax(0,1fr);gap:6px}
+#scoring .scoreCommandTeamCard{padding:6px 8px;border-radius:10px}
+#scoring .scoreCommandRole{font-size:8px;margin-bottom:3px}
+#scoring .scoreCommandTeamBody{gap:6px;padding:2px 0}
+#scoring .scoreCommandTeamLogo{width:28px;height:28px;flex-basis:28px}
+#scoring .scoreCommandTeamCopy>b{font-size:clamp(10px,.9vw,13px)}
+#scoring .scoreCommandTeamCopy>span{font-size:8px;line-height:1.2}
+#scoring .scoreCommandTeamFoot{gap:2px;padding-top:4px;margin-top:3px}
+#scoring .scoreCommandTeamFoot span,#scoring .scoreCommandTeamFoot b{font-size:8px}
+#scoring .scoreCommandCenter{min-height:86px;padding:6px 8px;border-radius:10px}
+#scoring .scoreCommandDigits strong{font-size:clamp(29px,3vw,42px)}
+#scoring .scoreCommandOvers{gap:5px;margin-top:3px}
+#scoring .scoreCommandOvers small{font-size:7px}
+#scoring .scoreCommandOvers b{font-size:9px}
+#scoring .scoreCommandProgress{height:3px;margin-top:4px}
+#scoring .scoreCommandMetrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+#scoring .scoreCommandMetric{padding:5px 7px;border-radius:8px;min-height:0}
+#scoring .scoreCommandMetric>small{font-size:7px}
+#scoring .scoreCommandMetric>b{font-size:14px;line-height:1.1}
+#scoring .scoreCommandMetric>span{font-size:7px;line-height:1.1}
+#scoring .scoreCommandNotice{padding:5px 8px;font-size:9px}
+#scoring .cbLiveDetailsGrid{flex:0 0 auto;display:block;margin:0;min-height:0}
+#scoring .cbLiveDetailsGrid>.panel:first-child{display:none}
+#scoring .cbLiveDetailsGrid>.panel:nth-child(2){padding:4px 8px;margin:0;border-radius:8px;min-height:0}
+#scoring .cbLiveDetailsGrid .panelHead{display:none}
+#scoring #recentBalls{display:flex;flex-wrap:nowrap;gap:5px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;scrollbar-width:thin;min-height:25px;align-items:center}
+#scoring #recentBalls .ball{flex:0 0 auto;padding:4px 7px;font-size:10px}
+#scoring .powerplayControl{flex:0 0 auto;margin:0;padding:4px 7px;gap:5px;border-radius:8px;min-height:30px}
+#scoring .powerplayControl>span{width:auto;margin:0;font-size:8px}
+#scoring .powerplayBtn{min-width:30px;padding:4px 8px;font-size:9px}
+#scoring #powerplayStatus{font-size:8px}
+#scoring .scoreManagementBar{flex:0 0 auto;margin:0;padding:5px 7px;gap:6px;border-radius:9px}
+#scoring .scoreManagementIntro{display:none}
+#scoring .scoreManagementButtons{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));width:100%;gap:5px}
+#scoring .scoreManagementButtons>*{min-width:0;min-height:34px!important;padding:5px 4px!important;font-size:9px!important;line-height:1.1;white-space:normal}
+#scoring #scoreActionGrid{flex:0 0 auto;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin:0}
+#scoring #scoreActionGrid button{min-width:0;min-height:39px;padding:5px 3px;border-radius:8px;font-size:clamp(11px,1vw,15px)}
+#scoring #scoreActionGrid .extra,#scoring #scoreActionGrid .wicket{font-size:9px}
+#scoring .scoringCardPanel{flex:0 0 auto;margin:0;padding:0;border-radius:9px;overflow:hidden}
+#scoring .scoringCardSummary{display:flex;align-items:center;min-height:30px;padding:6px 9px;cursor:pointer;list-style:none;font-size:10px;font-weight:900;color:#b9d8ef}
+#scoring .scoringCardSummary::-webkit-details-marker{display:none}
+#scoring .scoringCardPanel[open]{position:fixed;z-index:120;inset:12% 4% auto;max-height:76dvh;overflow:auto;box-shadow:0 18px 60px #000b}
+#scoring .scoringCardPanel[open]>.panelHead{display:none}
+#scoring .scoringCardPanel[open] .scoreCardActionGrid{padding:8px}
+#scoring>.pageFooterNav{display:none}
+@media(max-width:700px){
+ #app main:has(#scoring:not(.hidden)){height:calc(100dvh - 58px)}
+ #scoring:not(.hidden){padding:6px 8px;gap:5px}
+ #scoring .scoreCommandBoard{padding:7px;gap:5px}
+ #scoring .scoreCommandMainGrid{grid-template-columns:1fr 1fr;grid-template-areas:"score score" "bat bowl";gap:5px}
+ #scoring .scoreCommandCenter{grid-area:score;min-height:70px;padding:5px 7px}
+ #scoring .scoreCommandTeamCard.battingSide{grid-area:bat}
+ #scoring .scoreCommandTeamCard.bowlingSide{grid-area:bowl}
+ #scoring .scoreCommandTeamCard{padding:5px;min-width:0}
+ #scoring .scoreCommandTeamBody{align-items:center}
+ #scoring .scoreCommandTeamCopy>b{font-size:10px}
+ #scoring .scoreCommandTeamCopy>span{font-size:7px;white-space:normal}
+ #scoring .scoreCommandTeamFoot span,#scoring .scoreCommandTeamFoot b{font-size:7px}
+ #scoring .scoreCommandMetrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
+ #scoring .scoreCommandMetric{padding:4px 3px}
+ #scoring .scoreCommandMetric>b{font-size:11px}
+ #scoring .scoreCommandMetric>span{display:none}
+ #scoring .scoreCommandStatus{font-size:8px}
+ #scoring .scoreManagementButtons{grid-template-columns:repeat(4,minmax(0,1fr))}
+ #scoring .scoreManagementButtons>*{min-height:32px!important;font-size:8px!important}
+ #scoring #scoreActionGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+ #scoring #scoreActionGrid button{min-height:36px;font-size:12px}
+ #scoring #scoreActionGrid .extra,#scoring #scoreActionGrid .wicket{font-size:8px}
+}
+@media(max-width:380px){
+ #scoring .scoreCommandTitle>span:last-child{display:none}
+ #scoring .scoreCommandTeamFoot{display:none}
+ #scoring .scoreCommandMetrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+ #scoring .scoreManagementButtons{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #scoring #scoreActionGrid button{min-height:34px;font-size:11px}
+}
+@media(max-height:720px){
+ #scoring:not(.hidden){gap:4px;padding-top:4px;padding-bottom:4px}
+ #scoring .scoreCommandBoard{padding:5px 7px;gap:4px}
+ #scoring .scoreCommandTeamCard{padding:4px 6px}
+ #scoring .scoreCommandCenter{min-height:64px}
+ #scoring .scoreCommandMetric{padding:3px 5px}
+ #scoring .scoreCommandMetric>b{font-size:12px}
+ #scoring #scoreActionGrid button{min-height:33px}
+ #scoring .powerplayControl{min-height:26px;padding:2px 6px}
+ #scoring .scoreManagementButtons>*{min-height:29px!important}
+}
