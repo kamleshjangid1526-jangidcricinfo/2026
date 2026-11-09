@@ -2,7 +2,7 @@
 const JC_CACHE='jangid-cricinfo-static-v2';
 const JC_ASSETS=[
   './','./index.html','./control.html','./scorelayer.html','./scoreboard.html','./jangid-cricinfo.html',
-  './firebase-api-loader.js','./offline-store.js','./offline-status-ui.js','./event-animation-themes.js',
+  './firebase-api-loader.js','./offline-store.js','./offline-status-ui.js','./event-animation-themes.js','./mobile-scoring-v2.css','./event-animation-themes.css','./scorelayer-broadcast-v2.css',
   './theme.js','./theme.css','./control.js','./scoring-engine.js','./tournament-manager.js',
   './control.css','./control-workflow.css','./tournament-manager.css','./mobile-scoring-v2.css',
   './event-animation-themes.css','./scorelayer.js','./scorelayer.css','./scorelayer-v6.css','./scorelayer-v7.css',
