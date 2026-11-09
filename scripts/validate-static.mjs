@@ -69,8 +69,15 @@ const layoutStart = control.indexOf('const LAYERS=[');
 const layoutEnd = control.indexOf('];', layoutStart);
 const layerCount = layoutStart >= 0 && layoutEnd > layoutStart
   ? [...control.slice(layoutStart, layoutEnd).matchAll(/'[^']+'/g)].length : 0;
+const styledLayers = new Set([...scoreLayerCss.matchAll(/\\.scoreBar\\.layer(\\d+)/g)].map(match => Number(match[1])));
+const animStart = control.indexOf('const ANIMS=[');
+const animEnd = control.indexOf('];', animStart);
+const animationNames = animStart >= 0 && animEnd > animStart
+  ? [...control.slice(animStart, animEnd).matchAll(/'([^']+)'/g)].map(match => match[1]).filter(name => name !== 'none') : [];
 const checks = [
   ['20 distinct Score Layer options', layerCount === 20],
+  ['All 20 layouts have dedicated Score Layer CSS rules', styledLayers.size === 20 && Array.from({length:20},(_,i)=>i+1).every(n=>styledLayers.has(n))],
+  ['All 20 event animation names have matching Score Layer styles', animationNames.length === 20 && animationNames.every(name => scoreLayerCss.toLowerCase().includes(name.toLowerCase()))],
   ['Layout and colour are independent', control.includes('changing a layout must never overwrite') && control.includes("$('colorSelect').addEventListener('change'")],
   ['Single-screen scoring layout prevents vertical page scrolling', workflowCss.includes('overflow:hidden;overscroll-behavior:none')],
   ['Scoring engine exposes save and finish handlers', engine.includes('window.saveMatch=saveMatch') && engine.includes('window.finalizeMatch=finalizeMatch')],
