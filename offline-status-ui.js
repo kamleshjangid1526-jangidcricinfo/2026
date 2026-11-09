@@ -2,9 +2,11 @@
 (() => {
   const mount=()=>{
     if(!document.body)return;
+    const scoring=document.getElementById('scoring');
     let bar=document.getElementById('jcOfflineStatus');
-    if(!bar){bar=document.createElement('div');bar.id='jcOfflineStatus';bar.className='jcOfflineStatus';bar.setAttribute('role','status');bar.setAttribute('aria-live','polite');bar.textContent='Checking connection…';const scoring=document.getElementById('scoring');if(scoring)scoring.prepend(bar);else document.body.append(bar);}
+    if(scoring&&!bar){bar=document.createElement('div');bar.id='jcOfflineStatus';bar.className='jcOfflineStatus';bar.setAttribute('role','status');bar.setAttribute('aria-live','polite');bar.textContent='Checking connection…';scoring.prepend(bar);}
     const update=event=>{
+      if(!bar)return;
       const d=event?.detail||{},online=navigator.onLine;
       const state=d.state||(online?'synced':'offline');
       bar.dataset.state=state;
@@ -12,8 +14,7 @@
       bar.textContent=labels[state]||labels[online?'synced':'offline'];
       bar.title=d.detail||bar.textContent;
     };
-    window.addEventListener('jc-offline-status',update);
-    update({detail:{state:navigator.onLine?'synced':'offline'}});
+    if(bar){window.addEventListener('jc-offline-status',update);update({detail:{state:navigator.onLine?'synced':'offline'}});}
     if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
       navigator.serviceWorker.register(new URL('./sw.js',location.href),{scope:'./'}).then(registration=>{
         if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});
