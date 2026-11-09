@@ -104,8 +104,21 @@
       return new Response(JSON.stringify({ok:false,error:message}),{status:error?.status||503,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
     }
   };
+  async function emitCachedSession(){
+    if(!store)return;
+    try{
+      const saved=await store.get('state:last');if(!saved?.user)return;
+      const uid=uidOf(saved);if(!uid)return;
+      const matches=[...(saved.matches||[])];
+      if(saved.activeMatch){const ix=matches.findIndex(x=>String(x.id)===String(saved.activeMatch.id));if(ix>=0)matches[ix]=clone(saved.activeMatch);else matches.push(clone(saved.activeMatch));}
+      const pending=await records('queue:'+uid+':match:');
+      for(const row of pending){const match=row.value?.match;if(!match?.id)continue;const ix=matches.findIndex(x=>String(x.id)===String(match.id));if(ix>=0)matches[ix]=clone(match);else matches.push(clone(match));}
+      const broadcasts={...(saved.broadcasts||{})};if(saved.broadcast)broadcasts[uid]=clone(saved.broadcast);
+      emitPublic({activeMatches:matches.filter(x=>x.status==='live'),matches,tournaments:saved.tournaments||[],broadcasts,changedCollection:'offline-cache'});
+    }catch(error){console.warn('Cached match snapshot could not be emitted:',error);}
+  }
   class LocalFirebaseEventSource{
-    constructor(url){this.url=url;this.onmessage=null;this.onerror=null;this.onopen=null;this.listeners=new Map();this.closed=false;this.readyState=0;window.__JC_FIREBASE_EVENTS__?.add(this);ready.then(bridge=>{try{bridge?.subscribePublic?.();}catch(error){console.error('Realtime subscriptions could not start:',error);}if(this.closed)return;this.readyState=1;const e=new Event('open');try{this.onopen?.(e);}catch{}for(const fn of this.listeners.get('open')||[])try{fn(e);}catch{}}).catch(error=>{this.readyState=2;const e=new Event('error');e.error=error;try{this.onerror?.(e);}catch{}for(const fn of this.listeners.get('error')||[])try{fn(e);}catch{}});}
+    constructor(url){this.url=url;this.onmessage=null;this.onerror=null;this.onopen=null;this.listeners=new Map();this.closed=false;this.readyState=0;window.__JC_FIREBASE_EVENTS__?.add(this);ready.then(async bridge=>{try{bridge?.subscribePublic?.();}catch(error){console.error('Realtime subscriptions could not start:',error);}await emitCachedSession();if(this.closed)return;this.readyState=1;const e=new Event('open');try{this.onopen?.(e);}catch{}for(const fn of this.listeners.get('open')||[])try{fn(e);}catch{}}).catch(error=>{this.readyState=2;const e=new Event('error');e.error=error;try{this.onerror?.(e);}catch{}for(const fn of this.listeners.get('error')||[])try{fn(e);}catch{}});}
     addEventListener(type,fn){if(!this.listeners.has(type))this.listeners.set(type,new Set());this.listeners.get(type).add(fn);}
     removeEventListener(type,fn){this.listeners.get(type)?.delete(fn);}
     dispatchEvent(event){for(const fn of this.listeners.get(event.type)||[])try{fn(event);}catch(error){console.error(error);}return true;}
