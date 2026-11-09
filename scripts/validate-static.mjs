@@ -69,7 +69,7 @@ const layoutStart = control.indexOf('const LAYERS=[');
 const layoutEnd = control.indexOf('];', layoutStart);
 const layerCount = layoutStart >= 0 && layoutEnd > layoutStart
   ? [...control.slice(layoutStart, layoutEnd).matchAll(/'[^']+'/g)].length : 0;
-const styledLayers = new Set([...scoreLayerCss.matchAll(/\\.scoreBar\\.layer(\\d+)/g)].map(match => Number(match[1])));
+const styledLayers = new Set(Array.from({length:20},(_,i)=>i+1).filter(n=>scoreLayerCss.includes('.scoreBar.layer'+n+'{')));
 const animStart = control.indexOf('const ANIMS=[');
 const animEnd = control.indexOf('];', animStart);
 const animationNames = animStart >= 0 && animEnd > animStart
