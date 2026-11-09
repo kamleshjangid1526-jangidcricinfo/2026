@@ -9,6 +9,8 @@ const JC_ASSETS=[
   './scorelayer-designer.css','./scorelayer-compact-pattern.css','./scorelayer-studio.css','./scorelayer-overlays-v446.css',
   './scorelayer-v4_4_11-fixes.css','./scorelayer-card-layout-v4414.css','./scorelayer-broadcast-v2.css',
   './firebase/firebase-api-bridge.mjs','./firebase/firebase-config.js','./firebase/firebase-init.mjs',
+  'https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js','https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js','https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js',
+  './scoreboard.css','./scoreboard.js','./jangid.css','./jangid.js',
   './assets/demo/india-flag.svg','./assets/demo/pakistan-flag.svg',
   './assets/stickers/bat-ball-sticker.png','./assets/stickers/batter-sticker.png','./assets/stickers/bowler-sticker.png',
   './assets/stickers/celebration-sticker.png','./assets/stickers/umpire-out-sticker.png'
