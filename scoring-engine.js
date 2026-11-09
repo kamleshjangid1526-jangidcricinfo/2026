@@ -395,7 +395,7 @@
     const stack=i.undoStack.slice(),snapshot=stack.pop();
     const mOld=clone(MATCH);
     MATCH.activeInnings={...clone(snapshot),undoStack:stack};MATCH.awaitingNextInnings=false;MATCH.awaitingMatchFinish=false;MATCH.awaitingInningsSetup=false;
-    try {await saveMatch(false);renderScoring();await saveBroadcast({event:null,card:null,cardId:Date.now()});}
+    try {await saveMatch(false);renderScoring();if(navigator.onLine){try{await saveBroadcast({event:null,card:null,cardId:Date.now()})}catch(error){console.warn('Undo saved locally; optional graphics reset is pending.',error)}}}
     catch(e){MATCH=mOld;if(STATE)STATE.activeMatch=clone(mOld);renderScoring();alert(`Undo save नहीं हुआ: ${e.message}`)}
   }
   async function requestNextInnings() {
