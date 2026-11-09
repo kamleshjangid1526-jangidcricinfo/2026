@@ -72,7 +72,32 @@ function showPage(id){
 }
 
 document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){e.preventDefault();showPage(g.dataset.go)}});
-async function refresh(){STATE=await api('/api/state');MATCH=STATE.activeMatch;sanitizeActiveMatchPlayers();renderAll()}
+async function refresh(){
+ try{
+  STATE=await api('/api/state');
+  const uid=STATE?.user?.id;
+  if(uid&&window.JCOffline){
+   const pending=await JCOffline.loadPending(uid),local=await JCOffline.loadMatch(uid);
+   if(pending&&local&&local.status==='live'&&String(local.id)===String(pending.match?.id)){
+    STATE.activeMatch=local;STATE.matches||=[];
+    const ix=STATE.matches.findIndex(m=>String(m.id)===String(local.id));
+    if(ix>=0)STATE.matches[ix]=local;else STATE.matches.push(local);
+   }
+   await JCOffline.cacheState(uid,STATE);
+  }
+  MATCH=STATE.activeMatch;sanitizeActiveMatchPlayers();renderAll();
+  if(navigator.onLine)window.JangidScoring?.syncPendingMatch?.();
+ }catch(error){
+  const cached=await window.JCOffline?.loadState();
+  if(!cached?.user?.id)throw error;
+  STATE=cached;const uid=STATE.user.id;
+  const local=await JCOffline.loadMatch(uid),pending=await JCOffline.loadPending(uid);
+  if(local&&local.status==='live'){STATE.activeMatch=local;STATE.matches||=[];const ix=STATE.matches.findIndex(m=>String(m.id)===String(local.id));if(ix>=0)STATE.matches[ix]=local;else STATE.matches.push(local);}
+  STATE.offlineMode=true;MATCH=STATE.activeMatch;sanitizeActiveMatchPlayers();renderAll();
+  JCOffline.status('offline',pending?'● Offline · Sync Pending':'● Offline · Local Data');
+  showAppRuntimeNotice('इंटरनेट उपलब्ध नहीं है। पिछला सेव किया हुआ Control Board और मैच डेटा Offline Mode में खोला गया है।');
+ }
+}
 function sanitizeActiveMatchPlayers(){
  if(!MATCH?.activeInnings||!STATE)return;
  const i=MATCH.activeInnings;MATCH.teamXIs ||= {};
