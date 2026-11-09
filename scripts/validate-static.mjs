@@ -59,10 +59,13 @@ for (const file of cssFiles) {
 }
 
 const read = async name => readFile(path.join(root, name), 'utf8');
-const [control, engine, bridge, tournament, scoreLayer, scoreLayerCss, workflowCss, html] = await Promise.all([
+const [control, engine, bridge, tournament, scoreLayer, scoreLayerCss, workflowCss, html,
+  offlineStore, serviceWorker, mobileCss, tournamentTabsCss, newLayoutsCss, newEventsCss] = await Promise.all([
   read('control.js'), read('scoring-engine.js'), read('firebase/firebase-api-bridge.mjs'),
   read('tournament-manager.js'), read('scorelayer.js'), read('scorelayer.css'),
-  read('control-workflow.css'), read('control.html')
+  read('control-workflow.css'), read('control.html'), read('offline-store.js'), read('sw.js'),
+  read('mobile-scoring-v2.css'), read('tournament-tabs-v2.css'),
+  read('scorelayer-new-layouts.css'), read('scorelayer-new-events-v2.css')
 ]);
 
 const layoutStart = control.indexOf('const LAYERS=[');
@@ -86,7 +89,22 @@ const checks = [
   ['Tournament scheduling stays in dedicated Schedule Match view', tournament.includes('data-tm-tab="schedule"') && tournament.includes('function renderSchedule(t)')],
   ['Matches tab only renders live matches', tournament.includes("const live=list.filter(m=>m.status==='live')")],
   ['Score Layer displays the batting team name', scoreLayer.includes('jlScoreTeamName') && scoreLayerCss.includes('.jlScoreTeamName')],
-  ['Control Board loads scoring engine and Firebase bridge', html.includes('scoring-engine.js') && html.includes('firebase/firebase-api-bridge.mjs')]
+  ['Control Board loads scoring engine and Firebase bridge', html.includes('scoring-engine.js') && html.includes('firebase/firebase-api-bridge.mjs')],
+  ['Offline match storage uses IndexedDB with a localStorage fallback', offlineStore.includes('indexedDB.open') && offlineStore.includes('localStorage.setItem') && offlineStore.includes('saveMatch')],
+  ['Scoring saves each complete snapshot locally before sync', engine.includes('await JCOffline.saveMatch(uid,snapshot)') && engine.includes('async function syncPendingMatch')],
+  ['Reconnect automatically syncs pending score snapshots', engine.includes("addEventListener('online'") && engine.includes("api('/api/match/state'") && engine.includes('clearPending(uid,pending.version)')],
+  ['Offline finish result is saved and queued before reconnect', engine.includes('JCOffline.saveFinish(uid,payload,old,finished)') && engine.includes("pending.type==='finish'")],
+  ['Service worker caches offline scoring and new design assets', serviceWorker.includes('./control.html') && serviceWorker.includes('./offline-store.js') && serviceWorker.includes('./scorelayer-new-layouts.css') && serviceWorker.includes('./scorelayer-new-events-v2.css')),
+  ['Mobile scoring hides branding and shows the compact score desk', mobileCss.includes('body.scoringView .topbar .brand') && mobileCss.includes('.mobileLiveScoreBoard') && mobileCss.includes('.mobilePlayerGroups')],
+  ['Mobile scoring shows one over and keeps card controls optional', mobileCss.includes('#scoring #recentBalls') && mobileCss.includes('.cardsToggleBtn') && mobileCss.includes('.scoringCardPanel:not([open])')],
+  ['Tournament tabs are visible in a responsive grid, not a slider', tournamentTabsCss.includes('grid-template-columns:repeat(6') && tournamentTabsCss.includes('overflow:visible!important') && tournamentTabsCss.includes('grid-template-columns:repeat(3')),
+  ['Group labels remain horizontal and readable', tournamentTabsCss.includes('writing-mode:horizontal-tb!important') && tournamentTabsCss.includes('word-break:normal!important')),
+  ['All 20 new Score Layer compositions are defined', Array.from({length:20},(_,i)=>i+1).every(n=>newLayoutsCss.includes('.layer'+n+'{') || newLayoutsCss.includes('.layer'+n+'{'.replace('{',''))),
+  ['New Score Layer puts Target directly above the score and preserves all fields', scoreLayer.includes('jlTargetSlot') && scoreLayer.includes('jlTargetBadge') && scoreLayer.includes('jlScoreRates') && scoreLayer.includes('jlBatterList') && scoreLayer.includes('jlBowlerFigures')),
+  ['Score Layer layout and colour selectors remain independent', control.includes("$('colorSelect').disabled=false") && control.includes("$('colorSelect').addEventListener('change'")),
+  ['FOUR, SIX and WICKET each have ten separate animation themes', ['FOUR','SIX','WICKET'].every(name => (control.match(new RegExp(name+':\\[','g'))||[]).length>=1) && ['boundaryArc','groundWave','ropeFlash','batTrail','turfRibbon','scorePulse','stadiumBeam','fieldRipple','ropeRibbon','fourPanel','skyLaunch','powerImpact','trajectoryTrail','haloBurst','lightningStrike','orbitSparks','stadiumBloom','skylineReveal','sixColumns','maximumFlare','stumpShock','bailsScatter','umpireSignal','wicketGate','stumpsFlare','dismissalStamp','splitStumps','bailTrail','wicketPulse','redCard'].every(name=>newEventsCss.includes('data-anim="'+name+'"'))),
+  ['FOUR, SIX and WICKET use a transparent host with a compact event card', newEventsCss.includes('#eventLayer.specialMomentLayer') && newEventsCss.includes('background:transparent!important') && newEventsCss.includes('.broadcastMoment')),
+  ['Cards are opened by a separate button and have a close control', html.includes('id="scoringCardToggle"') && html.includes('id="scoringCardClose"') && engine.includes('#scoringCardClose')]
 ];
 for (const [label, ok] of checks) {
   console.log((ok ? 'PASS' : 'FAIL') + '  ' + label);
