@@ -85,8 +85,9 @@ async function refresh(){
   const uid=STATE?.user?.id;
   if(uid&&window.JCOffline){
    const pending=await JCOffline.loadPending(uid),local=await JCOffline.loadMatch(uid);
-   if(pending&&local&&local.status==='live'&&String(local.id)===String(pending.match?.id)){
-    STATE.activeMatch=local;STATE.matches||=[];
+   if(pending&&local&&String(local.id)===String(pending.match?.id)){
+    if(pending.type==='finish')STATE.activeMatch=null;else if(local.status==='live')STATE.activeMatch=local;
+    STATE.matches||=[];
     const ix=STATE.matches.findIndex(m=>String(m.id)===String(local.id));
     if(ix>=0)STATE.matches[ix]=local;else STATE.matches.push(local);
    }
