@@ -194,40 +194,39 @@ function renderBar(m,b){
  if(savedStudio){renderStudioBar(layer,m,b,savedStudio);return;}
  layer.dataset.studio='false';
  const layout=Math.max(1,Math.min(20,Number(b.layer)||1)),color=Math.max(1,Math.min(10,Number(b.color)||1));
- layer.className=`scoreBar layer${layout} jlCompactPattern color${color}${layout<=7?` referenceEra${layout}`:''}`;layer.dataset.layout=String(layout);layer.dataset.family='compact';layer.dataset.color=String(color);
- const referenceAccents={1:'#00c7dc',2:'#d6b34b',3:'#8c9daa',4:'#23a4da',5:'#e81d87',6:'#df2e8c',7:'#138d45'};
- layer.style.setProperty('--accent',layout<=7?referenceAccents[layout]:(accentByColor[color]||accentByColor[1]));
+ layer.className=`scoreBar layer${layout} jlCompactPattern color${color} jlNewBroadcastLayout`;layer.dataset.layout=String(layout);layer.dataset.family='new-broadcast';layer.dataset.color=String(color);
+ layer.style.setProperty('--accent',accentByColor[color]||accentByColor[1]);
  applyScoreDesign(b.design||{});
  const battingId=i.battingId??m.teamA;
- const batting=teamMeta(battingId,m,'BAT');
- const s=i.batStats?.[i.striker],n=i.batStats?.[i.nonStriker],bw=i.bowlStats?.[i.currentBowler];
+ const bowlingId=i.bowlingId??(String(battingId)===String(m.teamA)?m.teamB:m.teamA);
+ const batting=teamMeta(battingId,m,'BAT'),bowling=teamMeta(bowlingId,m,'BOWL');
+ const striker=i.batStats?.[i.striker],non=i.batStats?.[i.nonStriker],bw=i.bowlStats?.[i.currentBowler];
  const runs=Number(i.score)||0,wickets=Number(i.wickets)||0,balls=Number(i.balls)||0;
- const overs=fmtOvers(balls);
- const target=Number(i.target)||0;
+ const overs=fmtOvers(balls),target=Number(i.target)||0;
  const activePowerplay=String(i.powerplay||'').trim().toUpperCase();
- const batLine=(p,kind)=>`<div class="jlBatterRow ${kind==='striker'?'isStriker':'isNonStriker'}"><span class="jlStrikeIcon" aria-label="${kind==='striker'?'On strike':''}">${kind==='striker'?'🏏':''}</span><b class="jlBatterName ${String(p?.name||'').length>15?'isLong':''}">${esc(p?.name||(kind==='striker'?'—':'—'))}</b><span class="jlBatterStats"><strong class="jlBatterRuns">${Number(p?.runs)||0}${kind==='striker'?'*':''}</strong><small class="jlBatterBalls">(${Number(p?.balls)||0})</small></span></div>`;
- const deliveries=overEvents(i.events||[]).map(e=>{const d=deliveryInfo(e);return `<span class="jlBallChip ${d.cls}" title="${esc(d.title)}">${d.label}</span>`}).join('');
- const bowlerOvers=bw?fmtOvers(bw.balls||0):'0.0';
- const bowlerRuns=Number(bw?.runs)||0,bowlerWickets=Number(bw?.wickets)||0;
- const targetBadge=target>0?`<span class="jlTargetBadge">TARGET ${target}</span>`:'';
- const pp=['P1','P2','P3'].map(pp=>`<span class="jlPhaseTag ${activePowerplay===pp?'isActive':''}">${pp}</span>`).join('');
+ const batLine=(p,kind)=>`<div class="jlBatterRow ${kind==='striker'?'isStriker':'isNonStriker'}"><span class="jlStrikeIcon" aria-label="${kind==='striker'?'On strike':''}">${kind==='striker'?'▶':''}</span><b class="jlBatterName ${String(p?.name||'').length>15?'isLong':''}">${esc(p?.name||'—')}</b><span class="jlBatterStats"><strong class="jlBatterRuns">${Number(p?.runs)||0}${kind==='striker'?'*':''}</strong><small class="jlBatterBalls">(${Number(p?.balls)||0})</small></span></div>`;
+ const deliveries=overEvents(i.events||[]).map(e=>{const d=deliveryInfo(e);return `<span class="jlBallChip ${d.cls}" title="${esc(d.title)}">${esc(d.label)}</span>`}).join('');
+ const bowlerOvers=bw?fmtOvers(bw.balls||0):'0.0',bowlerRuns=Number(bw?.runs)||0,bowlerWickets=Number(bw?.wickets)||0;
+ const remaining=Math.max(0,(Number(m.oversLimit)||0)*6-balls),needed=target?Math.max(0,target-runs):0;
+ const requiredRate=target&&remaining>0?(needed/(remaining/6)).toFixed(2):'—';
+ const currentRate=balls?(runs/(balls/6)).toFixed(2):'0.00';
+ const targetBadge=target>0?`<div class="jlTargetSlot"><span class="jlTargetBadge">TARGET <b>${target}</b></span></div>`:'';
+ const pp=['P1','P2','P3'].map(p=>`<span class="jlPhaseTag ${activePowerplay===p?'isActive':''}">${p}</span>`).join('');
+ const teamBay=(t,role,side)=>`<div class="jlTeamBay ${side==='bat'?'jlBatTeam':'jlBowlTeam'}">${compactLogo(t)}<span class="jlTeamBayCopy"><b class="jlTeamName" title="${esc(t.name)}">${esc(t.name||'TEAM')}</b><small>${role}</small></span></div>`;
  layer.innerHTML=`
-  <div class="jlBatters">
-   ${compactLogo(batting)}
-   <div class="jlBatterList">${batLine(s,'striker')}${batLine(n,'nonStriker')}</div>
-  </div>
+  ${teamBay(batting,'BATTING','bat')}
   <div class="jlScoreWrap">
-   <div class="jlScoreTop">${targetBadge}<div class="jlPowerplayGroup">${pp}</div></div>
-   <div class="jlScoreTeamName" title="${esc(batting.name)}">${esc(batting.name||"BATTING TEAM")}</div>
-   <div class="jlScoreMain"><strong class="jlRuns">${runs}</strong><span class="jlSlash">/</span><strong class="jlWickets">${wickets}</strong><span class="jlOversValue">${overs}</span></div>
+   <div class="jlScoreTop"><span class="jlInningsTag">INN ${Number(i.number||m.inningsNo||1)}</span><div class="jlPowerplayGroup">${pp}</div></div>
+   <div class="jlScoreTeamName" title="${esc(batting.name)}">${esc(batting.name||'BATTING TEAM')}</div>
+   ${targetBadge}
+   <div class="jlScoreMain"><strong class="jlRuns">${runs}</strong><span class="jlSlash">/</span><strong class="jlWickets">${wickets}</strong><span class="jlOversValue">${overs} OV</span></div>
+   <div class="jlScoreRates"><span>CRR <b>${currentRate}</b></span>${target? `<span>NEED <b>${needed}</b> · RRR <b>${requiredRate}</b></span>`:''}</div>
   </div>
-  <div class="jlBowler">
-   <b class="jlBowlerName ${String(bw?.name||'').length>15?'isLong':''}">${esc(bw?.name||'—')}</b>
-   <strong class="jlBowlerFigures">${bowlerOvers} – ${bowlerRuns} – ${bowlerWickets}</strong>
-  </div>
-  <div class="jlBalls"><div class="jlBallRail">${deliveries||'<span class="jlBallEmpty">—</span>'}</div></div>`;
+  ${teamBay(bowling,'BOWLING','bowl')}
+  <div class="jlBatters"><div class="jlBatterList">${batLine(striker,'striker')}${batLine(non,'nonStriker')}</div></div>
+  <div class="jlBowler"><span class="jlBowlerLabel">BOWLER</span><b class="jlBowlerName ${String(bw?.name||'').length>15?'isLong':''}">${esc(bw?.name||'—')}</b><strong class="jlBowlerFigures">${bowlerOvers} – ${bowlerRuns} – ${bowlerWickets}</strong></div>
+  <div class="jlBalls"><span class="jlBallsLabel">OVER</span><div class="jlBallRail">${deliveries||'<span class="jlBallEmpty">—</span>'}</div></div>`;
 }
-
 
 function tableRows(players,kind){
  if(!players?.length)return '<tr><td colspan="8" class="emptyCell">No player figures recorded yet.</td></tr>';
@@ -336,6 +335,23 @@ function incomingCornerMarkup(eventName,meta={}){
  const detail=eventName==='NEW BOWLER'?`${fmtOvers(p.balls||0)} OV · ${Number(p.wickets||0)} W · ${Number(p.runs||0)} RUNS`:`${Number(p.runs||0)} RUNS · ${Number(p.balls||0)} BALLS`;
  return `<div class="incomingPlayerToast ${eventName==='NEW BOWLER'?'isBowler':'isBatter'}"><span class="incomingKicker">${label}</span><b>${esc(name)}</b><small>${esc(team)}</small><em>${detail}</em></div>`;
 }
+function specialMomentMarkup(eventName,b){
+ const m=latestMatch||{},i=m.activeInnings||{},delivery=i.lastDelivery||{};
+ const wicket=b.wicketDetails||{};
+ const batter=String(wicket.batter||delivery.batter||'');
+ const bowler=String(wicket.bowler||delivery.bowler||'');
+ const dismissal=String(wicket.dismissal||delivery.wicket?.type||'');
+ const team=currentTeamName(i.battingId,m)||'';
+ const isWicket=eventName==='WICKET',isSix=eventName==='SIX';
+ const mark=isWicket?'OUT':isSix?'6':'4',title=isWicket?'WICKET':isSix?'SIX':'FOUR';
+ const kicker=isWicket?'WICKET FALL':isSix?'MAXIMUM':'BOUNDARY';
+ const detail=isWicket?[dismissal,bowler?'BOWLER '+bowler:'',team].filter(Boolean).join(' · '):[batter,team].filter(Boolean).join(' · ');
+ return `<div class="broadcastMoment ${isWicket?'momentWicket':isSix?'momentSix':'momentFour'}">
+   <div class="momentMark" aria-hidden="true">${mark}</div>
+   <div class="momentCopy"><small>${esc(kicker)}</small><b>${esc(title)}</b><em>${esc(detail|| (isWicket?'OUT!':isSix?'MAXIMUM!':'BOUNDARY!'))}</em></div>
+   <div class="momentSide"><span>JANGID</span><strong>CRICINFO</strong><small>LIVE EVENT</small></div>
+  </div>`;
+}
 function renderEvent(b){
  const el=document.getElementById('eventLayer'),cardEl=document.getElementById('cardLayer');
  if(!b.event){clearTimeout(el._hide);eventVisible=false;el.style.display='none';el.innerHTML='';el.classList.remove('incomingCornerLayer');lastEventId=b.eventId??lastEventId;if(!cardEl.classList.contains('isVisible'))flushPendingSponsor();return}
@@ -344,10 +360,14 @@ function renderEvent(b){
  if(cardEl.classList.contains('isVisible')){dismissedCardId=String(latestBroadcast?.cardId??'');cardEl.classList.remove('isVisible');cardEl.style.display='none';cardEl.innerHTML='';document.body.classList.remove('cardActive')}
  const eventName=String(b.event||'').toUpperCase();const corner=['NEW BATSMAN','NEW BOWLER'].includes(eventName);
  const animationTemplate=!corner?selectedStudioOverlay(b.animationDesign):null;
- if(corner){el.innerHTML=incomingCornerMarkup(eventName,b);el.className=`eventLayer incomingCornerLayer ${eventName==='NEW BOWLER'?'isBowler':'isBatter'}`;el.dataset.anim=b.animation||'fade';}
- else if(eventName==='WICKET'&&b.wicketDetails){const d=b.wicketDetails;el.innerHTML=`<div class="eventInner wicketEventInner detailedWicketEvent"><div class="eventTitle">WICKET</div><b class="eventPlayerName">${esc(d.batter||'Batter')}</b><div class="eventSub">${esc(d.dismissal||'OUT')}</div><small>${esc(d.bowler||'')} ${d.fielder?` · ${esc(d.fielder)}`:''}</small></div>`;el.className='eventLayer style-wicket';el.dataset.anim=b.animation||'slam';}
+ if(['FOUR','SIX','WICKET'].includes(eventName)){
+  el.innerHTML=specialMomentMarkup(eventName,b);
+  el.className=`eventLayer specialMomentLayer momentType-${eventName.toLowerCase()}`;
+  el.dataset.anim=b.eventAnimations?.[eventName]||b.animation||(eventName==='FOUR'?'boundaryArc':eventName==='SIX'?'skyLaunch':'stumpShock');
+ }
+ else if(corner){el.innerHTML=incomingCornerMarkup(eventName,b);el.className=`eventLayer incomingCornerLayer ${eventName==='NEW BOWLER'?'isBowler':'isBatter'}`;el.dataset.anim=b.animation||'fade';}
  else{el.innerHTML=animationTemplate?studioOverlayTemplateMarkup(animationTemplate,latestMatch||{}, {kind:'animation',event:b.event}):eventMarkup(b.event,b);el.className=`eventLayer style-${String(b.eventStyle||'generic').toLowerCase().replace(/\s+/g,'')}${animationTemplate?' studioAnimationEvent':''}`;el.dataset.anim=b.eventAnimations?.[b.event]||b.animation||'zoom';}
- el.dataset.eventType=eventName.toLowerCase().replace(/\s+/g,'-');el.style.animationDuration=`${b.duration||2200}ms`;el.style.display='grid';const inner=el.querySelector('.eventInner,.jlStudioOverlayRoot,.incomingPlayerToast');if(inner)inner.style.animationDuration=`${b.duration||2200}ms`;
+ el.dataset.eventType=eventName.toLowerCase().replace(/\s+/g,'-');el.style.animationDuration=`${b.duration||2200}ms`;el.style.display='grid';const inner=el.querySelector('.eventInner,.jlStudioOverlayRoot,.incomingPlayerToast,.broadcastMoment');if(inner)inner.style.animationDuration=`${b.duration||2200}ms`;
  el._hide=setTimeout(()=>{eventVisible=false;el.style.display='none';el.innerHTML='';el.classList.remove('incomingCornerLayer');if(!cardEl.classList.contains('isVisible'))flushPendingSponsor()},Math.max(900,Number(b.duration||2200)-50));
 }
 function renderCard(b,m){
@@ -378,6 +398,21 @@ async function loadOwnerBroadcast(userId,version){
  }catch(error){console.warn('Could not load uploaded Score Layer layout:',error);ownerBroadcastRequestedVersion='';}
 }
 function boot(){
+ if(owner&&window.JCOffline){
+  const localChannel=JCOffline.channel;
+  if(localChannel)localChannel.addEventListener('message',event=>{
+   const detail=event.data||{};
+   if(detail.uid!==String(owner)||!detail.match?.activeInnings)return;
+   const requested=q.get('match');if(requested&&requested!==detail.match.id)return;
+   latestMatch=detail.match;renderBar(detail.match,{...ownerBroadcast,...latestSSEBroadcast});
+  });
+  JCOffline.loadMatch(owner).then(match=>{
+   const requested=q.get('match');
+   if(match?.activeInnings&&match.status==='live'&&(!requested||requested===match.id)){
+    latestMatch=match;renderBar(match,{...ownerBroadcast,...latestSSEBroadcast});
+   }
+  }).catch(()=>{});
+ }
  const es=new EventSource('/events');
  es.onmessage=e=>{
   try{
