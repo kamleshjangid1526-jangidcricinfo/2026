@@ -413,7 +413,8 @@ async function handleApi(url,init={}) {
     return fail(404,`यह ऑनलाइन सुविधा अभी उपलब्ध नहीं है: ${method} ${path}`);
   } catch(error) {
     console.error('Jangid Firebase API error:',error);
-    return fail(error.status||400,error.message||'अनुरोध पूरा नहीं हो पाया।',error.code?{code:error.code}:{});
+    const details={...(error.code?{code:error.code}:{}),...(error.matchId?{matchId:error.matchId}:{}),...(Array.isArray(error.matches)?{matches:error.matches.map(m=>({id:m.id,title:m.title||'Local Match',teamAName:m.teamAName||'Team A',teamBName:m.teamBName||'Team B',activeInnings:m.activeInnings||{}}))}:{})};
+    return fail(error.status||400,error.message||'अनुरोध पूरा नहीं हो पाया।',details);
   }
 }
 
@@ -462,7 +463,7 @@ async function startMatch(uid,b) {
   const id=fixture?.id||rid('m_'),now=nowIso();const match={id,ownerUid:uid,userId:uid,title:cleanText(b.title,100)||'Local Match',tournamentId:t?.id||null,tournamentName:t?.name||'',stage:cleanText(b.stage,30)||'league',groupName:cleanText(b.groupName,40),teamA:A.id,teamB:B.id,teamAName:A.name,teamBName:B.name,teamALogo:A.logo||'',teamBLogo:B.logo||'',oversLimit:overs,bowlerOverLimit:overLimit,tossWinner:String(b.tossWinner),tossDecision:decision,tossMode:b.tossMode==='auto'?'auto':'manual',ballType:['tennis','leather'].includes(String(b.ballType))?String(b.ballType):'leather',venue:cleanText(b.venue||b.location,140),state:cleanText(b.state||t?.state,80),district:cleanText(b.district||t?.district,80),tehsil:cleanText(b.tehsil||t?.tehsil,80),pinCode:cleanText(b.pinCode||t?.pinCode,6),umpireOne:cleanText(b.umpireOne,80),umpireTwo:cleanText(b.umpireTwo,80),scorerName:cleanText(b.scorerName,80),location:cleanText(b.venue||b.location||t?.venue||'Venue to be confirmed',140),startedAt:now,updatedAt:now,lastActivityAt:now,scheduledAt:fixture?.dateTime||null,dateTime:String(b.dateTime||fixture?.dateTime||now),status:'live',inningsNo:1,teamXIs:{[A.id]:xiA,[B.id]:xiB},activeInnings:inn,inningsHistory:[],result:null,createdAt:fixture?.createdAt||now};
   // Transactional active pointer prevents two tabs from starting two matches at once.
   const publicMatch=await enrichMatch(uid,match);
-  await runTransaction(db,async tx=>{const activeRef=ownerDoc(uid,'meta','active'),activeSnap=await tx.get(activeRef);if(activeSnap.exists()){const activeId=activeSnap.data().matchId;const activeMatch=await tx.get(ownerDoc(uid,'matches',activeId));if(activeMatch.exists()&&activeMatch.data().status==='live')throw Object.assign(new Error('आपके खाते में एक Match पहले से LIVE है।'),{status:409,code:'ACTIVE_MATCH_EXISTS',matchId:activeId});}
+  await runTransaction(db,async tx=>{const activeRef=ownerDoc(uid,'meta','active'),activeSnap=await tx.get(activeRef);if(activeSnap.exists()){const activeId=activeSnap.data().matchId;const activeMatch=await tx.get(ownerDoc(uid,'matches',activeId));if(activeMatch.exists()&&activeMatch.data().status==='live')throw Object.assign(new Error('आपके खाते में एक Match पहले से LIVE है।'),{status:409,code:'ACTIVE_MATCH_EXISTS',matchId:activeId,matches:[{id:activeId,...activeMatch.data()}]});}
     tx.set(ownerDoc(uid,'matches',id),cleanData(match));tx.set(activeRef,{matchId:id,updatedAt:now});tx.set(publicDoc('publicMatches',id),cleanData(publicMatch));});
   await deleteDoc(ownerDoc(uid,'drafts','current')).catch(()=>{});if(match.tournamentId)await refreshPublicTournament(uid,match.tournamentId);return match;
 }

@@ -1108,3 +1108,7 @@ html[data-theme="light"] body.scoreLayerBody #scoreBar.scoreBar .jlTeam.noLogo .
 .eventLayer[data-anim="shatter"] .eventInner,.cardLayer[data-anim="shatter"] .broadcastCardStage.cardEntering{animation:jcShatter .8s ease both}
 .eventLayer[data-anim="orbit"] .eventInner,.cardLayer[data-anim="orbit"] .broadcastCardStage.cardEntering{animation:jcOrbit .85s ease both}
 .eventLayer[data-anim="spotlight"] .eventInner,.cardLayer[data-anim="spotlight"] .broadcastCardStage.cardEntering{animation:jcSpotlight 1s ease both}
+
+/* Keep the batting team name visibly attached to the live score. */
+.jlScoreTeamName{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(9px,1vw,13px);font-weight:1000;line-height:1.1;letter-spacing:.035em;color:var(--jl-muted);padding:1px 3px 2px;text-transform:uppercase}
+@media(max-width:700px){.jlScoreTeamName{font-size:clamp(8px,2.2vw,11px);max-width:34vw}}
