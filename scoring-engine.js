@@ -133,7 +133,9 @@
         if(pending.type==='snapshot'&&pending.match){
           await api('/api/match/state',{method:'POST',body:JSON.stringify({match:pending.match})});
         }else if(pending.type==='finish'&&pending.payload){
-          await api('/api/match/finish',{method:'POST',body:JSON.stringify(pending.payload)});
+          if(pending.match)await api('/api/match/state',{method:'POST',body:JSON.stringify({match:pending.match})});
+          const finishResult=await api('/api/match/finish',{method:'POST',body:JSON.stringify(pending.payload)});
+          if(STATE&&finishResult?.match){STATE.activeMatch=null;STATE.matches||=[];const ix=STATE.matches.findIndex(x=>String(x.id)===String(finishResult.match.id));if(ix>=0)STATE.matches[ix]=finishResult.match;else STATE.matches.push(finishResult.match);await JCOffline.cacheState(uid,STATE);}
         }else{
           await JCOffline.clearPending(uid,pending.version);continue;
         }
