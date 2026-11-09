@@ -441,7 +441,34 @@
   }
   async function finalizeMatch(resultType,winnerTeamId='') {
     if(!MATCH?.id)throw new Error('Match record नहीं मिला।');
-    const old=clone(MATCH);
+    const old=clone(MATCH),uid=ownerUid();
+    if(!navigator.onLine){
+      if(!uid||!window.JCOffline)throw new Error('Offline Finish Storage उपलब्ध नहीं है।');
+      if(resultType==='winner'&&![String(old.teamA),String(old.teamB)].includes(String(winnerTeamId)))throw new Error('Winner Team चुनें।');
+      const finished=clone(old),stamp=new Date().toISOString();
+      if(resultType==='winner'){
+        finished.winnerTeamId=String(winnerTeamId);finished.resultType='winner';
+        finished.result=`${String(winnerTeamId)===String(old.teamA)?(old.teamAName||'Team A'):(old.teamBName||'Team B')} won`;
+      }else{
+        finished.winnerTeamId=null;finished.resultType=resultType==='tie'?'tie':'no-result';
+        finished.result=resultType==='tie'?'Match tied':'No Result';
+      }
+      finished.status='finished';finished.completedAt=stamp;finished.updatedAt=stamp;
+      if(finished.activeInnings){finished.activeInnings.finished=true;finished.activeInnings.finishedReason='match-finished';}
+      const payload={matchId:old.id,resultType:finished.resultType,winnerTeamId:finished.winnerTeamId||''};
+      await JCOffline.saveFinish(uid,payload,old,finished);
+      if(STATE){
+        STATE.activeMatch=null;STATE.matches||=[];
+        const ix=STATE.matches.findIndex(x=>String(x.id)===String(finished.id));
+        if(ix>=0)STATE.matches[ix]=finished;else STATE.matches.push(finished);
+        STATE.offlineMode=true;await JCOffline.cacheState(uid,STATE);
+      }
+      MATCH=null;setSyncState('offline','● Offline · Result Sync Pending');
+      try{await saveBroadcast({event:'RESULT',eventStyle:'result',card:null,cardId:Date.now()})}catch(_){}
+      renderScoring();showPage('dashboard');
+      alert('मैच का Result मोबाइल में सुरक्षित हो गया है। इंटरनेट आने पर Score और Result अपने आप Sync होंगे।');
+      return {match:finished,offline:true};
+    }
     try {
       const res=await api('/api/match/finish',{method:'POST',body:JSON.stringify({matchId:MATCH.id,resultType,winnerTeamId})});
       if(STATE){STATE.activeMatch=null;STATE.matches||=[];const ix=STATE.matches.findIndex(x=>x.id===res.match.id);if(ix>=0)STATE.matches[ix]=res.match;else STATE.matches.push(res.match);}
