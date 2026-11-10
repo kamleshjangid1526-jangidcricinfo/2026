@@ -245,7 +245,7 @@ let ADMIN_STUDIO_TEMPLATES=[],ADMIN_CARD_TEMPLATES=[],ADMIN_ANIMATION_TEMPLATES=
 async function loadAdminStudioDesigns(selectedId=''){
  const select=$('studioDesignSelect');if(!select)return;
  try{
-  const data=await api('/api/public/studio-library');ADMIN_STUDIO_TEMPLATES=Array.isArray(data.templates)?data.templates:[];ADMIN_CARD_TEMPLATES=Array.isArray(data.cardTemplates)?data.cardTemplates:[];ADMIN_ANIMATION_TEMPLATES=Array.isArray(data.animationTemplates)?data.animationTemplates:[];
+  const response=await api('/api/public/studio-library');const data=response.studioDesign||response;ADMIN_STUDIO_TEMPLATES=Array.isArray(data.templates)?data.templates:[];ADMIN_CARD_TEMPLATES=Array.isArray(data.cardTemplates)?data.cardTemplates:[];ADMIN_ANIMATION_TEMPLATES=Array.isArray(data.animationTemplates)?data.animationTemplates:[];
   const fill=(id,list,label,infoId,statusId,wanted='')=>{const el=$(id);if(!el)return;if(!list.length){el.innerHTML=`<option value="">No published ${label} designs</option>`;if($(infoId))$(infoId).textContent=`Admin → Studio Canvas के ${label} Designer में design बनाकर Publish करें।`;if($(statusId))$(statusId).textContent=`अभी कोई Published ${label} design उपलब्ध नहीं है।`;return;}el.innerHTML=list.map(t=>`<option value="${esc(t.id)}">${esc(t.name||'Untitled Design')}</option>`).join('');if(wanted&&list.some(t=>String(t.id)===String(wanted)))el.value=wanted;};
   fill('studioDesignSelect',ADMIN_STUDIO_TEMPLATES,'Score Layer','studioDesignInfo','studioDesignStatus',selectedId||STATE?.broadcast?.studioDesign?.activeTemplateId||'');
   fill('studioCardDesignSelect',ADMIN_CARD_TEMPLATES,'Card','studioCardDesignInfo','studioCardDesignStatus',STATE?.broadcast?.cardDesign?.template?.id||'');
