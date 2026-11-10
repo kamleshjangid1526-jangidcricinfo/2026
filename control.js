@@ -1,4 +1,5 @@
 let STATE=null, MATCH=null, selectedTeamId=null, matchStep=1, modalCloseHook=null, PUBLIC_LIVE=[], activeCardType=null, draftSaveTimer=null, restoringMatchDraft=false, secondSetupModalOpen=false, secondSetupDismissed=false, secondSetupOpenScheduled=false, nextInningsModalOpen=false, nextInningsPromptDismissed=false, nextInningsPromptScheduled=false, newBatterModalOpen=false, newBatterDismissed=false, newBatterOpenScheduled=false;
+let broadcastSequence=Date.now(),eventBroadcastQueue=Promise.resolve();
 // Auth bootstrap guard: an initial unauthenticated /api/state request must never undo a later successful login.
 let authBootSequence=0, loginSubmitting=false;
 const DESIGN_DEFAULTS={enabled:false,width:92,scale:100,scoreFont:56,metaFont:11,logoSize:36,opacity:94,radius:15,border:1,shape:'rounded',fontFamily:'system',position:'bottom-center',bg:'#071626',accent:'#58c8ff',text:'#f4f9ff'};
@@ -234,7 +235,7 @@ function renderGraphics(){
  document.querySelectorAll('[data-event-duration]').forEach(x=>x.value=EVENT_DURATION_MAP[x.dataset.eventDuration]||b.duration||2200);
  document.querySelectorAll('[data-card-anim]').forEach(x=>{const list=availableAnimations('card'),v=CARD_ANIM_MAP[x.dataset.cardAnim]||'zoom';x.value=list.includes(v)?v:list[0];CARD_ANIM_MAP[x.dataset.cardAnim]=x.value});
  document.querySelectorAll('[data-card-duration]').forEach(x=>x.value=CARD_DURATION_MAP[x.dataset.cardDuration]||1800);
- document.querySelectorAll('[data-card-button]').forEach(x=>x.classList.toggle('cardOn',x.dataset.cardButton===(b.card?.type||activeCardType)));
+ syncCardButtonState(b.card?.type||activeCardType);
  setDesignControls(SCORE_DESIGN);
  updateLayerPreview();
  loadAdminStudioDesigns(b.studioDesign?.activeTemplateId || '');
@@ -312,14 +313,14 @@ $('sponsorControlInterval')?.addEventListener('change',async()=>{const prev=STAT
 function updateLayerPreview(){const p=$('layerPreview');if(!p)return;const layout=+$('layerSelect').value||1;const color=+$('colorSelect').value||1;const reference=layout<=7;p.className=`layerPreview previewPattern${layout} ${reference?`referenceEra${layout}`:''} color${color}`;p.dataset.layout=String(layout);$('colorSelect').disabled=false;$('colorSelect').title='Choose a colour palette independently from the selected layout.';const hint=$('colorStyleHint');if(hint)hint.textContent='All 20 new layouts support every independent colour palette.';p.innerHTML=`<div class="pvBatTeam"><i class="pvLogo">JX</i><b>JANGID XI</b><small>BAT</small></div><div class="pvMidScore"><small>INN 1 · JANGID XI</small><strong>102<span>/</span>3</strong><em>12.4 OV · CRR 8.27</em></div><div class="pvBowlTeam"><i class="pvLogo">OP</i><b>OPPONENT</b><small>BOWL</small></div><div class="pvPlayers"><span><i>STR</i> Batter 58* <small>(31)</small></span><span><i>NON</i> Player 17 <small>(12)</small></span></div><div class="pvBowler"><small>NOW BOWLING</small><b>Bowler 2/21</b><em>3.0 OV</em></div><div class="pvBalls"><small>BALLS</small><i>1</i><i class="four">4</i><i>0</i><i class="six">6</i><i class="wicket">W</i><i>1</i></div><div class="pvChase"><small>NEED</small><b>42</b><em>RRR 8.4</em></div>`}
 let EVENT_ANIM_MAP={FOUR:'boundary-ripple',SIX:'stadium-surge',WICKET:'shard-break','FREE HIT':'spotlight',FIFTY:'orbit',CENTURY:'fireworks','NO BALL':'flash',WIDE:'slideLeft','LEG BYE':'wipe',BYE:'fade','NEW BATSMAN':'bounce','NEW BOWLER':'flip',RESULT:'fireworks','INNINGS BREAK':'shatter',POWERPLAY:'glitch',PARTNERSHIP:'rotate','50 PARTNERSHIP':'spark'};
 async function saveBroadcast(extra={}){
-  const payload={layer:+$('layerSelect').value,color:+$('colorSelect').value,design:readDesignControls(),animation:$('animationSelect').value,duration:Math.max(300,Math.min(10000,+$('animationDuration').value||2200)),cardAnimation:$('cardAnimationSelect')?.value||'zoom',cardDuration:Math.max(300,Math.min(10000,+$('cardAnimationDuration')?.value||1800)),eventAnimations:EVENT_ANIM_MAP,eventDurations:EVENT_DURATION_MAP,cardAnimations:CARD_ANIM_MAP,cardDurations:CARD_DURATION_MAP,...extra,eventId:Date.now()};
+  const payload={layer:+$('layerSelect').value,color:+$('colorSelect').value,design:readDesignControls(),animation:$('animationSelect').value,duration:Math.max(300,Math.min(10000,+$('animationDuration').value||2200)),cardAnimation:$('cardAnimationSelect')?.value||'zoom',cardDuration:Math.max(300,Math.min(10000,+$('cardAnimationDuration')?.value||1800)),eventAnimations:EVENT_ANIM_MAP,eventDurations:EVENT_DURATION_MAP,cardAnimations:CARD_ANIM_MAP,cardDurations:CARD_DURATION_MAP,...extra,eventId:++broadcastSequence};
   await api('/api/broadcast',{method:'POST',body:JSON.stringify(payload)});
   if(STATE)STATE.broadcast={...(STATE.broadcast||{}),...payload};
 }
 // The no-code visual editor persists its template library beside the existing broadcast settings.
 window.persistScoreboardStudio = async (studioDesign) => saveBroadcast({studioDesign, event:null});
 function eventStyle(event){return EVENT_STYLES[event]||'generic'}
-async function fireEvent(event,meta={}){
+async function publishEventNow(event,meta={}){
  // Broadcast graphics are best-effort: a graphics/API failure must never roll back a saved ball or lock scoring.
  if(!activePlan())return {ok:false,skipped:true};
  const duration=EVENT_DURATION_MAP[event]||Math.max(300,Math.min(10000,+$('animationDuration').value||2200));
@@ -332,6 +333,18 @@ async function fireEvent(event,meta={}){
   if(status)status.textContent='स्कोर सुरक्षित है; Broadcast Graphic अभी उपलब्ध नहीं है।';
   return {ok:false,error:error?.message||'Broadcast unavailable'};
  }
+}
+function fireEvent(event,meta={}){
+ const task=eventBroadcastQueue.then(async()=>{
+  const result=await publishEventNow(event,meta);
+  if(result?.ok){
+   const duration=Math.max(900,Number(EVENT_DURATION_MAP[event]||$('animationDuration')?.value||2200));
+   await new Promise(resolve=>setTimeout(resolve,duration+100));
+  }
+  return result;
+ });
+ eventBroadcastQueue=task.catch(error=>{console.warn('Queued broadcast event failed:',error);return {ok:false,error:error?.message||'Broadcast unavailable'};});
+ return task;
 }
 function fireEventSequence(events){
  let delay=0;
@@ -361,13 +374,27 @@ function cardDataFor(type){
  if(type==='chase'){const ballsLeft=Math.max(0,(MATCH?.oversLimit||0)*6-balls),need=Math.max(0,(Number(i.target)||0)-score);return {name:'RUNS NEEDED',teamName:bat?.name||'',score,wickets,balls,target:i.target||0,runsNeeded:need,ballsRemaining:ballsLeft,rrr:ballsLeft?(need/(ballsLeft/6)).toFixed(2):'0.00',runRate:crr};}
  return null;
 }
+function syncCardButtonState(type=STATE?.broadcast?.card?.type||activeCardType){
+ const selected=type||null;
+ document.querySelectorAll('[data-card-button]').forEach(button=>{
+  const active=!!selected&&button.dataset.cardButton===selected;
+  button.classList.toggle('cardOn',active);
+  button.setAttribute('aria-pressed',String(active));
+ });
+}
 async function toggleCard(type){
  if(!activePlan())return planModal('Activate a plan to use broadcast graphics');
  const current=STATE?.broadcast?.card?.type||activeCardType;
- if(current===type){activeCardType=null;await saveBroadcast({card:null,cardId:Date.now(),event:null});document.querySelectorAll('[data-card-button]').forEach(b=>b.classList.remove('cardOn'));return}
+ if(current===type){
+  activeCardType=null;syncCardButtonState(null);
+  try{await saveBroadcast({card:null,cardId:Date.now(),event:null});}
+  catch(error){activeCardType=STATE?.broadcast?.card?.type||null;syncCardButtonState();throw error;}
+  return;
+ }
  const data=cardDataFor(type);if(!data)return alert('Start a match before showing a card.');
- activeCardType=type;document.querySelectorAll('[data-card-button]').forEach(b=>b.classList.toggle('cardOn',b.dataset.cardButton===type));
- await saveBroadcast({card:{type,data},cardId:Date.now(),cardAnimation:CARD_ANIM_MAP[type]||$('cardAnimationSelect').value,cardDurations:CARD_DURATION_MAP,event:null});
+ activeCardType=type;syncCardButtonState(type);
+ try{await saveBroadcast({card:{type,data},cardId:Date.now(),cardAnimation:CARD_ANIM_MAP[type]||$('cardAnimationSelect').value,cardDurations:CARD_DURATION_MAP,event:null});}
+ catch(error){activeCardType=STATE?.broadcast?.card?.type||null;syncCardButtonState();throw error;}
 }
 async function refreshActiveCard(){const type=STATE?.broadcast?.card?.type||activeCardType;if(!type)return;const data=cardDataFor(type);if(data)await saveBroadcast({card:{type,data},cardId:STATE?.broadcast?.cardId||0,event:null,cardAnimation:CARD_ANIM_MAP[type]||'zoom',cardDurations:CARD_DURATION_MAP})}
 function planModal(heading='Match access is required'){
@@ -523,9 +550,14 @@ $('animationSelect').addEventListener('change',async()=>{EVENTS.filter(e=>!['FOU
 $('animationDuration').addEventListener('change',async()=>{const d=Math.max(300,Math.min(10000,+$('animationDuration').value||2200));$('animationDuration').value=d;EVENTS.forEach(e=>EVENT_DURATION_MAP[e]=d);document.querySelectorAll('[data-event-duration]').forEach(x=>x.value=d);if(activePlan())await saveBroadcast({event:null})});
 $('cardAnimationSelect').addEventListener('change',async()=>{CARD_TYPES.forEach(([key])=>CARD_ANIM_MAP[key]=$('cardAnimationSelect').value);document.querySelectorAll('[data-card-anim]').forEach(x=>x.value=CARD_ANIM_MAP[x.dataset.cardAnim]);if(activePlan())await saveBroadcast({event:null})});
 $('cardAnimationDuration').addEventListener('change',async()=>{const d=Math.max(300,Math.min(10000,+$('cardAnimationDuration').value||1800));$('cardAnimationDuration').value=d;CARD_TYPES.forEach(([key])=>CARD_DURATION_MAP[key]=d);document.querySelectorAll('[data-card-duration]').forEach(x=>x.value=d);if(activePlan())await saveBroadcast({event:null})});
-$('batterCard').onclick=()=>toggleCard('batter');$('bowlerCard').onclick=()=>toggleCard('bowler');$('playerCard').onclick=()=>toggleCard('player');$('partnershipCard').onclick=()=>toggleCard('partnership');$('teamBattingCard').onclick=()=>toggleCard('teamBatting');$('teamBowlingCard').onclick=()=>toggleCard('teamBowling');$('nextBatterCard').onclick=()=>toggleCard('nextBatter');$('newBatterCard').onclick=()=>toggleCard('newBatter');$('newBowlerCard').onclick=()=>toggleCard('newBowler');$('inningsBreakCard').onclick=()=>toggleCard('inningsBreak');$('resultCard').onclick=()=>toggleCard('result');$('clearCard').onclick=async()=>{activeCardType=null;document.querySelectorAll('[data-card-button]').forEach(b=>b.classList.remove('cardOn'));await saveBroadcast({card:null,cardId:Date.now(),event:null})};
+$('batterCard').onclick=()=>toggleCard('batter');$('bowlerCard').onclick=()=>toggleCard('bowler');$('playerCard').onclick=()=>toggleCard('player');$('partnershipCard').onclick=()=>toggleCard('partnership');$('teamBattingCard').onclick=()=>toggleCard('teamBatting');$('teamBowlingCard').onclick=()=>toggleCard('teamBowling');$('nextBatterCard').onclick=()=>toggleCard('nextBatter');$('newBatterCard').onclick=()=>toggleCard('newBatter');$('newBowlerCard').onclick=()=>toggleCard('newBowler');$('inningsBreakCard').onclick=()=>toggleCard('inningsBreak');$('resultCard').onclick=()=>toggleCard('result');$('clearCard').onclick=async()=>{activeCardType=null;syncCardButtonState(null);try{await saveBroadcast({card:null,cardId:Date.now(),event:null});}catch(error){activeCardType=STATE?.broadcast?.card?.type||null;syncCardButtonState();alert(`Card बंद नहीं हो सका: ${error.message}`)}};
 $('resumeSetup').onclick=()=>window.resumeScoringSetup?.();
-document.querySelectorAll('[data-powerplay]').forEach(btn=>btn.onclick=async()=>{const i=currentInnings();if(!i||MATCH.status!=='live'||MATCH.awaitingNextInnings||MATCH.awaitingInningsSetup||i.awaitingBowler)return;i.powerplay=btn.dataset.powerplay||'';await saveMatch(true);if(i.powerplay)fireEvent('POWERPLAY')});
+document.querySelectorAll('[data-powerplay]').forEach(btn=>btn.onclick=async()=>{
+ const i=currentInnings();if(!i||MATCH.status!=='live'||MATCH.awaitingNextInnings||MATCH.awaitingInningsSetup||i.awaitingBowler)return;
+ const previous=i.powerplay||'',next=btn.dataset.powerplay||'';i.powerplay=next;renderScoring();
+ try{await saveMatch(false);if(next)void fireEvent('POWERPLAY');}
+ catch(error){i.powerplay=previous;renderScoring();alert(`Power Play सेव नहीं हुआ: ${error.message}`);}
+});
 $('manualStrikeChange').onclick=async()=>{const i=currentInnings();if(!i||MATCH?.status!=='live')return alert('कोई LIVE match नहीं है।');if(!i.striker||!i.nonStriker||String(i.striker)===String(i.nonStriker))return alert('दो अलग-अलग बल्लेबाज चुनें।');const oldStriker=i.striker,oldNon=i.nonStriker;i.striker=oldNon;i.nonStriker=oldStriker;try{await saveMatch(true)}catch(err){i.striker=oldStriker;i.nonStriker=oldNon;renderScoring();alert(`Strike change सेव नहीं हुआ: ${err.message}`)}};
 // Change Batter is handled by the scoring engine's delegated click handler.
 $('chaseCard').onclick=()=>toggleCard('chase');
@@ -576,7 +608,7 @@ async function boot(options={}){
  showPage('dashboard');
  return true;
 }
-const es=new EventSource('/events');es.onmessage=e=>{try{const p=JSON.parse(e.data);PUBLIC_LIVE=p.activeMatches||[];const mine=PUBLIC_LIVE.find(m=>m.userId===STATE?.user?.id&&m.status==='live');if(STATE?.user?.id){if(mine){MATCH=mine;STATE.activeMatch=MATCH}else if(!MATCH||MATCH.status!=='live'){MATCH=STATE.activeMatch||null}renderDashboard();if(!$('scoring').classList.contains('hidden'))renderScoring()}}catch{}};
+const es=new EventSource('/events');es.onmessage=e=>{try{const p=JSON.parse(e.data);PUBLIC_LIVE=p.activeMatches||[];const ownBroadcast=STATE?.user?.id?p.broadcasts?.[STATE.user.id]:null;if(ownBroadcast){STATE.broadcast={...(STATE.broadcast||{}),...ownBroadcast};activeCardType=ownBroadcast.card?.type||null;syncCardButtonState(activeCardType);}const mine=PUBLIC_LIVE.find(m=>m.userId===STATE?.user?.id&&m.status==='live');if(STATE?.user?.id){if(mine){MATCH=mine;STATE.activeMatch=MATCH}else if(!MATCH||MATCH.status!=='live'){MATCH=STATE.activeMatch||null}renderDashboard();if(!$('scoring').classList.contains('hidden'))renderScoring()}}catch{}};
 setInterval(()=>{if(STATE)$('clock').textContent=new Date().toLocaleString()},1000);
 fillGraphics();boot();
 
