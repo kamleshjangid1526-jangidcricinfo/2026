@@ -5,6 +5,15 @@ let lastEventId=null,lastCardId=null,lastRenderMatchId=null,eventVisible=false,l
 let sponsorLibrary=[],sponsorLibraryVersion='',sponsorLibraryRequested=false,lastSponsorManualToken='',lastSponsorTimeoutToken='',sponsorAutoState={matchId:'',innings:0,over:0,status:''},pendingSponsor=null,sponsorVisible=false,sponsorHideTimer=null,sponsorRotationIndex=0,sponsorRotationBase='',dismissedCardId=null;
 const accentByColor={1:'#58c8ff',2:'#43e09b',3:'#ff6074',4:'#ffae4d',5:'#c59bff',6:'#f5d06c',7:'#ffffff',8:'#44e1d5',9:'#ef8493',10:'#dce5ef'};
 function currentTeamName(id,m){return id===m.teamA?m.teamAName:id===m.teamB?m.teamBName:id}
+function resolveEventBatterName(meta={},eventType=''){
+ const details=meta.wicketDetails||meta.eventPlayer||{};
+ const innings=latestMatch?.activeInnings||{};
+ const expectedRuns=eventType==='FOUR'?4:eventType==='SIX'?6:null;
+ const events=Array.isArray(innings.events)?innings.events:[];
+ const lastEvent=events.slice().reverse().find(item=>eventType==='WICKET'?!!item?.wicket:(expectedRuns!==null&&Number(item?.runs)===expectedRuns&&!item?.wicket));
+ const strikerStat=innings.batStats?.[String(innings.striker||'')]||innings.batStats?.[String(innings.strikerId||'')];
+ return String(details.batter||details.name||meta.batter||lastEvent?.batter||strikerStat?.name||'').trim();
+}
 function eventMarkup(ev,meta={}){
  const e=String(ev||'');
  if(e==='WICKET')return '<div class="eventInner wicketEventInner"><img class="eventSticker batterSticker walkingSticker" src="assets/stickers/batter-sticker.png" alt="Departing batter illustration"><img class="eventSticker umpireSticker" src="assets/stickers/umpire-out-sticker.png" alt="Umpire OUT signal illustration"><div class="eventTitle">OUT</div><div class="eventSub">WICKET</div></div>  ';
@@ -350,6 +359,10 @@ function renderEvent(b){
  if(corner){el.innerHTML=incomingCornerMarkup(eventName,b);el.className=`eventLayer incomingCornerLayer ${eventName==='NEW BOWLER'?'isBowler':'isBatter'}`;el.dataset.anim=b.animation||'fade';}
  else if(eventName==='WICKET'&&b.wicketDetails){const d=b.wicketDetails;el.innerHTML=`<div class="eventInner wicketEventInner detailedWicketEvent"><div class="eventTitle">WICKET</div><b class="eventPlayerName">${esc(d.batter||'Batter')}</b><div class="eventSub">${esc(d.dismissal||'OUT')}</div><small>${esc(d.bowler||'')} ${d.fielder?` · ${esc(d.fielder)}`:''}</small></div>`;el.className='eventLayer style-wicket';el.dataset.anim=b.animation||'slam';}
  else{el.innerHTML=animationTemplate?studioOverlayTemplateMarkup(animationTemplate,latestMatch||{}, {kind:'animation',event:b.event}):eventMarkup(b.event,b);el.className=`eventLayer style-${String(b.eventStyle||'generic').toLowerCase().replace(/\s+/g,'')}${animationTemplate?' studioAnimationEvent':''}`;el.dataset.anim=eventName==='NO BALL'?(b.eventAnimations?.['FREE HIT']||b.eventAnimations?.[eventName]||b.animation||'spotlight'):(b.eventAnimations?.[b.event]||b.animation||'zoom');}
+ if(['FOUR','SIX','WICKET'].includes(eventName)&&!el.querySelector('.eventPlayerName')){
+  const batterName=resolveEventBatterName(b,eventName);
+  if(batterName){const name=document.createElement('div');name.className='eventPlayerName jcEventPlayerNameOverlay';name.textContent=batterName;el.appendChild(name);}
+ }
  el.dataset.eventType=eventName.toLowerCase().replace(/\s+/g,'-');el.style.animationDuration=`${b.duration||2200}ms`;el.style.display='grid';const inner=el.querySelector('.eventInner,.jlStudioOverlayRoot,.incomingPlayerToast');if(inner)inner.style.animationDuration=`${b.duration||2200}ms`;
  el._hide=setTimeout(()=>{eventVisible=false;el.style.display='none';el.innerHTML='';el.classList.remove('incomingCornerLayer');if(!cardEl.classList.contains('isVisible'))flushPendingSponsor()},Math.max(900,Number(b.duration||2200)-50));
 }
