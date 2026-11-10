@@ -133,36 +133,36 @@ body.scoreLayerBody #eventLayer[data-event-type="six"] .fireworks {
 
 /* Alpha rings, rays and streaks; the cricket picture remains visible underneath. */
 body.scoreLayerBody #eventLayer[data-event-type="four"]::before {
-  opacity:1 !important;
+  opacity:1;
   background:
     radial-gradient(circle at 50% 50%,transparent 0 18vw,rgba(38,225,245,.18) 18.1vw 18.35vw,transparent 18.5vw 31vw,rgba(38,225,245,.1) 31.1vw 31.3vw,transparent 31.5vw),
     conic-gradient(from 12deg at 50% 50%,transparent 0 10%,rgba(42,232,255,.16) 10.5% 11%,transparent 11.5% 23%,rgba(42,232,255,.12) 23.5% 24%,transparent 24.5% 48%,rgba(42,232,255,.16) 48.5% 49%,transparent 49.5% 100%) !important;
   animation:jcObsRingBurst 1.9s ease-out both !important;
 }
 body.scoreLayerBody #eventLayer[data-event-type="four"]::after {
-  opacity:.7 !important;background:repeating-linear-gradient(118deg,transparent 0 8vw,rgba(67,230,255,.16) 8.1vw 8.22vw,transparent 8.35vw 17vw) !important;
+  opacity:.7;background:repeating-linear-gradient(118deg,transparent 0 8vw,rgba(67,230,255,.16) 8.1vw 8.22vw,transparent 8.35vw 17vw) !important;
   animation:jcObsStreaks 1.65s ease-out both !important;
 }
 body.scoreLayerBody #eventLayer[data-event-type="six"]::before {
-  opacity:1 !important;
+  opacity:1;
   background:
     radial-gradient(circle at 50% 50%,transparent 0 17vw,rgba(255,194,66,.2) 17.1vw 17.35vw,transparent 17.5vw 30vw,rgba(255,194,66,.12) 30.1vw 30.3vw,transparent 30.5vw),
     conic-gradient(from 35deg at 50% 50%,transparent 0 7%,rgba(255,198,70,.2) 7.5% 8%,transparent 8.5% 18%,rgba(255,198,70,.13) 18.5% 19%,transparent 19.5% 40%,rgba(255,198,70,.2) 40.5% 41%,transparent 41.5% 100%) !important;
   animation:jcObsRingBurst 2.15s cubic-bezier(.16,.8,.2,1) both !important;
 }
 body.scoreLayerBody #eventLayer[data-event-type="six"]::after {
-  opacity:.72 !important;background:repeating-linear-gradient(62deg,transparent 0 7vw,rgba(255,205,82,.16) 7.1vw 7.25vw,transparent 7.4vw 16vw) !important;
+  opacity:.72;background:repeating-linear-gradient(62deg,transparent 0 7vw,rgba(255,205,82,.16) 7.1vw 7.25vw,transparent 7.4vw 16vw) !important;
   animation:jcObsStreaks 1.85s ease-out both !important;
 }
 body.scoreLayerBody #eventLayer[data-event-type="wicket"]::before {
-  opacity:1 !important;
+  opacity:1;
   background:
     radial-gradient(circle at 50% 50%,transparent 0 16vw,rgba(255,48,83,.2) 16.1vw 16.35vw,transparent 16.5vw 29vw,rgba(255,48,83,.12) 29.1vw 29.3vw,transparent 29.5vw),
     conic-gradient(from -20deg at 50% 50%,transparent 0 9%,rgba(255,48,83,.18) 9.5% 10%,transparent 10.5% 24%,rgba(255,48,83,.13) 24.5% 25%,transparent 25.5% 48%,rgba(255,48,83,.18) 48.5% 49%,transparent 49.5% 100%) !important;
   animation:jcObsRingBurst 1.9s cubic-bezier(.2,.8,.2,1) both !important;
 }
 body.scoreLayerBody #eventLayer[data-event-type="wicket"]::after {
-  opacity:.68 !important;background:repeating-linear-gradient(135deg,transparent 0 9vw,rgba(255,66,96,.17) 9.1vw 9.25vw,transparent 9.4vw 18vw) !important;
+  opacity:.68;background:repeating-linear-gradient(135deg,transparent 0 9vw,rgba(255,66,96,.17) 9.1vw 9.25vw,transparent 9.4vw 18vw) !important;
   animation:jcObsStreaks 1.7s ease-out both !important;
 }
 
