@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
 import {
-  getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, signOut, sendEmailVerification,
+  getAuth, browserSessionPersistence, setPersistence,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendEmailVerification,
   sendPasswordResetEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
 import {
@@ -26,6 +26,8 @@ if (missing.length) {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
+// Keep authenticated state only for the current browser session, not indefinitely on a shared device.
+const authPersistenceReady = setPersistence(auth, browserSessionPersistence);
 const db = getFirestore(app);
 const nowIso = () => new Date().toISOString();
 const rid = prefix => `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2,8)}`;
@@ -41,11 +43,10 @@ const cleanText = (v,n=140) => String(v ?? '').trim().slice(0,n);
 const mobileDigits = v => String(v||'').replace(/\D/g,'');
 const dateMs = v => { const n=Date.parse(v||''); return Number.isFinite(n)?n:0; };
 const toList = snap => snap.docs.map(d => ({id:d.id,...d.data()}));
-let authReadyResolve;
-const authReady = new Promise(resolve => { authReadyResolve=resolve; });
-onAuthStateChanged(auth, user => authReadyResolve(user));
-
-async function currentUser() { return auth.currentUser || await authReady; }
+async function currentUser() {
+  await authPersistenceReady;
+  return auth.currentUser;
+}
 async function profileFor(uid) { const s=await getDoc(doc(db,'users',uid)); return s.exists()?{uid:s.id,...s.data()}:null; }
 async function adminFor(uid) { const s=await getDoc(doc(db,'admins',uid)); return s.exists() && s.data().enabled === true; }
 async function requireUser() {
@@ -288,6 +289,7 @@ async function pointsForTournament(t, matches, teams) {
 async function handleApi(url,init={}) {
   const path=url.pathname, method=String(init.method||'GET').toUpperCase(), body=readBody(init);
   try {
+    await authPersistenceReady;
     if(path==='/api/health' && method==='GET') return ok({app:'Jangid Cricinfo',version:'4.5.0',mode:'github-pages-firebase',storage:'cloud-firestore',firebaseConnected:true});
     if(path==='/api/register' && method==='POST') {
       const email=cleanText(body.email,160).toLowerCase(), password=String(body.password||'');
