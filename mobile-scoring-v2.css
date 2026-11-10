@@ -103,3 +103,38 @@
  body.jc-scoring-view .scoreActionGrid button{min-height:28px}
  body.jc-scoring-view .scoringCardSummary{min-height:25px;padding:5px 8px}
 }
+
+
+/* Three equally sized on-field cards: striker, non-striker and current bowler. */
+@media(max-width:700px){
+ body.jc-scoring-view #currentPlayers{min-width:0}
+ body.jc-scoring-view #currentPlayers>.jcOnFieldGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;min-width:0}
+ body.jc-scoring-view .jcFieldPlayer{gap:3px;padding:5px 5px;border-radius:8px;min-width:0;overflow:hidden}
+ body.jc-scoring-view .jcFieldPlayerTop{align-items:flex-start;flex-wrap:wrap;gap:2px}
+ body.jc-scoring-view .jcFieldRole{font-size:7px;letter-spacing:0}
+ body.jc-scoring-view .jcStrikeBadge,body.jc-scoring-view .jcOverBadge{font-size:6px;white-space:normal;line-height:1.05}
+ body.jc-scoring-view .jcFieldPlayerName{font-size:clamp(9px,2.7vw,12px);line-height:1.1}
+ body.jc-scoring-view .jcFieldStats{gap:2px}
+ body.jc-scoring-view .jcFieldStats>div{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
+ body.jc-scoring-view .jcFieldStats strong{font-size:clamp(11px,3vw,14px)}
+ body.jc-scoring-view .jcFieldStats small{font-size:6px}
+ body.jc-scoring-view .jcFieldExtra{font-size:6px}
+ body.jc-scoring-view .jcBowlingTeam{font-size:6px}
+}
+@media(max-width:390px){
+ body.jc-scoring-view #currentPlayers>.jcOnFieldGrid{gap:3px}
+ body.jc-scoring-view .jcFieldPlayer{padding:4px 3px}
+ body.jc-scoring-view .jcFieldPlayerName{font-size:9px}
+ body.jc-scoring-view .jcFieldRole{font-size:6px}
+}
+@media(max-height:650px) and (max-width:700px){
+ body.jc-scoring-view .jcFieldPlayer{padding-top:3px;padding-bottom:3px;gap:2px}
+ body.jc-scoring-view .jcFieldExtra{display:none}
+}
+
+
+@media(max-width:700px){
+ body.jc-scoring-view .scoreGrid.cbLiveDetailsGrid>.panel:has(#currentPlayers){padding:5px 6px;margin:0}
+ body.jc-scoring-view .scoreGrid.cbLiveDetailsGrid>.panel:has(#currentPlayers)>.panelHead{margin:0 0 4px}
+ body.jc-scoring-view .scoreGrid.cbLiveDetailsGrid>.panel:has(#currentPlayers)>.panelHead h3{font-size:8px;line-height:1.1;letter-spacing:.04em}
+}

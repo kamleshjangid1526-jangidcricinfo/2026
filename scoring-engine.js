@@ -333,7 +333,31 @@
       ${stateNotice}
     </div>`;
     const striker=i.batStats?.[i.striker],non=i.batStats?.[i.nonStriker],bowler=i.bowlStats?.[i.currentBowler];
-    players.innerHTML=`<div class="currentPlayerGroups"><section class="currentPlayerGroup battingPlayerGroup"><h4>BATTERS · ${safe(bat?.name||'Batting Side')}</h4><div class="currentPlayerCard"><div><small>STRIKER</small><b>${safe(striker?.name||'—')}</b><strong>${striker?.runs||0} (${striker?.balls||0})</strong><span>${striker?.fours||0}×4 · ${striker?.sixes||0}×6</span></div><div><small>NON-STRIKER</small><b>${safe(non?.name||'—')}</b><strong>${non?.runs||0} (${non?.balls||0})</strong><span>${non?.fours||0}×4 · ${non?.sixes||0}×6</span></div></div></section><section class="currentPlayerGroup bowlingPlayerGroup"><h4>BOWLER · ${safe(bowl?.name||'Bowling Side')}</h4><div class="currentPlayerCard"><div><small>CURRENT BOWLER</small><b>${safe(bowler?.name||'—')}</b><strong>${fmtOvers(bowler?.balls||0)} · ${bowler?.runs||0}/${bowler?.wickets||0}</strong><span>WD ${bowler?.wides||0} · NB ${bowler?.noBalls||0}</span></div></div></section></div>`;
+    const bowlerRole=i.awaitingBowler?'LAST OVER BOWLER':'CURRENT BOWLER';
+    const overRole=i.awaitingBowler?'NEXT OVER · SELECT BOWLER':`OVER ${Math.floor(ballsNow/6)+1}`;
+    const batterCard=(p,role,isStriker)=>`<section class="jcFieldPlayer ${isStriker?'jcFieldStriker':'jcFieldNonStriker'}">
+      <div class="jcFieldPlayerTop"><span class="jcFieldRole">${role}</span>${isStriker?'<span class="jcStrikeBadge">● ON STRIKE</span>':''}</div>
+      <b class="jcFieldPlayerName" title="${safe(p?.name||'Not selected')}">${safe(p?.name||'Not selected')}</b>
+      <div class="jcFieldStats">
+        <div><strong>${Number(p?.runs)||0}${isStriker?'*':''}</strong><small>RUNS</small></div>
+        <div><strong>${Number(p?.balls)||0}</strong><small>BALLS</small></div>
+      </div>
+      <div class="jcFieldExtra">${Number(p?.fours)||0}×4 <span>·</span> ${Number(p?.sixes)||0}×6</div>
+    </section>`;
+    players.innerHTML=`<div class="jcOnFieldGrid">
+      ${batterCard(striker,'STRIKER',true)}
+      ${batterCard(non,'NON-STRIKER',false)}
+      <section class="jcFieldPlayer jcFieldBowler">
+        <div class="jcFieldPlayerTop"><span class="jcFieldRole">${bowlerRole}</span><span class="jcOverBadge">${overRole}</span></div>
+        <b class="jcFieldPlayerName" title="${safe(bowler?.name||'Bowler not selected')}">${safe(bowler?.name||'Bowler not selected')}</b>
+        <div class="jcFieldStats jcBowlerStats">
+          <div><strong>${fmtOvers(bowler?.balls||0)}</strong><small>OVERS</small></div>
+          <div><strong>${Number(bowler?.runs)||0}</strong><small>RUNS</small></div>
+          <div><strong>${Number(bowler?.wickets)||0}</strong><small>WICKETS</small></div>
+        </div>
+        <div class="jcFieldExtra jcBowlingTeam" title="${safe(bowl?.name||'Bowling team')}">${safe(bowl?.name||'Bowling team')} · WD ${Number(bowler?.wides)||0} · NB ${Number(bowler?.noBalls)||0}</div>
+      </section>
+    </div>`;
     const latestBallEvent=[...(i.events||[])].reverse().find(e=>e?.ballLabel),latestOverKey=latestBallEvent?String(latestBallEvent.ballLabel).split('.')[0]:null,currentOverEvents=latestOverKey===null?(i.events||[]).slice(-6):(i.events||[]).filter(e=>String(e?.ballLabel||'').split('.')[0]===latestOverKey).slice(-12);recent.innerHTML=currentOverEvents.map(e=>`<span class="ball ${e.wicket?'ballWicket':e.runs===4?'ballFour':e.runs===6?'ballSix':''}" title="${safe(e.commentary||'')} ">${safe(e.label||labelForEvent(e))}</span>`).join('')||'<span class="muted">पहली गेंद का इंतज़ार…</span>';
     const disabled=!isOpen || !!i._replaceSlot || !!i.awaitingNewBatter || !!i.awaitingBowler || !i.currentBowler;
     grid?.classList.toggle('disabledScoreGrid',disabled);grid?.querySelectorAll('button').forEach(b=>b.disabled=disabled);
