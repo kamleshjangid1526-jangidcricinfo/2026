@@ -609,7 +609,25 @@ async function boot(options={}){
  showPage('dashboard');
  return true;
 }
-const es=new EventSource('/events');es.onmessage=e=>{try{const p=JSON.parse(e.data);PUBLIC_LIVE=p.activeMatches||[];const ownBroadcast=STATE?.user?.id?p.broadcasts?.[STATE.user.id]:null;if(ownBroadcast){STATE.broadcast={...(STATE.broadcast||{}),...ownBroadcast};activeCardType=ownBroadcast.card?.type||null;syncCardButtonState(activeCardType);}const mine=PUBLIC_LIVE.find(m=>m.userId===STATE?.user?.id&&m.status==='live');if(STATE?.user?.id){if(mine){MATCH=mine;STATE.activeMatch=MATCH}else if(!MATCH||MATCH.status!=='live'){MATCH=STATE.activeMatch||null}renderDashboard();if(!$('scoring').classList.contains('hidden'))renderScoring()}}catch{}};
+const es=new EventSource('/events');es.onmessage=e=>{try{
+ const p=JSON.parse(e.data);PUBLIC_LIVE=p.activeMatches||[];
+ const ownBroadcast=STATE?.user?.id?p.broadcasts?.[STATE.user.id]:null;
+ if(ownBroadcast){STATE.broadcast={...(STATE.broadcast||{}),...ownBroadcast};activeCardType=ownBroadcast.card?.type||null;syncCardButtonState(activeCardType);}
+ const incomingMine=PUBLIC_LIVE.find(m=>m.userId===STATE?.user?.id&&m.status==='live');
+ if(STATE?.user?.id){
+  if(incomingMine){
+   const localMatch=MATCH?.id===incomingMine.id&&MATCH.status==='live'?MATCH:(STATE.activeMatch?.id===incomingMine.id&&STATE.activeMatch.status==='live'?STATE.activeMatch:null);
+   const stamp=value=>Math.max(Date.parse(value?.updatedAt||'')||0,Date.parse(value?.offlineUpdatedAt||'')||0);
+   const mine=localMatch&&stamp(localMatch)>stamp(incomingMine)?localMatch:incomingMine;
+   MATCH=mine;STATE.activeMatch=mine;STATE.matches||=[];
+   const matchIndex=STATE.matches.findIndex(m=>String(m.id)===String(mine.id));
+   if(matchIndex>=0)STATE.matches[matchIndex]=mine;else STATE.matches.push(mine);
+   const liveIndex=PUBLIC_LIVE.findIndex(m=>String(m.id)===String(mine.id));
+   if(liveIndex>=0)PUBLIC_LIVE[liveIndex]=mine;
+  }else if(!MATCH||MATCH.status!=='live'){MATCH=STATE.activeMatch||null;}
+  renderDashboard();if(!$('scoring').classList.contains('hidden'))renderScoring();
+ }
+ }catch(error){console.warn('Live scoring update ignored:',error);}};
 setInterval(()=>{if(STATE)$('clock').textContent=new Date().toLocaleString()},1000);
 fillGraphics();boot();
 
