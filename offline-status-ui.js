@@ -3,9 +3,15 @@
   const mount=()=>{
     if(!document.body)return;
     const isObsScoreLayer=document.body.classList.contains('scoreLayerBody');
+    const obsStatusSelectors='#jcOfflineStatus,#offlineScoreStatus,.jcOfflineStatus,.offlineScoreStatus,[data-jc-offline-status],[data-offline-status]';
+    const clearObsStatus=()=>{
+      if(!document.body?.classList.contains('scoreLayerBody'))return;
+      document.querySelectorAll(obsStatusSelectors).forEach(node=>node.remove());
+    };
     if(isObsScoreLayer){
-      document.getElementById('jcOfflineStatus')?.remove();
-      document.getElementById('offlineScoreStatus')?.remove();
+      clearObsStatus();
+      const statusObserver=new MutationObserver(clearObsStatus);
+      statusObserver.observe(document.body,{childList:true,subtree:true});
     }
     const scoring=document.getElementById('scoring');
     let bar=isObsScoreLayer?null:(document.getElementById('jcOfflineStatus')||document.getElementById('offlineScoreStatus'));
