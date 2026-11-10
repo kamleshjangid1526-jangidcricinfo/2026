@@ -37,17 +37,21 @@
     try{
       const state=await readState(),uid=activeUid||uidOf(state);if(!uid){localStatus('offline','Login करें; saved offline data इस device पर सुरक्षित है।');return false;}
       const matchRows=await records('queue:'+uid+':match:');
+      const finishRows=await records('queue:'+uid+':finish:');
+      const broadcastRow=await store?.get(key(uid,'broadcast'));
+      if(!matchRows.length&&!finishRows.length&&!broadcastRow){localStatus('synced','कोई pending बदलाव नहीं है।');return true;}
       for(const row of matchRows){
         const match=row.value?.match;if(!match?.id)continue;
         const result=await apiRequest(new URL('/api/match/state',location.href),{method:'POST',body:JSON.stringify({match})});
         if((result.status||200)>=400)throw Object.assign(new Error(result.body?.error||'Match sync failed'),{code:result.body?.code});
         const latest=await store?.get(row.key);if(latest?.version===row.value.version)await store?.remove(row.key);
-        const finish=await store?.get(key(uid,'finish',match.id));
-        if(finish){const done=await apiRequest(new URL('/api/match/finish',location.href),{method:'POST',body:JSON.stringify(finish.body)});if((done.status||200)>=400)throw new Error(done.body?.error||'Finish sync failed');await store?.remove(key(uid,'finish',match.id));}
       }
-      const broadcastRow=await store?.get(key(uid,'broadcast'));
-      if(broadcastRow){const result=await apiRequest(new URL('/api/broadcast',location.href),{method:'POST',body:JSON.stringify(broadcastRow.payload)});if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast sync failed');const latest=await store?.get(key(uid,'broadcast'));if(latest?.version===broadcastRow.version)await store?.remove(key(uid,'broadcast'));}
-      try{const latest=await apiRequest(new URL('/api/state',location.href),{method:'GET'});if((latest.status||200)<400&&latest.body?.user)await saveState(await withPending(latest.body));}catch{}
+      for(const row of finishRows){
+        const result=await apiRequest(new URL('/api/match/finish',location.href),{method:'POST',body:JSON.stringify(row.value.body||{})});
+        if((result.status||200)>=400)throw new Error(result.body?.error||'Match finish sync failed');
+        await store?.remove(row.key);await store?.remove(key(uid,'match',String(row.key).split(':').pop()));
+      }
+      if(broadcastRow){const result=await apiRequest(new URL('/api/broadcast',location.href),{method:'POST',body:JSON.stringify(broadcastRow.payload)});if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast save failed');const latest=await store?.get(key(uid,'broadcast'));if(latest?.version===broadcastRow.version)await store?.remove(key(uid,'broadcast'));}
       const pending=(await records('queue:'+uid+':')).length;localStatus(pending?'pending':'synced',pending?pending+' pending items remain.':'सभी बदलाव Firebase से Sync हो गए।');return pending===0;
     }catch(error){localStatus('pending',error?.message||'Sync अभी पूरा नहीं हुआ; फिर प्रयास होगा।');return false;}
     finally{syncing=false;}
