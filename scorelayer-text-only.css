@@ -1,0 +1,67 @@
+/* Text-only live-data pass for compact Score Layer layouts.
+   Keep the overall scorebug/theme artwork; remove individual boxes behind cricket details. */
+#scoreBar.scoreBar.jlCompactPattern .jlBatters,
+#scoreBar.scoreBar.jlCompactPattern .jlScoreWrap,
+#scoreBar.scoreBar.jlCompactPattern .jlBowler,
+#scoreBar.scoreBar.jlCompactPattern .jlBalls,
+#scoreBar.scoreBar.jlCompactPattern .jlBatterList,
+#scoreBar.scoreBar.jlCompactPattern .jlBatterRow,
+#scoreBar.scoreBar.jlCompactPattern .jlScoreTop,
+#scoreBar.scoreBar.jlCompactPattern .jlScoreMain,
+#scoreBar.scoreBar.jlCompactPattern .jlPowerplayGroup,
+#scoreBar.scoreBar.jlCompactPattern .jlBallRail {
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+#scoreBar.scoreBar.jlCompactPattern .jlBallChip,
+#scoreBar.scoreBar.jlCompactPattern .jlTargetBadge,
+#scoreBar.scoreBar.jlCompactPattern .jlPhaseTag {
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:0!important;
+  min-height:0!important;
+  padding:0!important;
+  margin:0 .12em!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:inherit;
+}
+#scoreBar.scoreBar.jlCompactPattern .jlPhaseTag.isActive {
+  color:var(--accent)!important;
+  text-decoration:underline;
+  text-underline-offset:.2em;
+}
+#scoreBar.scoreBar.jlCompactPattern .jlScoreLogo,
+#scoreBar.scoreBar.jlCompactPattern .jlStrikeIcon {
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+#scoreBar.scoreBar.jlCompactPattern .jlScoreLogo {
+  border-radius:0!important;
+}
+#scoreBar.scoreBar[data-custom="true"] .jlBatters,
+#scoreBar.scoreBar[data-custom="true"] .jlScoreWrap,
+#scoreBar.scoreBar[data-custom="true"] .jlBowler,
+#scoreBar.scoreBar[data-custom="true"] .jlBalls,
+#scoreBar.scoreBar[data-custom="true"] .jlChase,
+#scoreBar.scoreBar[data-custom="true"] .jlBrandBay {
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+#scoreBar.scoreBar[data-custom="true"] .jlBallChip,
+#scoreBar.scoreBar[data-custom="true"] .jlTargetBadge,
+#scoreBar.scoreBar[data-custom="true"] .jlPhaseTag {
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  padding:0!important;
+}
