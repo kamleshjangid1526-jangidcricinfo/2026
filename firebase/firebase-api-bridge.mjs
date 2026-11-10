@@ -329,7 +329,11 @@ async function handleApi(url,init={}) {
       const map={}; broadcasts.forEach(x=>map[x.id]={...x});
       return {status:200,body:{plans:PLANS,contact:CONTACT,liveMatches:visible.filter(x=>x.status==='live'),matches:visible,tournaments:tRows,broadcasts:map,siteName:'Jangid Cricinfo'}};
     }
-    if(path==='/api/public/studio-library' && method==='GET') return ok({studioDesign:await getGlobalLibrary('studio')});
+    if(path==='/api/public/studio-library' && method==='GET') {
+      const library=await getGlobalLibrary('studio');
+      const published=list=>(Array.isArray(list)?list:[]).filter(item=>item&&item.published===true);
+      return ok({studioDesign:{...library,templates:published(library.templates),cardTemplates:published(library.cardTemplates),animationTemplates:published(library.animationTemplates)}});
+    }
     if(path==='/api/public/sponsor-library' && method==='GET') {const library=await getGlobalLibrary('sponsors');return ok({sponsors:(library.sponsors||[]).filter(x=>x.published===true),updatedAt:library.updatedAt||null});}
     const publicMatch=path.match(/^\/api\/public\/match\/([^/]+)$/);
     if(publicMatch&&method==='GET'){const s=await getDoc(publicDoc('publicMatches',decodeURIComponent(publicMatch[1])));return s.exists()?{status:200,body:{ok:true,match:{id:s.id,...s.data()}}}:fail(404,'यह Match उपलब्ध नहीं है।');}
@@ -339,6 +343,18 @@ async function handleApi(url,init={}) {
     if(publicBroadcast&&method==='GET'){const uid=decodeURIComponent(publicBroadcast[1]);const b=await loadPublicBroadcast(uid);return ok({broadcast:b,version:b.updatedAt||null});}
     if(path==='/api/admin/state'&&method==='GET'){const {user,profile}=await requireAdmin();return {status:200,body:await adminState(user.uid,profile)};}
     if(path==='/api/admin/studio-library'&&method==='GET'){await requireAdmin();return ok({studioDesign:await getGlobalLibrary('studio')});}
+    if(path==='/api/admin/studio-library'&&method==='POST'){
+      await requireAdmin();
+      const design=body.studioDesign||{};
+      if(!Array.isArray(design.templates)||!design.templates.length)return fail(400,'कम से कम एक Score Layer design सेव रखें।');
+      for(const [key,label] of [['templates','Score Layer'],['cardTemplates','Card'],['animationTemplates','Animation']]){
+        const rows=design[key]===undefined?[]:design[key];
+        if(!Array.isArray(rows)||rows.length>20)return fail(400,`${label} Library में अधिकतम 20 designs रख सकते हैं।`);
+        if(rows.some(item=>!item||!item.id||!Array.isArray(item.elements)||item.elements.length>100))return fail(400,`${label} design का data सही नहीं है।`);
+      }
+      await saveGlobalLibrary('studio',design);
+      return ok({studioDesign:await getGlobalLibrary('studio'),publishedCount:{score:(design.templates||[]).filter(x=>x.published===true).length,card:(design.cardTemplates||[]).filter(x=>x.published===true).length,animation:(design.animationTemplates||[]).filter(x=>x.published===true).length}});
+    }
     if(path==='/api/admin/sponsor-library'&&method==='GET'){await requireAdmin();return ok({sponsorLibrary:await getGlobalLibrary('sponsors')});}
 
     const teamMatch=path.match(/^\/api\/team(?:\/([^/]+))?(?:\/player(?:\/([^/]+))?)?$/);
