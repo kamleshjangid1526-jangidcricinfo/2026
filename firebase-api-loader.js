@@ -73,12 +73,6 @@
         try{const result=await apiRequest(url,init);if((result.status||200)<400)await store?.put(matchCacheKey,result.body||{});return toResponse(result);}
         catch(error){if(!isNetworkError(error))throw error;const cached=await store?.get(matchCacheKey);if(!cached)throw error;localStatus('offline','इस Scoreboard का पिछला Match snapshot दिखाया जा रहा है।');return toResponse({status:200,body:{...cached,offlineMode:true}});}
       }
-      const publicMatchPath=url.pathname.match(/^\/api\/public\/match\/([^/]+)$/);
-      if(publicMatchPath&&method==='GET'){
-        const matchCacheKey='public:match:'+decodeURIComponent(publicMatchPath[1]);
-        try{const result=await apiRequest(url,init);if((result.status||200)<400)await store?.put(matchCacheKey,result.body||{});return toResponse(result);}
-        catch(error){if(!isNetworkError(error))throw error;const cached=await store?.get(matchCacheKey);if(!cached)throw error;localStatus('offline','इस Scoreboard का पिछला Match snapshot offline उपलब्ध है।');return toResponse({status:200,body:cached});}
-      }
       if(url.pathname==='/api/public'&&method==='GET'){
         try{const result=await apiRequest(url,init);if((result.status||200)<400)await store?.put('public:last',result.body||{});return toResponse(result);}
         catch(error){if(!isNetworkError(error))throw error;const cached=await store?.get('public:last');if(!cached)throw error;localStatus('offline','Public page last saved copy दिखा रहा है।');return toResponse({status:200,body:{...cached,offlineMode:true}});}
