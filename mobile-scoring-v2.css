@@ -237,3 +237,17 @@
  body.jc-scoring-view #scoring .mobileFieldSide{gap:4px}
  body.jc-scoring-view #scoring .mobileFieldPlayer{padding:3px 2px;gap:2px}
 }
+
+
+/* Scoring screen lock control: visible beside the menu only while scoring is open. */
+.scoringLockBtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:0 12px;border:1px solid #3b6789;border-radius:10px;background:linear-gradient(135deg,#12334e,#174b66);color:#eaf7ff;font-size:12px;font-weight:900;letter-spacing:.2px;white-space:nowrap;box-shadow:0 4px 14px #0003}
+.scoringLockBtn.hidden{display:none!important}
+.scoringLockBtn.isLocked{border-color:#4bd3a6;background:linear-gradient(135deg,#07533f,#08765b);color:#eafff5;box-shadow:0 0 0 2px #35d5a022}
+body.jc-scoring-locked .menuOpenBtn{opacity:.55;cursor:not-allowed}
+body.jc-scoring-locked #logout{opacity:.55;cursor:not-allowed}
+.scoringLockNotice{position:fixed;z-index:500;top:52px;left:50%;max-width:calc(100vw - 24px);padding:10px 15px;border:1px solid #4bd3a6;border-radius:11px;background:#073c31;color:#eafff5;font-size:12px;font-weight:850;text-align:center;box-shadow:0 12px 36px #0008;opacity:0;transform:translate(-50%,-8px);pointer-events:none;transition:opacity .18s,transform .18s}
+.scoringLockNotice.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:700px){
+ body.jc-scoring-view .scoringLockBtn{height:32px;min-height:32px;padding:0 10px;border-radius:8px;font-size:11px}
+ body.jc-scoring-locked .menuOpenBtn{pointer-events:none}
+}
