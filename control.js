@@ -42,6 +42,67 @@ function eligibleBowlers(){
  const limit=Math.max(1,Number(i.bowlerOverLimit||MATCH?.bowlerOverLimit||1)),previous=String(i.previousBowler||'');
  return matchXI(i.bowlingId,'bowlStats').filter(id=>{const p=i.bowlStats?.[id];if(!p||Number(p.balls||0)/6>=limit)return false;if(i.awaitingBowler&&previous&&String(id)===previous)return false;return true});
 }
+
+let scoringPageLocked=false,scoringLockHistoryGuard=false,scoringLockNoticeTimer=null;
+function showScoringLockNotice(message='Scoring screen locked है। Unlock करने के बाद ही Back या Logout कर सकते हैं।'){
+ let toast=$('scoringLockNotice');
+ if(!toast){toast=document.createElement('div');toast.id='scoringLockNotice';toast.className='scoringLockNotice';toast.setAttribute('role','status');toast.setAttribute('aria-live','polite');document.body.append(toast);}
+ toast.textContent=message;toast.classList.add('show');
+ clearTimeout(scoringLockNoticeTimer);
+ scoringLockNoticeTimer=setTimeout(()=>toast.classList.remove('show'),2400);
+}
+function syncScoringLockUI(){
+ const inScoring=document.body.classList.contains('jc-scoring-view');
+ const button=$('scoringLockBtn'),logout=$('logout'),menu=$('menuToggle');
+ if(button){
+  button.classList.toggle('hidden',!inScoring);
+  button.classList.toggle('isLocked',scoringPageLocked);
+  button.setAttribute('aria-pressed',String(scoringPageLocked));
+  button.textContent=scoringPageLocked?'🔐 Locked':'🔒 Lock';
+  button.title=scoringPageLocked?'Unlock scoring controls':'Lock scoring controls';
+ }
+ if(logout){logout.disabled=scoringPageLocked;logout.setAttribute('aria-disabled',String(scoringPageLocked));}
+ if(menu){menu.disabled=scoringPageLocked;menu.setAttribute('aria-disabled',String(scoringPageLocked));}
+ document.body.classList.toggle('jc-scoring-locked',scoringPageLocked);
+ if(scoringPageLocked)closeSideNav();
+}
+function toggleScoringLock(){
+ if(!document.body.classList.contains('jc-scoring-view'))return;
+ if(scoringPageLocked){
+  if(!window.confirm('Scoring Lock हटाकर सामान्य navigation और Logout चालू करें?'))return;
+  scoringPageLocked=false;
+  syncScoringLockUI();
+  showScoringLockNotice('Scoring Lock हट गया। अब Back और Logout उपलब्ध हैं।');
+  if(scoringLockHistoryGuard){scoringLockHistoryGuard=false;history.back();}
+  return;
+ }
+ scoringPageLocked=true;
+ try{history.pushState({jcScoringLock:true},'',location.href);scoringLockHistoryGuard=true;}catch(error){console.warn('Could not add scoring lock history guard:',error);}
+ syncScoringLockUI();
+ showScoringLockNotice('Scoring LOCKED — Back और Logout बंद हैं।');
+}
+window.addEventListener('popstate',()=>{
+ if(!scoringPageLocked)return;
+ try{history.pushState({jcScoringLock:true},'',location.href);scoringLockHistoryGuard=true;}catch(error){console.warn('Could not restore scoring lock history guard:',error);}
+ closeSideNav();
+ showScoringLockNotice('Scoring LOCKED है। पहले ऊपर Unlock दबाएँ।');
+});
+window.addEventListener('keydown',event=>{
+ if(!scoringPageLocked)return;
+ const tag=document.activeElement?.tagName;
+ const backShortcut=(event.altKey&&event.key==='ArrowLeft')||event.key==='BrowserBack'||(event.key==='Backspace'&&!['INPUT','TEXTAREA','SELECT'].includes(tag));
+ if(backShortcut){event.preventDefault();event.stopPropagation();showScoringLockNotice('Scoring LOCKED है। पहले ऊपर Unlock दबाएँ।');}
+},true);
+document.addEventListener('click',event=>{
+ if(!scoringPageLocked)return;
+ if(event.target.closest('#scoringLockBtn'))return;
+ const nav=event.target.closest('[data-go]');
+ if(nav){event.preventDefault();event.stopImmediatePropagation();showScoringLockNotice('Scoring LOCKED है। पहले ऊपर Unlock दबाएँ।');return;}
+ const link=event.target.closest('a[href]');
+ if(link){event.preventDefault();event.stopImmediatePropagation();showScoringLockNotice('Scoring LOCKED है। पहले ऊपर Unlock दबाएँ।');}
+},true);
+$('scoringLockBtn')?.addEventListener('click',toggleScoringLock);
+
 function closeSideNav(){const side=$('sideNav'),backdrop=$('navBackdrop'),toggle=$('menuToggle');side?.classList.remove('open');side?.setAttribute('aria-hidden','true');if(backdrop){backdrop.classList.remove('show');backdrop.hidden=true;}if(toggle){toggle.setAttribute('aria-expanded','false');toggle.classList.remove('isOpen')}}
 function openSideNav(){const side=$('sideNav'),backdrop=$('navBackdrop'),toggle=$('menuToggle');if(!side)return;side.classList.add('open');side.setAttribute('aria-hidden','false');if(backdrop){backdrop.hidden=false;requestAnimationFrame(()=>backdrop.classList.add('show'));}if(toggle){toggle.setAttribute('aria-expanded','true');toggle.classList.add('isOpen')}}
 $('menuToggle')?.addEventListener('click',()=> $('sideNav')?.classList.contains('open')?closeSideNav():openSideNav());$('closeSideNav')?.addEventListener('click',closeSideNav);$('navBackdrop')?.addEventListener('click',closeSideNav);document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSideNav()});
@@ -56,9 +117,11 @@ function showAppRuntimeNotice(message){
  box.textContent=String(message||'इस सेक्शन को लोड करने में समस्या आई। दूसरे सेक्शन इस्तेमाल कर सकते हैं।');
 }
 function showPage(id){
+ if(scoringPageLocked&&id!=='scoring'){showScoringLockNotice('Scoring LOCKED है। पहले ऊपर Unlock दबाएँ।');return;}
  if(!STATE?.user){setAuthView(false);return;}
  if(!$(id))return;
  document.body.classList.toggle('jc-scoring-view',id==='scoring');
+ syncScoringLockUI();
  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
  $(id).classList.remove('hidden');
  document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.go===id));
@@ -564,7 +627,7 @@ $('manualStrikeChange').onclick=async()=>{const i=currentInnings();if(!i||MATCH?
 $('chaseCard').onclick=()=>toggleCard('chase');
 $('demoDataBtn').onclick=()=>{ location.href='demo.html'; };
 $('removeDemoDataBtn').onclick=async()=>{if(!confirm('Remove only the generated Demo tournament, its demo teams/players and demo match? Your real teams, players, matches and subscription will stay safe.'))return;try{await api('/api/demo',{method:'DELETE'});await refresh();alert('Demo data removed. Your real data was not changed.')}catch(e){alert(`Remove Demo failed: ${e.message}`)}};
-$('logout').onclick=async()=>{await api('/api/logout',{method:'POST'});location.reload()};$('openProfile').onclick=()=>{const s=STATE.user.subscription;openModal(`<div class="modalHead"><div><div class="eyebrow">ACCOUNT</div><h3>${esc(STATE.user.mobile)}</h3></div><button class="closeBtn" data-close>×</button></div><p>Plan: <b>${esc(STATE.user.activePlan||'No active plan')}</b></p>${s?`<p class="muted">Activated ${new Date(s.activatedAt).toLocaleString()}<br>Expires ${new Date(s.expiresAt).toLocaleString()}</p>`:''}<div class="rowBtns"><button class="btn primary" id="profileActivate">Activate Plan</button><a class="btn ghost" href="jangid-cricinfo.html" target="_blank">Open Jangid Cricinfo</a></div>`,box=>box.querySelector('#profileActivate').onclick=()=>{closeModal();planModal('Activate your plan')})};
+$('logout').onclick=async()=>{if(scoringPageLocked){showScoringLockNotice();return;}await api('/api/logout',{method:'POST'});location.reload()};$('openProfile').onclick=()=>{const s=STATE.user.subscription;openModal(`<div class="modalHead"><div><div class="eyebrow">ACCOUNT</div><h3>${esc(STATE.user.mobile)}</h3></div><button class="closeBtn" data-close>×</button></div><p>Plan: <b>${esc(STATE.user.activePlan||'No active plan')}</b></p>${s?`<p class="muted">Activated ${new Date(s.activatedAt).toLocaleString()}<br>Expires ${new Date(s.expiresAt).toLocaleString()}</p>`:''}<div class="rowBtns"><button class="btn primary" id="profileActivate">Activate Plan</button><a class="btn ghost" href="jangid-cricinfo.html" target="_blank">Open Jangid Cricinfo</a></div>`,box=>box.querySelector('#profileActivate').onclick=()=>{closeModal();planModal('Activate your plan')})};
 async function submitLogin(){
  if(loginSubmitting)return;
  loginSubmitting=true;const button=$('loginBtn');if(button){button.disabled=true;button.textContent='Logging in…';}
