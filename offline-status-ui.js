@@ -2,9 +2,14 @@
 (() => {
   const mount=()=>{
     if(!document.body)return;
+    const isObsScoreLayer=document.body.classList.contains('scoreLayerBody');
+    if(isObsScoreLayer){
+      document.getElementById('jcOfflineStatus')?.remove();
+      document.getElementById('offlineScoreStatus')?.remove();
+    }
     const scoring=document.getElementById('scoring');
-    let bar=document.getElementById('jcOfflineStatus')||document.getElementById('offlineScoreStatus');
-    if(!bar){bar=document.createElement('div');bar.id='jcOfflineStatus';bar.className='jcOfflineStatus';bar.setAttribute('role','status');bar.setAttribute('aria-live','polite');bar.textContent='Checking connection…';if(scoring)scoring.prepend(bar);else document.body.prepend(bar);}
+    let bar=isObsScoreLayer?null:(document.getElementById('jcOfflineStatus')||document.getElementById('offlineScoreStatus'));
+    if(!isObsScoreLayer&&!bar){bar=document.createElement('div');bar.id='jcOfflineStatus';bar.className='jcOfflineStatus';bar.setAttribute('role','status');bar.setAttribute('aria-live','polite');bar.textContent='Checking connection…';if(scoring)scoring.prepend(bar);else document.body.prepend(bar);}
     const update=event=>{
       if(!bar)return;
       const d=event?.detail||{},online=navigator.onLine;
