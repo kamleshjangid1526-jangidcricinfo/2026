@@ -617,7 +617,7 @@ const es=new EventSource('/events');es.onmessage=e=>{try{
  if(STATE?.user?.id){
   if(incomingMine){
    const localMatch=MATCH?.id===incomingMine.id&&MATCH.status==='live'?MATCH:(STATE.activeMatch?.id===incomingMine.id&&STATE.activeMatch.status==='live'?STATE.activeMatch:null);
-   const stamp=value=>Math.max(Date.parse(value?.updatedAt||'')||0,Date.parse(value?.offlineUpdatedAt||'')||0);
+   const stamp=value=>{const localVersion=Date.parse(value?.offlineUpdatedAt||'');return Number.isFinite(localVersion)&&localVersion>0?localVersion:(Date.parse(value?.updatedAt||'')||0);};
    const mine=localMatch&&stamp(localMatch)>stamp(incomingMine)?localMatch:incomingMine;
    MATCH=mine;STATE.activeMatch=mine;STATE.matches||=[];
    const matchIndex=STATE.matches.findIndex(m=>String(m.id)===String(mine.id));
