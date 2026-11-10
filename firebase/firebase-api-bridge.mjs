@@ -469,6 +469,6 @@ async function startMatch(uid,b) {
 }
 
 // Start realtime listeners for pages that need updates, and publish the initial snapshot.
-subscribePublic().catch(error=>console.warn('Public update listener could not start:',error));
+subscribePublic();
 window.__JC_FIREBASE_BACKEND_STATUS__ = { mode:'github-pages-firebase', connected:true, projectId:firebaseConfig.projectId };
 window.JangidBackendStatus = { mode:'github-pages-firebase', connected:true, projectId:firebaseConfig.projectId, provider:'Firebase Auth + Firestore' };

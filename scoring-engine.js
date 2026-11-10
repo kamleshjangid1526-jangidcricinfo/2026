@@ -272,10 +272,11 @@
       };
     });
   }
-  function promptBowler() {
+  function promptBowler(forceChange=false) {
     const i=innings();if(!i)return;
-    const legalChoices=eligibleBowlers(i);
-    const allChoices=rosterIds(i.bowlingId).filter(id=>i.bowlStats?.[id]);
+    const isCurrent=id=>forceChange&&String(id)===String(i.currentBowler||'');
+    const legalChoices=eligibleBowlers(i).filter(id=>!isCurrent(id));
+    const allChoices=rosterIds(i.bowlingId).filter(id=>i.bowlStats?.[id]&&!isCurrent(id));
     const choices=legalChoices.length?legalChoices:allChoices;
     if(!choices.length) {
       i.awaitingBowler=true;renderScoring();
@@ -319,7 +320,7 @@
       <div class="scoreCommandTop"><div class="scoreCommandTitle"><span class="scoreCommandEyebrow">JANGID CRICINFO · SCORING DESK</span><h3>${safe(m.title||'Cricket Match')}</h3><span>${safe(m.tournamentName||'Standalone match')}${m.venue||m.location?` · ${safe(m.venue||m.location)}`:''}</span></div><div class="scoreCommandStatus ${m.status==='live'?'isLive':'isDone'}">${topStatus}<span>INNINGS ${Number(m.inningsNo||1)}</span></div></div>
       <div class="scoreCommandMainGrid">
         <article class="scoreCommandTeamCard battingSide"><div class="scoreCommandRole"><span>01</span> BATTING</div><div class="scoreCommandTeamBody">${teamCard(bat,i.battingId,'BATTING TEAM')}</div><div class="scoreCommandTeamFoot battingPlayersFoot"><span>BATTERS</span><b>${safe(strikerNow?.name||'—')} <small>STR</small></b><b>${safe(nonNow?.name||'—')} <small>NON</small></b></div></article>
-        <article class="scoreCommandCenter"><div class="scoreCommandCenterTop"><span>LIVE TOTAL</span>${targetNow?`<b class="scoreCommandTarget">TARGET ${targetNow}</b>`:`<b class="scoreCommandPowerplay">${pp?`POWERPLAY ${safe(pp)}`:'INNINGS '+Number(m.inningsNo||1)}</b>`}</div><div class="scoreCommandDigits"><strong>${scoreNow}</strong><i>/</i><strong>${wicketsNow}</strong></div><div class="scoreCommandOvers"><div><small>OVERS</small><b>${fmtOvers(ballsNow)} <em>/ ${maxOvers}</em></b></div><div><small>CRR</small><b>${runRate(i)}</b></div><div><small>POWERPLAY</small><b>${pp||'—'}</b></div></div><div class="scoreCommandProgress"><span style="width:${progressPct.toFixed(2)}%"></span></div></article>
+        <article class="scoreCommandCenter"><div class="scoreCommandCenterTop"><span>LIVE TOTAL</span>${targetNow?`<b class="scoreCommandTarget">TARGET ${targetNow}</b>`:`<b class="scoreCommandPowerplay">${pp?`POWERPLAY ${safe(pp)}`:'INNINGS '+Number(m.inningsNo||1)}</b>`}</div><div class="scoreCommandTeamNameMobile">${safe(bat?.name||'Batting Team')}</div><div class="scoreCommandDigits"><strong>${scoreNow}</strong><i>/</i><strong>${wicketsNow}</strong></div><div class="scoreCommandOvers"><div><small>OVERS</small><b>${fmtOvers(ballsNow)} <em>/ ${maxOvers}</em></b></div><div><small>CRR</small><b>${runRate(i)}</b></div><div><small>POWERPLAY</small><b>${pp||'—'}</b></div></div><div class="scoreCommandProgress"><span style="width:${progressPct.toFixed(2)}%"></span></div></article>
         <article class="scoreCommandTeamCard bowlingSide"><div class="scoreCommandRole"><span>02</span> BOWLING</div><div class="scoreCommandTeamBody">${teamCard(bowl,i.bowlingId,'BOWLING TEAM')}</div><div class="scoreCommandTeamFoot"><span>CURRENT BOWLER</span><b>${safe(bowlerNow?.name||'—')}</b></div></article>
       </div>
       <div class="scoreCommandMetrics">${metaCards}</div>
@@ -327,7 +328,7 @@
     </div>`;
     const striker=i.batStats?.[i.striker],non=i.batStats?.[i.nonStriker],bowler=i.bowlStats?.[i.currentBowler];
     players.innerHTML=`<div class="currentPlayerGroups"><section class="currentPlayerGroup battingPlayerGroup"><h4>BATTERS · ${safe(bat?.name||'Batting Side')}</h4><div class="currentPlayerCard"><div><small>STRIKER</small><b>${safe(striker?.name||'—')}</b><strong>${striker?.runs||0} (${striker?.balls||0})</strong><span>${striker?.fours||0}×4 · ${striker?.sixes||0}×6</span></div><div><small>NON-STRIKER</small><b>${safe(non?.name||'—')}</b><strong>${non?.runs||0} (${non?.balls||0})</strong><span>${non?.fours||0}×4 · ${non?.sixes||0}×6</span></div></div></section><section class="currentPlayerGroup bowlingPlayerGroup"><h4>BOWLER · ${safe(bowl?.name||'Bowling Side')}</h4><div class="currentPlayerCard"><div><small>CURRENT BOWLER</small><b>${safe(bowler?.name||'—')}</b><strong>${fmtOvers(bowler?.balls||0)} · ${bowler?.runs||0}/${bowler?.wickets||0}</strong><span>WD ${bowler?.wides||0} · NB ${bowler?.noBalls||0}</span></div></div></section></div>`;
-    recent.innerHTML=(i.events||[]).slice(-18).map(e=>`<span class="ball ${e.wicket?'ballWicket':e.runs===4?'ballFour':e.runs===6?'ballSix':''}" title="${safe(e.commentary||'')} ">${safe(e.label||labelForEvent(e))}</span>`).join('')||'<span class="muted">पहली गेंद का इंतज़ार…</span>';
+    const latestBallEvent=[...(i.events||[])].reverse().find(e=>e?.ballLabel),latestOverKey=latestBallEvent?String(latestBallEvent.ballLabel).split('.')[0]:null,currentOverEvents=latestOverKey===null?(i.events||[]).slice(-6):(i.events||[]).filter(e=>String(e?.ballLabel||'').split('.')[0]===latestOverKey).slice(-12);recent.innerHTML=currentOverEvents.map(e=>`<span class="ball ${e.wicket?'ballWicket':e.runs===4?'ballFour':e.runs===6?'ballSix':''}" title="${safe(e.commentary||'')} ">${safe(e.label||labelForEvent(e))}</span>`).join('')||'<span class="muted">पहली गेंद का इंतज़ार…</span>';
     const disabled=!isOpen || !!i._replaceSlot || !!i.awaitingNewBatter || !!i.awaitingBowler || !i.currentBowler;
     grid?.classList.toggle('disabledScoreGrid',disabled);grid?.querySelectorAll('button').forEach(b=>b.disabled=disabled);
     if(finish)finish.disabled=m.status!=='live';
@@ -459,7 +460,7 @@
     if(extra){event.preventDefault();promptExtra(extra.dataset.extra);return;}
     if(event.target.closest('#wicketBtn')){event.preventDefault();pickWicket();return;}
     if(event.target.closest('#undoBall')){event.preventDefault();await undoLastDelivery();return;}
-    if(event.target.closest('#changeBowler')){event.preventDefault();promptBowler();return;}
+    if(event.target.closest('#changeBowler')){event.preventDefault();promptBowler(true);return;}
     if(event.target.closest('#retiredHurt')){event.preventDefault();retireHurt();return;}
     if(event.target.closest('#changeBatter')){event.preventDefault();openChangeBatter();return;}
     if(event.target.closest('#startNextInningsBtn')){event.preventDefault();requestNextInnings();return;}
