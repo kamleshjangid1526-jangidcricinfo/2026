@@ -158,3 +158,82 @@
   display:flex !important;visibility:visible !important;min-width:0 !important;
  }
 }
+
+
+/* Mobile score header: player details sit beside the central team name/target/score.
+   Keep the separate on-field panel on desktop; remove it from the mobile flow. */
+.mobileFieldSide{display:none}
+@media(max-width:700px){
+ body.jc-scoring-view #scoring .cbLiveDetailsGrid>.panel:has(#currentPlayers){
+  display:none !important;
+ }
+ body.jc-scoring-view #scoring .scoreCommandMainGrid{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.55fr) minmax(0,1fr) !important;
+  grid-template-areas:"bat score bowl" !important;
+  align-items:stretch !important;gap:4px !important;min-width:0 !important;
+ }
+ body.jc-scoring-view #scoring .scoreCommandTeamCard.battingSide,
+ body.jc-scoring-view #scoring .scoreCommandTeamCard.bowlingSide{
+  display:flex !important;flex-direction:column !important;justify-content:center !important;
+  min-width:0 !important;min-height:100px !important;padding:5px 4px !important;
+  overflow:hidden !important;border-radius:9px !important;
+ }
+ body.jc-scoring-view #scoring .scoreCommandTeamCard.battingSide{grid-area:bat !important}
+ body.jc-scoring-view #scoring .scoreCommandTeamCard.bowlingSide{grid-area:bowl !important}
+ body.jc-scoring-view #scoring .scoreCommandTeamCard .scoreCommandRole,
+ body.jc-scoring-view #scoring .scoreCommandTeamCard .scoreCommandTeamBody,
+ body.jc-scoring-view #scoring .scoreCommandTeamCard .scoreCommandTeamFoot{
+  display:none !important;
+ }
+ body.jc-scoring-view #scoring .mobileFieldSide{
+  display:grid !important;visibility:visible !important;min-width:0 !important;width:100% !important;
+  align-content:center;gap:6px;overflow:hidden;
+ }
+ body.jc-scoring-view #scoring .mobileFieldHeading{
+  display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#a9d7f2;font-size:clamp(6px,1.75vw,9px);font-weight:1000;letter-spacing:.035em;
+  text-align:center;line-height:1.1;margin-bottom:1px;
+ }
+ body.jc-scoring-view #scoring .mobileFieldPlayer{
+  display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;
+  align-items:center;gap:2px 3px;min-width:0;width:100%;padding:4px 3px;
+  border:1px solid #ffffff20;border-radius:6px;background:#06152188;
+ }
+ body.jc-scoring-view #scoring .mobileFieldPlayer>small{
+  grid-column:1;grid-row:1;font-size:6px;line-height:1;font-weight:1000;
+  color:#89d8ce;white-space:nowrap;
+ }
+ body.jc-scoring-view #scoring .mobileFieldPlayer>b{
+  grid-column:2;grid-row:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:clamp(7px,2vw,10px);line-height:1.1;font-weight:950;color:#fff;text-align:right;
+ }
+ body.jc-scoring-view #scoring .mobileFieldPlayer>span{
+  grid-column:1/-1;grid-row:2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:clamp(6px,1.65vw,8px);line-height:1.05;color:#c1d6e7;text-align:center;
+ }
+ body.jc-scoring-view #scoring .scoreCommandCenter{
+  grid-area:score !important;min-width:0 !important;min-height:100px !important;
+  padding:5px 4px !important;display:flex !important;flex-direction:column !important;justify-content:center !important;
+ }
+ body.jc-scoring-view #scoring .scoreCommandCenterTop{min-height:14px !important;gap:3px !important}
+ body.jc-scoring-view #scoring .scoreCommandTarget{max-width:100%;font-size:clamp(7px,1.9vw,9px) !important;padding:2px 5px !important;white-space:nowrap}
+ body.jc-scoring-view #scoring .scoreCommandTeamNameMobile{
+  display:block !important;max-width:100%;font-size:clamp(8px,2.3vw,11px) !important;
+  margin:1px 0 !important;text-align:center;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ }
+ body.jc-scoring-view #scoring .scoreCommandDigits{font-size:clamp(26px,7.6vw,39px) !important;line-height:.96 !important;gap:2px !important}
+ body.jc-scoring-view #scoring .scoreCommandDigits strong{font-size:inherit !important}
+ body.jc-scoring-view #scoring .scoreCommandOvers{gap:4px !important;margin-top:3px !important;flex-wrap:wrap}
+ body.jc-scoring-view #scoring .scoreCommandOvers small{font-size:6px !important}
+ body.jc-scoring-view #scoring .scoreCommandOvers b{font-size:clamp(7px,1.9vw,9px) !important}
+ body.jc-scoring-view #scoring .scoreCommandProgress{height:3px !important;margin-top:3px !important}
+}
+@media(max-width:390px){
+ body.jc-scoring-view #scoring .scoreCommandMainGrid{grid-template-columns:minmax(0,.95fr) minmax(0,1.35fr) minmax(0,.95fr) !important;gap:3px !important}
+ body.jc-scoring-view #scoring .scoreCommandTeamCard.battingSide,
+ body.jc-scoring-view #scoring .scoreCommandTeamCard.bowlingSide,
+ body.jc-scoring-view #scoring .scoreCommandCenter{min-height:94px !important}
+ body.jc-scoring-view #scoring .mobileFieldSide{gap:4px}
+ body.jc-scoring-view #scoring .mobileFieldPlayer{padding:3px 2px;gap:2px}
+}
