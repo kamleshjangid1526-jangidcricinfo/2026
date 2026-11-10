@@ -84,3 +84,33 @@
 @keyframes jcOrbitLaunch{0%{transform:perspective(700px) rotateY(-78deg) rotateZ(-7deg) scale(.65);opacity:.2}65%{transform:perspective(700px) rotateY(12deg) rotateZ(2deg) scale(1.05)}100%{transform:none;opacity:1}}
 .eventLayer[data-event-type="four"][data-anim="impact-digital"] .eventInner,.eventLayer[data-event-type="six"][data-anim="impact-digital"] .eventInner,.eventLayer[data-event-type="wicket"][data-anim="impact-digital"] .eventInner{animation:jcImpactDigital 1.05s ease-out both}
 @keyframes jcImpactDigital{0%{transform:scaleY(.05);filter:contrast(3);background:repeating-linear-gradient(0deg,#ff6d8422 0 2px,#06182c 2px 5px)}35%{transform:scaleY(1.07);filter:contrast(1.8)}100%{transform:scaleY(1);filter:none;background:linear-gradient(125deg,#06182c,#102f50 52%,#071222)}}
+
+
+/* Smooth-motion pass: use compositor-friendly transform and opacity changes. */
+.eventLayer[data-event-type="four"] .eventInner,
+.eventLayer[data-event-type="six"] .eventInner,
+.eventLayer[data-event-type="wicket"] .eventInner{will-change:transform,opacity;backface-visibility:hidden;transform:translateZ(0);contain:layout paint}
+.eventLayer[data-event-type="four"] .eventInner:before,
+.eventLayer[data-event-type="six"] .eventInner:before,
+.eventLayer[data-event-type="wicket"] .eventInner:before{will-change:opacity;backface-visibility:hidden}
+@keyframes jcRipple{0%{transform:translate3d(0,18px,0) scale(.78);opacity:0}65%{transform:translate3d(0,-3px,0) scale(1.035);opacity:1}100%{transform:translate3d(0,0,0) scale(1);opacity:1}}
+@keyframes jcOrbit{0%{transform:rotate(-9deg) scale(.78);opacity:0}70%{transform:rotate(3deg) scale(1.04);opacity:1}100%{transform:rotate(0) scale(1);opacity:1}}
+@keyframes jcSurge{0%{transform:translate3d(0,42px,0) scaleY(.82);opacity:0}62%{transform:translate3d(0,-5px,0) scaleY(1.035);opacity:1}100%{transform:translate3d(0,0,0) scaleY(1);opacity:1}}
+@keyframes jcRibbon{0%{transform:translate3d(-9vw,0,0) skewX(-12deg);opacity:0}60%{transform:translate3d(2vw,0,0) skewX(3deg);opacity:1}100%{transform:translate3d(0,0,0) skewX(0);opacity:1}}
+@keyframes jcLightning{0%,25%,45%{transform:translate3d(-5vw,0,0) skewX(-5deg);opacity:.2}12%,35%,100%{transform:translate3d(0,0,0) skewX(0);opacity:1}}
+@keyframes jcHalo{0%{transform:scale(.86);opacity:0}45%{transform:scale(1.07);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes jcStarburst{0%{transform:rotate(-12deg) scale(.6);opacity:0}55%{transform:rotate(4deg) scale(1.08);opacity:1}100%{transform:rotate(0) scale(1);opacity:1}}
+@keyframes jcBloom{0%{transform:scale(.62);opacity:0}70%{transform:scale(1.055);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes jcShards{0%{transform:perspective(800px) rotateY(-30deg) rotateZ(-7deg) scale(.8);opacity:0}55%{transform:perspective(800px) rotateY(8deg) rotateZ(2deg) scale(1.04);opacity:1}100%{transform:none;opacity:1}}
+@keyframes jcSpotlight{0%{transform:scale(1.12);opacity:0}58%{transform:scale(.98);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes jcLaserSweep{0%{transform:translate3d(-22vw,0,0) skewX(-18deg);opacity:0}55%{transform:translate3d(2vw,0,0) skewX(4deg);opacity:1}100%{transform:translate3d(0,0,0);opacity:1}}
+@keyframes jcVelocityTrails{0%{transform:translate3d(-26vw,0,0) skewX(18deg) scale(.92);opacity:0}72%{transform:translate3d(3vw,0,0) skewX(-3deg);opacity:1}100%{transform:none;opacity:1}}
+@keyframes jcSplitImpact{0%{transform:scaleX(.06) scaleY(.9);opacity:0}60%{transform:scaleX(1.04) scaleY(1.03);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes jcPulseTunnel{0%{transform:scale(.72);opacity:0}55%{transform:scale(1.1);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes jcChromaticWave{0%{transform:translate3d(0,28px,0) skewY(5deg);opacity:0}55%{transform:translate3d(0,-5px,0) skewY(-2deg);opacity:1}100%{transform:none;opacity:1}}
+@keyframes jcStadiumFlash{0%,22%,42%{transform:scale(.92);opacity:.3}11%,33%,100%{transform:scale(1);opacity:1}}
+@keyframes jcRibbonBurst{0%{transform:rotate(-9deg) scale(.68);opacity:0}62%{transform:rotate(3deg) scale(1.05);opacity:1}100%{transform:none;opacity:1}}
+@keyframes jcGlassShatter{0%{transform:rotate(-7deg) scale(.76);opacity:0}38%{transform:rotate(3deg) scale(1.06);opacity:1}100%{transform:none;opacity:1}}
+@keyframes jcOrbitLaunch{0%{transform:perspective(700px) rotateY(-72deg) rotateZ(-6deg) scale(.7);opacity:0}65%{transform:perspective(700px) rotateY(10deg) rotateZ(2deg) scale(1.05);opacity:1}100%{transform:none;opacity:1}}
+@keyframes jcImpactDigital{0%{transform:scaleY(.08);opacity:0}45%{transform:scaleY(1.08);opacity:1}100%{transform:scaleY(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){.eventLayer[data-event-type="four"] .eventInner,.eventLayer[data-event-type="six"] .eventInner,.eventLayer[data-event-type="wicket"] .eventInner{animation:none!important;will-change:auto}}

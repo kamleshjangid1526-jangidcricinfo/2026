@@ -343,7 +343,7 @@ function renderEvent(b){
  if(!b.event){clearTimeout(el._hide);eventVisible=false;el.style.display='none';el.innerHTML='';el.classList.remove('incomingCornerLayer');lastEventId=b.eventId??lastEventId;if(!cardEl.classList.contains('isVisible'))flushPendingSponsor();return}
  if(String(b.eventId??'')===String(lastEventId??'')){if(eventVisible){el.style.display='grid';cardEl.style.display='none'}return}
  clearTimeout(el._hide);lastEventId=b.eventId;eventVisible=true;hideSponsorLayer();
- if(cardEl.classList.contains('isVisible')){dismissedCardId=String(latestBroadcast?.cardId??'');cardEl.classList.remove('isVisible');cardEl.style.display='none';cardEl.innerHTML='';document.body.classList.remove('cardActive')}
+ if(cardEl.classList.contains('isVisible')){dismissedCardId=String(latestBroadcast?.cardId??'');cardEl.classList.remove('isVisible');cardEl.style.display='none';cardEl.innerHTML='';cardEl.dataset.cardMarkup='';cardEl.dataset.cardId='';document.body.classList.remove('cardActive')}
  const eventName=String(b.event||'').toUpperCase();const corner=['NEW BATSMAN','NEW BOWLER'].includes(eventName);
  const animationTemplate=!corner?selectedStudioOverlay(b.animationDesign):null;
  if(corner){el.innerHTML=incomingCornerMarkup(eventName,b);el.className=`eventLayer incomingCornerLayer ${eventName==='NEW BOWLER'?'isBowler':'isBatter'}`;el.dataset.anim=b.animation||'fade';}
@@ -355,18 +355,42 @@ function renderEvent(b){
 function renderCard(b,m){
  const el=document.getElementById('cardLayer'),card=b.card;
  const currentCardId=String(b.cardId??'');
- if(card && dismissedCardId!==null && currentCardId===dismissedCardId){el.classList.remove('isVisible');el.style.display='none';el.innerHTML='';document.body.classList.remove('cardActive');return;}
+ if(card && dismissedCardId!==null && currentCardId===dismissedCardId){
+  el.classList.remove('isVisible');el.style.display='none';el.innerHTML='';el.dataset.cardMarkup='';el.dataset.cardId='';document.body.classList.remove('cardActive');return;
+ }
  if(card && dismissedCardId!==null && currentCardId!==dismissedCardId)dismissedCardId=null;
- if(!card){el.classList.remove('isVisible');el.style.display='none';el.innerHTML='';el.removeAttribute('data-anim');lastCardId=null;document.body.classList.remove('cardActive');flushPendingSponsor();return}
+ if(!card){
+  el.classList.remove('isVisible');el.style.display='none';el.innerHTML='';el.removeAttribute('data-anim');el.dataset.cardMarkup='';el.dataset.cardId='';lastCardId=null;document.body.classList.remove('cardActive');flushPendingSponsor();return;
+ }
  hideSponsorLayer();
- const type=card.type||'batter',newCard=String(b.cardId??'')!==String(lastCardId),anim=b.cardAnimations?.[type]||b.cardAnimation||'zoom';
+ const type=card.type||'batter',newCard=currentCardId!==String(lastCardId??''),anim=b.cardAnimations?.[type]||b.cardAnimation||'zoom';
  const cardTemplate=selectedStudioOverlay(b.cardDesign);
- el.className=`cardLayer cardType-${type}${cardTemplate?' hasStudioCard':''}`;el.style.setProperty('--accent',getComputedStyle(document.getElementById('scoreBar')).getPropertyValue('--accent')||'#58c8ff');
  const custom=cardTemplate?studioOverlayTemplateMarkup(cardTemplate,m,{kind:'card',card}):cardMarkup(card,m);
- el.innerHTML=`<div class="broadcastCardStage${newCard?' cardEntering':''}${cardTemplate?' studioCardStage':''}" data-anim="${esc(anim)}" style="animation-duration:${Number(b.cardDurations?.[type]||b.cardDuration||1800)}ms">${custom}</div>`;
- el.dataset.anim=anim;el.classList.add('isVisible');el.style.display=eventVisible?'none':'grid';document.body.classList.add('cardActive');if(newCard)lastCardId=b.cardId??Date.now();
- const closeButton=document.createElement('button');closeButton.type='button';closeButton.className='broadcastCardClose';closeButton.setAttribute('aria-label','Close card');closeButton.textContent='×';el.querySelector('.broadcastCardStage')?.prepend(closeButton);
- closeButton.addEventListener('click',async event=>{event.preventDefault();event.stopPropagation();dismissedCardId=currentCardId;el.classList.remove('isVisible');el.style.display='none';el.innerHTML='';document.body.classList.remove('cardActive');const payload={...(latestBroadcast||b||{}),card:null,cardId:Date.now(),event:null,eventId:Date.now()};try{await fetch('/api/broadcast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});}catch(error){console.warn('Card close could not sync yet:',error);}});
+ const duration=Number(b.cardDurations?.[type]||b.cardDuration||1800);
+ let stage=el.querySelector('.broadcastCardStage');
+ const canReuse=!!stage&&!newCard&&String(el.dataset.cardId||'')===currentCardId;
+ el.className=`cardLayer cardType-${type}${cardTemplate?' hasStudioCard':''}`;
+ el.style.setProperty('--accent',getComputedStyle(document.getElementById('scoreBar')).getPropertyValue('--accent')||'#58c8ff');
+ if(canReuse){
+  if(el.dataset.cardMarkup!==custom){
+   const closeButton=stage.querySelector('.broadcastCardClose');
+   stage.innerHTML=custom;
+   if(closeButton)stage.prepend(closeButton);
+  }
+  stage.dataset.anim=anim;stage.style.animationDuration=`${duration}ms`;
+ }else{
+  el.innerHTML=`<div class="broadcastCardStage${newCard?' cardEntering':''}${cardTemplate?' studioCardStage':''}" data-anim="${esc(anim)}" style="animation-duration:${duration}ms">${custom}</div>`;
+  stage=el.querySelector('.broadcastCardStage');
+  const closeButton=document.createElement('button');closeButton.type='button';closeButton.className='broadcastCardClose';closeButton.setAttribute('aria-label','Close card');closeButton.textContent='×';stage?.prepend(closeButton);
+  closeButton.addEventListener('click',event=>{
+   event.preventDefault();event.stopPropagation();dismissedCardId=currentCardId;el.classList.remove('isVisible');el.style.display='none';el.innerHTML='';el.dataset.cardMarkup='';el.dataset.cardId='';document.body.classList.remove('cardActive');
+   const payload={...(latestBroadcast||b||{}),card:null,cardId:Date.now(),event:null,eventId:Date.now()};
+   fetch('/api/broadcast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(error=>console.warn('Card close could not sync yet:',error));
+  });
+ }
+ el.dataset.cardMarkup=custom;el.dataset.cardId=currentCardId;el.dataset.anim=anim;
+ el.classList.add('isVisible');el.style.display=eventVisible?'none':'grid';document.body.classList.add('cardActive');
+ if(newCard)lastCardId=b.cardId??Date.now();
 }
 
 function render(m,b){if(!m?.activeInnings)return;latestMatch=m;latestBroadcast=b||{};renderBar(m,b||{});renderCard(b||{},m);renderEvent(b||{});processSponsorBroadcast(m,b||{});lastRenderMatchId=m.id;}

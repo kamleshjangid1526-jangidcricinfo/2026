@@ -274,3 +274,15 @@ body:has(#scoring:not(.hidden)){overflow:hidden}
  #scoring #scoreActionGrid button{min-height:28px;padding:3px 2px;font-size:10px}
  #scoring .scoringCardSummary{min-height:24px;padding:3px 7px;font-size:9px}
 }
+
+
+/* Active-state feedback: cards and Power Play stay highlighted only while selected. */
+#scoring .scoreCardAction{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+#scoring .scoreCardAction.cardOn,
+#scoring .scoreCardAction[aria-pressed="true"]{background:linear-gradient(135deg,#155b70,#187d72)!important;border-color:#65e4cb!important;color:#f4fffd!important;box-shadow:inset 0 0 0 1px #c4fff45c,0 0 14px #21d6b533;font-weight:950}
+#scoring .scoreCardAction.cardOn::after{content:"✓ ACTIVE";display:inline-block;margin-left:6px;font-size:8px;letter-spacing:.06em;color:#baffed}
+#scoring #scoringCardControls[open]>.scoringCardSummary{background:linear-gradient(110deg,#174b69,#1c746e);border:1px solid #63dfc5;color:#f2fffc;border-radius:8px;box-shadow:inset 0 0 0 1px #c4fff433}
+#scoring #scoringCardControls[open]>.scoringCardSummary::after{content:"OPEN";margin-left:auto;padding:2px 6px;border-radius:5px;background:#092a39;color:#baffeb;font-size:8px;letter-spacing:.08em}
+#scoring .powerplayBtn{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+#scoring .powerplayBtn.active{transform:translateY(-1px)}
+#scoring .powerplayBtn.powerplayOff.active{background:#314a61;color:#f4f8fc;border-color:#8ca9c1;box-shadow:0 0 0 2px #9ab4c52a}

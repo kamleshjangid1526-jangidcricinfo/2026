@@ -5,7 +5,7 @@
   const ready=new Promise((resolve,reject)=>{resolveBridge=resolve;rejectBridge=reject;});
   window.__JC_FIREBASE_BRIDGE_READY__=ready;window.__JC_FIREBASE_BRIDGE_RESOLVE__=resolveBridge;window.__JC_FIREBASE_BRIDGE_REJECT__=rejectBridge;
   window.__JC_FIREBASE_EVENTS__=new Set();window.__JC_LAST_PUBLIC_PAYLOAD__=null;window.__JC_FIREBASE_INIT_ERROR__=null;
-  let cachedState=null,activeUid='',syncing=false,channel=null;
+  let cachedState=null,activeUid='',syncing=false,channel=null,syncRetryTimer=null;
   try{channel=new BroadcastChannel('jangid-cricinfo-local-live-v1');}catch{}
   const clone=x=>store?.clone?store.clone(x):JSON.parse(JSON.stringify(x??null));
   const uidOf=s=>String(s?.user?.id||s?.user?.uid||s?.user?.userId||'');
@@ -32,8 +32,9 @@
   function localFinish(match,body){const finished=clone(match||{}),type=['winner','tie','no-result'].includes(body.resultType)?body.resultType:'winner';if(type==='winner'){if(![String(finished.teamA),String(finished.teamB)].includes(String(body.winnerTeamId)))throw new Error('Winner Team चुनें।');finished.winnerTeamId=String(body.winnerTeamId);finished.resultType='winner';finished.result=(finished.winnerTeamId===String(finished.teamA)?(finished.teamAName||'Team A'):(finished.teamBName||'Team B'))+' won';}else{finished.winnerTeamId=null;finished.resultType=type;finished.result=type==='tie'?'Match tied':'No Result';}finished.status='finished';finished.completedAt=new Date().toISOString();finished.updatedAt=finished.completedAt;return finished;}
   async function cacheMatch(match){if(!match?.id)throw new Error('Match snapshot में ID नहीं है।');const uid=activeUid||uidOf(cachedState);if(!uid)throw new Error('इस डिवाइस पर पिछला Login डेटा नहीं मिला। एक बार internet पर Login करके Match खोलें।');const stamp=new Date().toISOString(),snapshot=clone({...match,updatedAt:match.updatedAt||stamp,offlineUpdatedAt:stamp}),queueKey=key(uid,'match',snapshot.id);await store?.put(queueKey,{match:snapshot,version:snapshot.offlineUpdatedAt});if(cachedState){cachedState.matches||=[];const ix=cachedState.matches.findIndex(x=>String(x.id)===String(snapshot.id));if(ix>=0)cachedState.matches[ix]=clone(snapshot);else cachedState.matches.push(clone(snapshot));cachedState.activeMatch=snapshot.status==='live'?clone(snapshot):null;cachedState.savedLiveMatches=(cachedState.savedLiveMatches||[]).filter(x=>String(x.id)!==String(snapshot.id));if(snapshot.status==='live')cachedState.savedLiveMatches.push(clone(snapshot));await saveState(cachedState);}emitPublic(publicPayload(snapshot,cachedState?.broadcast));return {uid,queueKey,snapshot};}
   async function cacheBroadcast(payload){const uid=activeUid||uidOf(cachedState);if(!uid)throw new Error('पहले online Login करें, फिर offline graphics सेव हो सकेंगी।');const queueKey=key(uid,'broadcast'),version=String(payload.eventId||Date.now());await store?.put(queueKey,{payload:clone(payload),version});if(cachedState){cachedState.broadcast={...(cachedState.broadcast||{}),...clone(payload)};await saveState(cachedState);}emitPublic(publicPayload(cachedState?.activeMatch,cachedState?.broadcast));return {uid,queueKey,version};}
+  function scheduleSync(delay=120){if(!navigator.onLine)return;if(syncRetryTimer)clearTimeout(syncRetryTimer);syncRetryTimer=setTimeout(()=>{syncRetryTimer=null;if(syncing){scheduleSync(180);return;}void syncNow();},Math.max(50,Number(delay)||120));}
   async function syncNow(){
-    if(syncing||!navigator.onLine)return false;syncing=true;localStatus('syncing','Pending changes are being uploaded.');
+    if(syncing||!navigator.onLine)return false;syncing=true;let rerunSync=false;localStatus('syncing','Pending changes are being uploaded.');
     try{
       const state=await readState(),uid=activeUid||uidOf(state);if(!uid){localStatus('offline','Login करें; saved offline data इस device पर सुरक्षित है।');return false;}
       const matchRows=await records('queue:'+uid+':match:');
@@ -52,9 +53,9 @@
         await store?.remove(row.key);await store?.remove(key(uid,'match',String(row.key).split(':').pop()));
       }
       if(broadcastRow){const result=await apiRequest(new URL('/api/broadcast',location.href),{method:'POST',body:JSON.stringify(broadcastRow.payload)});if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast save failed');const latest=await store?.get(key(uid,'broadcast'));if(latest?.version===broadcastRow.version)await store?.remove(key(uid,'broadcast'));}
-      const pending=(await records('queue:'+uid+':')).length;localStatus(pending?'pending':'synced',pending?pending+' pending items remain.':'सभी बदलाव Firebase से Sync हो गए।');return pending===0;
+      const pending=(await records('queue:'+uid+':')).length;rerunSync=pending>0;localStatus(pending?'pending':'synced',pending?pending+' pending items remain.':'सभी बदलाव Firebase से Sync हो गए।');return pending===0;
     }catch(error){localStatus('pending',error?.message||'Sync अभी पूरा नहीं हुआ; फिर प्रयास होगा।');return false;}
-    finally{syncing=false;}
+    finally{syncing=false;if(rerunSync&&navigator.onLine)scheduleSync(180);}
   }
   window.JangidOfflineSync={syncNow,getStatus:()=>({online:navigator.onLine,userId:activeUid}),getCachedState:readState};
   window.fetch=async(input,init={})=>{
@@ -79,8 +80,9 @@
       }
       if(url.pathname==='/api/match/state'&&method==='POST'){
         const saved=await cacheMatch(body.match);
-        try{const result=await apiRequest(url,init);if((result.status||200)>=400)throw Object.assign(new Error(result.body?.error||'Match save failed'),{status:result.status,code:result.body?.code});const latest=await store?.get(saved.queueKey);if(latest?.version===saved.snapshot.offlineUpdatedAt)await store?.remove(saved.queueKey);localStatus('synced','Match Firebase में सेव हुआ।');return toResponse(result);}
-        catch(error){if(!isNetworkError(error)){const latest=await store?.get(saved.queueKey);if(latest?.version===saved.snapshot.offlineUpdatedAt)await store?.remove(saved.queueKey);throw error;}localStatus('pending','स्कोर मोबाइल में सुरक्षित है; internet आने पर Sync होगा।');return toResponse({status:200,body:{ok:true,offline:true,queued:true}});}
+        localStatus(navigator.onLine?'pending':'offline',navigator.onLine?'स्कोर device पर सेव है; Firebase background में sync होगा।':'स्कोर device पर सुरक्षित है; internet आने पर Sync होगा।');
+        if(navigator.onLine)scheduleSync(100);
+        return toResponse({status:200,body:{ok:true,queued:true,localFirst:true,match:saved.snapshot}});
       }
       if(url.pathname==='/api/match/finish'&&method==='POST'){
         const uid=activeUid||uidOf(cachedState),match=(cachedState?.matches||[]).find(x=>String(x.id)===String(body.matchId))||cachedState?.activeMatch;if(!uid||!match)throw new Error('Offline Finish के लिए Match की saved copy नहीं मिली।');
@@ -91,9 +93,10 @@
         catch(error){if(!isNetworkError(error))throw error;localStatus('pending','Match result offline सेव है; internet आने पर Sync होगा।');return toResponse({status:200,body:{ok:true,offline:true,queued:true,match:finished}});}
       }
       if(url.pathname==='/api/broadcast'&&method==='POST'){
-        const saved=await cacheBroadcast(body);
-        try{const result=await apiRequest(url,init);if((result.status||200)>=400)throw Object.assign(new Error(result.body?.error||'Broadcast save failed'),{status:result.status,code:result.body?.code});const latest=await store?.get(saved.queueKey);if(latest?.version===saved.version)await store?.remove(saved.queueKey);localStatus('synced','Broadcast settings Firebase में सेव हुईं।');return toResponse(result);}
-        catch(error){if(!isNetworkError(error)){const latest=await store?.get(saved.queueKey);if(latest?.version===saved.version)await store?.remove(saved.queueKey);throw error;}localStatus('pending','Broadcast बदलाव device पर सेव हैं; reconnect पर Sync होंगे।');return toResponse({status:200,body:{ok:true,offline:true,queued:true}});}
+        await cacheBroadcast(body);
+        localStatus(navigator.onLine?'pending':'offline',navigator.onLine?'Broadcast graphics device पर update हुईं; Firebase background में sync होगा।':'Broadcast graphics device पर सेव हैं; reconnect पर Sync होंगी।');
+        if(navigator.onLine)scheduleSync(100);
+        return toResponse({status:200,body:{ok:true,queued:true,localFirst:true}});
       }
       return toResponse(await apiRequest(url,init));
     }catch(error){
