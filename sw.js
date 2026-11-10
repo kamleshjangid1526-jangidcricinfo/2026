@@ -1,12 +1,12 @@
 /* Static asset cache for offline scoring sessions. API writes are handled by firebase-api-loader.js. */
-const JC_CACHE='jangid-cricinfo-static-v4';
+const JC_CACHE='jangid-cricinfo-static-v6';
 const JC_ASSETS=[
   './','./index.html','./control.html','./scorelayer.html','./scoreboard.html','./jangid-cricinfo.html',
   './firebase-api-loader.js','./offline-store.js','./offline-status-ui.js','./event-animation-themes.js','./mobile-scoring-v2.css','./event-animation-themes.css','./scorelayer-broadcast-v2.css','./broadcast-ui-fixes.css',
   './theme.js','./theme.css','./control.js','./scoring-engine.js','./tournament-manager.js',
   './control.css','./control-workflow.css','./tournament-manager.css','./mobile-scoring-v2.css',
   './event-animation-themes.css','./scorelayer.js','./scorelayer.css','./scorelayer-v6.css','./scorelayer-v7.css',
-  './scorelayer-designer.css','./scorelayer-compact-pattern.css','./scorelayer-studio.css','./scorelayer-overlays-v446.css',
+  './scorelayer-designer.css','./scorelayer-compact-pattern.css','./scorelayer-studio.css','./scorelayer-text-only.css','./scorelayer-overlays-v446.css',
   './scorelayer-v4_4_11-fixes.css','./scorelayer-card-layout-v4414.css','./scorelayer-broadcast-v2.css',
   './firebase/firebase-api-bridge.mjs','./firebase/firebase-config.js','./firebase/firebase-init.mjs',
   'https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js','https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js','https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js',

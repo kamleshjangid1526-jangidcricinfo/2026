@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
 import {
-  getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, signOut, sendEmailVerification,
+  getAuth, browserSessionPersistence, setPersistence,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendEmailVerification,
   sendPasswordResetEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
 import {
@@ -26,6 +26,8 @@ if (missing.length) {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
+// Keep authenticated state only for the current browser session, not indefinitely on a shared device.
+const authPersistenceReady = setPersistence(auth, browserSessionPersistence);
 const db = getFirestore(app);
 const nowIso = () => new Date().toISOString();
 const rid = prefix => `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2,8)}`;
@@ -41,11 +43,10 @@ const cleanText = (v,n=140) => String(v ?? '').trim().slice(0,n);
 const mobileDigits = v => String(v||'').replace(/\D/g,'');
 const dateMs = v => { const n=Date.parse(v||''); return Number.isFinite(n)?n:0; };
 const toList = snap => snap.docs.map(d => ({id:d.id,...d.data()}));
-let authReadyResolve;
-const authReady = new Promise(resolve => { authReadyResolve=resolve; });
-onAuthStateChanged(auth, user => authReadyResolve(user));
-
-async function currentUser() { return auth.currentUser || await authReady; }
+async function currentUser() {
+  await authPersistenceReady;
+  return auth.currentUser;
+}
 async function profileFor(uid) { const s=await getDoc(doc(db,'users',uid)); return s.exists()?{uid:s.id,...s.data()}:null; }
 async function adminFor(uid) { const s=await getDoc(doc(db,'admins',uid)); return s.exists() && s.data().enabled === true; }
 async function requireUser() {
@@ -288,6 +289,7 @@ async function pointsForTournament(t, matches, teams) {
 async function handleApi(url,init={}) {
   const path=url.pathname, method=String(init.method||'GET').toUpperCase(), body=readBody(init);
   try {
+    await authPersistenceReady;
     if(path==='/api/health' && method==='GET') return ok({app:'Jangid Cricinfo',version:'4.5.0',mode:'github-pages-firebase',storage:'cloud-firestore',firebaseConnected:true});
     if(path==='/api/register' && method==='POST') {
       const email=cleanText(body.email,160).toLowerCase(), password=String(body.password||'');
@@ -327,7 +329,11 @@ async function handleApi(url,init={}) {
       const map={}; broadcasts.forEach(x=>map[x.id]={...x});
       return {status:200,body:{plans:PLANS,contact:CONTACT,liveMatches:visible.filter(x=>x.status==='live'),matches:visible,tournaments:tRows,broadcasts:map,siteName:'Jangid Cricinfo'}};
     }
-    if(path==='/api/public/studio-library' && method==='GET') return ok({studioDesign:await getGlobalLibrary('studio')});
+    if(path==='/api/public/studio-library' && method==='GET') {
+      const library=await getGlobalLibrary('studio');
+      const published=list=>(Array.isArray(list)?list:[]).filter(item=>item&&item.published===true);
+      return ok({studioDesign:{...library,templates:published(library.templates),cardTemplates:published(library.cardTemplates),animationTemplates:published(library.animationTemplates)}});
+    }
     if(path==='/api/public/sponsor-library' && method==='GET') {const library=await getGlobalLibrary('sponsors');return ok({sponsors:(library.sponsors||[]).filter(x=>x.published===true),updatedAt:library.updatedAt||null});}
     const publicMatch=path.match(/^\/api\/public\/match\/([^/]+)$/);
     if(publicMatch&&method==='GET'){const s=await getDoc(publicDoc('publicMatches',decodeURIComponent(publicMatch[1])));return s.exists()?{status:200,body:{ok:true,match:{id:s.id,...s.data()}}}:fail(404,'यह Match उपलब्ध नहीं है।');}
@@ -337,6 +343,18 @@ async function handleApi(url,init={}) {
     if(publicBroadcast&&method==='GET'){const uid=decodeURIComponent(publicBroadcast[1]);const b=await loadPublicBroadcast(uid);return ok({broadcast:b,version:b.updatedAt||null});}
     if(path==='/api/admin/state'&&method==='GET'){const {user,profile}=await requireAdmin();return {status:200,body:await adminState(user.uid,profile)};}
     if(path==='/api/admin/studio-library'&&method==='GET'){await requireAdmin();return ok({studioDesign:await getGlobalLibrary('studio')});}
+    if(path==='/api/admin/studio-library'&&method==='POST'){
+      await requireAdmin();
+      const design=body.studioDesign||{};
+      if(!Array.isArray(design.templates)||!design.templates.length)return fail(400,'कम से कम एक Score Layer design सेव रखें।');
+      for(const [key,label] of [['templates','Score Layer'],['cardTemplates','Card'],['animationTemplates','Animation']]){
+        const rows=design[key]===undefined?[]:design[key];
+        if(!Array.isArray(rows)||rows.length>20)return fail(400,`${label} Library में अधिकतम 20 designs रख सकते हैं।`);
+        if(rows.some(item=>!item||!item.id||!Array.isArray(item.elements)||item.elements.length>100))return fail(400,`${label} design का data सही नहीं है।`);
+      }
+      await saveGlobalLibrary('studio',design);
+      return ok({studioDesign:await getGlobalLibrary('studio'),publishedCount:{score:(design.templates||[]).filter(x=>x.published===true).length,card:(design.cardTemplates||[]).filter(x=>x.published===true).length,animation:(design.animationTemplates||[]).filter(x=>x.published===true).length}});
+    }
     if(path==='/api/admin/sponsor-library'&&method==='GET'){await requireAdmin();return ok({sponsorLibrary:await getGlobalLibrary('sponsors')});}
 
     const teamMatch=path.match(/^\/api\/team(?:\/([^/]+))?(?:\/player(?:\/([^/]+))?)?$/);

@@ -46,8 +46,8 @@
       id: uid(), type, key: key || '', label, x, y, w, h, z, rotation: 0,
       hidden: false, locked: false, fontFamily: 'condensed', fontSize: type === 'shape' ? 18 : 34,
       fontWeight: 900, color: '#ffffff', fill: 'transparent', fill2: '#4b2a92', fillMode: 'solid',
-      gradientAngle: 110, stroke: '#ff168f', strokeWidth: 0, opacity: 100, radius: 8,
-      align: 'center', valign: 'middle', letterSpacing: 0, text: label, shapeType: 'rect', textTransform: 'none', shadow: true, animationType: 'none',
+      gradientAngle: 110, stroke: '#ff168f', strokeWidth: 0, opacity: 100, radius: 0,
+      align: 'center', valign: 'middle', letterSpacing: 0, text: label, shapeType: 'rect', textTransform: 'none', shadow: true, shadowColor:'#000000', shadowBlur:9, animationType: 'none',
       points: [[0, 0], [100, 0], [100, 100], [0, 100]], imageData:'', imageFit:'cover', imagePositionX:50, imagePositionY:50, ...extra
     };
   }
@@ -59,10 +59,10 @@
       makeItem('shape', '', 'Score highlight panel', 35, 8, 32, 84, 2, { fill: '#2b1a5c', fill2: '#4a1a68', fillMode: 'gradient', gradientAngle: 120, stroke: '#ff168f', strokeWidth: 2, shapeType: 'chevron' }),
       makeItem('shape', '', 'Bowler panel', 68, 8, 32, 84, 1, { fill: '#211448', fill2: '#171033', fillMode: 'gradient', gradientAngle: 100, stroke: '#513c80', strokeWidth: 1, shapeType: 'parallelogram' }),
       makeItem('shape', '', 'Bottom accent', 0, 96, 100, 4, 3, { fill: '#ff168f', fill2: '#00a9ff', fillMode: 'gradient', gradientAngle: 0, stroke: '#ff168f', strokeWidth: 0, shapeType: 'rect' }),
-      makeItem('data', 'teamLogo', 'Batting Team Logo', 1.8, 34, 4.3, 32, 5, { fontSize: 34, fill: '#ffffff', color: '#171033', radius: 50, stroke: '#f7d3e7', strokeWidth: 2 }),
+      makeItem('data', 'teamLogo', 'Batting Team Logo', 1.8, 34, 4.3, 32, 5, { fontSize: 34, fill: 'transparent', color: '#ffffff', radius: 0, stroke: 'transparent', strokeWidth: 0 }),
       makeItem('data', 'batter1', 'Striker / Batter 1', 6.5, 16, 26, 32, 5, { fontSize: 34, align: 'left', fill: 'transparent', strokeWidth: 0 }),
       makeItem('data', 'batter2', 'Non-striker / Batter 2', 6.5, 51, 26, 32, 5, { fontSize: 31, align: 'left', fill: 'transparent', strokeWidth: 0 }),
-      makeItem('data', 'target', 'Target', 39, 6, 18, 18, 6, { fontSize: 23, fill: '#ff168f', color: '#ffffff', radius: 2, stroke: '#ff8ac6', strokeWidth: 1, shapeType: 'parallelogram' }),
+      makeItem('data', 'target', 'Target', 39, 6, 18, 18, 6, { fontSize: 23, fill: 'transparent', color: '#ffffff', radius: 0, stroke: 'transparent', strokeWidth: 0 }),
       makeItem('data', 'score', 'Team Score', 39, 27, 19, 51, 6, { fontSize: 72, fontWeight: 1000, letterSpacing: -2, fill: 'transparent', align: 'center' }),
       makeItem('data', 'overs', 'Overs', 58.5, 39, 8, 28, 6, { fontSize: 32, color: '#bdeaff', fill: 'transparent' }),
       makeItem('data', 'phase', 'P1 / P2 / P3', 36.5, 82, 18, 14, 6, { fontSize: 15, fill: 'transparent' }),
@@ -116,7 +116,7 @@
         ...makeItem(e.type||'data',e.key||'',e.label||'Element',e.x,e.y,e.w,e.h,e.z,e),id:String(e.id||uid()),
         x:safeNum(e.x,0,100,0),y:safeNum(e.y,0,100,0),w:safeNum(e.w,1,100,10),h:safeNum(e.h,1,100,20),z:safeNum(e.z,0,200,1),
         rotation:safeNum(e.rotation,-180,180,0),opacity:safeNum(e.opacity,0,100,100),fontSize:safeNum(e.fontSize,6,220,30),fontWeight:safeNum(e.fontWeight,100,1000,800),
-        strokeWidth:safeNum(e.strokeWidth,0,30,0),radius:safeNum(e.radius,0,100,8),letterSpacing:safeNum(e.letterSpacing,-8,30,0),
+        strokeWidth:safeNum(e.strokeWidth,0,30,0),radius:safeNum(e.radius,0,100,0),letterSpacing:safeNum(e.letterSpacing,-8,30,0),shadowColor:safeColor(e.shadowColor,'#000000'),shadowBlur:safeNum(e.shadowBlur,0,30,9),
         points:Array.isArray(e.points)?e.points.slice(0,150).map(p=>[safeNum(p?.[0],0,100,0),safeNum(p?.[1],0,100,0)]):[[0,0],[100,0],[100,100],[0,100]]
       })):[]
     }));
@@ -327,7 +327,8 @@
     canvas.style.backgroundSize = tpl?.backgroundFit==='stretch' ? '100% 100%' : (tpl?.backgroundFit==='contain'?'contain':'cover');
     canvas.style.backgroundPosition = `${tpl?.backgroundPositionX??50}% ${tpl?.backgroundPositionY??50}%`; canvas.style.backgroundRepeat = 'no-repeat';
     canvas.classList.toggle('hasUploadedLayout', !!tpl?.backgroundImage);
-    const items = [...elements()].sort((a,b) => (a.z||0)-(b.z||0));
+    const hasThemeArtwork=!!(isScore&&tpl?.backgroundImage);
+    const items = [...elements()].filter(e=>!(hasThemeArtwork&&e.type==='shape')).sort((a,b) => (a.z||0)-(b.z||0));
     canvas.innerHTML = items.map(renderEditorElement).join('');
     if(currentCategory==='animation' && tpl?.animationPreset && tpl.animationPreset!=='none') canvas.querySelectorAll('.jc-studio-item:not(.isShape)').forEach(el=>el.classList.add(`jc-anim-${tpl.animationPreset}`));
     if (drawMode && drawPoints.length) {
@@ -385,7 +386,7 @@
     return `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${gradient}<g fill="${['line','doubleLine','brace','bracket','arc'].includes(e.shapeType)?'none':fill}" stroke="${stroke}" stroke-width="${safeNum(e.strokeWidth,0,12,0)}pt" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke">${geometry}</g></svg>`;
   }
   function renderEditorElement(e) {
-    const style = `left:${safeNum(e.x,0,100,0)}%;top:${safeNum(e.y,0,100,0)}%;width:${safeNum(e.w,1,100,10)}%;height:${safeNum(e.h,1,100,20)}%;z-index:${safeNum(e.z,0,200,1)};transform:rotate(${safeNum(e.rotation,-180,180,0)}deg);--jc-fs:${safeNum(e.fontSize,6,220,30)};--jc-color:${safeColor(e.color,'#ffffff')};--jc-fill:${e.fill === 'transparent' ? 'transparent' : safeColor(e.fill,'#171033')};--jc-stroke:${safeColor(e.stroke,'#ff168f')};--jc-stroke-width:${safeNum(e.strokeWidth,0,12,0)}pt;--jc-radius:${safeNum(e.radius,0,100,8)}px;--jc-opacity:${safeNum(e.opacity,0,100,100)/100};--jc-font:${FONT_MAP[e.fontFamily] || FONT_MAP.condensed};--jc-weight:${safeNum(e.fontWeight,100,1000,900)};--jc-align:${['left','center','right'].includes(e.align)?e.align:'center'};--jc-justify:${e.align==='left'?'flex-start':e.align==='right'?'flex-end':'center'};--jc-letter:${safeNum(e.letterSpacing,-8,30,0)}px;--jc-valign:${e.valign==='top'?'flex-start':e.valign==='bottom'?'flex-end':'center'};--jc-text-transform:${['uppercase','lowercase','capitalize'].includes(e.textTransform)?e.textTransform:'none'};--jc-text-shadow:${e.shadow===false?'none':'0 2px 9px #0008'};`;
+    const style = `left:${safeNum(e.x,0,100,0)}%;top:${safeNum(e.y,0,100,0)}%;width:${safeNum(e.w,1,100,10)}%;height:${safeNum(e.h,1,100,20)}%;z-index:${safeNum(e.z,0,200,1)};transform:rotate(${safeNum(e.rotation,-180,180,0)}deg);--jc-fs:${safeNum(e.fontSize,6,220,30)};--jc-color:${safeColor(e.color,'#ffffff')};--jc-fill:${e.fill === 'transparent' ? 'transparent' : safeColor(e.fill,'#171033')};--jc-stroke:${safeColor(e.stroke,'#ff168f')};--jc-stroke-width:${safeNum(e.strokeWidth,0,12,0)}pt;--jc-radius:${safeNum(e.radius,0,100,8)}px;--jc-opacity:${safeNum(e.opacity,0,100,100)/100};--jc-font:${FONT_MAP[e.fontFamily] || FONT_MAP.condensed};--jc-weight:${safeNum(e.fontWeight,100,1000,900)};--jc-align:${['left','center','right'].includes(e.align)?e.align:'center'};--jc-justify:${e.align==='left'?'flex-start':e.align==='right'?'flex-end':'center'};--jc-letter:${safeNum(e.letterSpacing,-8,30,0)}px;--jc-valign:${e.valign==='top'?'flex-start':e.valign==='bottom'?'flex-end':'center'};--jc-text-transform:${['uppercase','lowercase','capitalize'].includes(e.textTransform)?e.textTransform:'none'};--jc-text-shadow:${e.shadow===false?'none':`0 2px ${safeNum(e.shadowBlur,0,30,9)}px ${safeColor(e.shadowColor,'#000000')}`};`;
     const isShape = e.type === 'shape';
     const content = isShape ? shapeSvg(e, `shape_${String(e.id).replace(/[^a-z0-9]/gi,'')}`) : previewItemContent(e);
     const anim=e.animationType&&e.animationType!=='none'?e.animationType:(currentCategory==='animation'?(activeTemplate()?.animationPreset||'none'):'none');
@@ -417,7 +418,7 @@
     } else if (e.type === 'shape') {
       specific = `${field('Shape type','shapeType','', 'select',SHAPE_ITEMS.map(([v,l,g])=>`<option value="${v}">${g} · ${l}</option>`).join(''))}${field('Fill mode','fillMode',e.fillMode,'select','<option value="solid">Solid colour</option><option value="gradient">Linear gradient</option>')}${field('Fill colour','fill',e.fill,'color')}${field('Gradient second colour','fill2',e.fill2,'color')}${field('Gradient angle (°)','gradientAngle',e.gradientAngle,'number','min="0" max="360" step="1"')}${field('Border colour','stroke',e.stroke,'color')}${field('Border thickness (pt)','strokeWidth',e.strokeWidth,'number','min="0" max="12" step="0.25"')}${field('Corner roundness (canvas units)','radius',e.radius,'number','min="0" max="48" step="0.5"')}${field('Shadow','shadow',e.shadow?'yes':'no','select','<option value="yes">On</option><option value="no">Off</option>')}`;
     } else {
-      specific = `${e.type==='text'?field('Text content','text',e.text,'textarea'):''}${field('Font family','fontFamily',e.fontFamily,'select','<option value="condensed">Sports Condensed</option><option value="system">Modern Sans</option><option value="arial">Arial</option><option value="trebuchet">Trebuchet</option><option value="georgia">Georgia</option><option value="mono">Monospace</option><option value="impact">Impact</option>')}${field('Font size (design px)','fontSize',e.fontSize,'number','min="6" max="220" step="1"')}${field('Font weight','fontWeight',e.fontWeight,'number','min="100" max="1000" step="100"')}${field('Text colour','color',e.color,'color')}${field('Background colour','fill',e.fill==='transparent'?'#171033':e.fill,'color')}${field('Border colour','stroke',e.stroke,'color')}${field('Border thickness (pt)','strokeWidth',e.strokeWidth,'number','min="0" max="12" step="0.25"')}${field('Corner roundness (canvas units)','radius',e.radius,'number','min="0" max="48" step="0.5"')}${field('Text alignment','align',e.align,'select','<option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>')}${field('Letter spacing (px)','letterSpacing',e.letterSpacing,'number','min="-8" max="30" step="0.5"')}${field('Vertical align','valign',e.valign,'select','<option value="top">Top</option><option value="middle">Middle</option><option value="bottom">Bottom</option>')}${field('Text transform','textTransform',e.textTransform,'select','<option value="none">Normal</option><option value="uppercase">UPPERCASE</option><option value="lowercase">lowercase</option><option value="capitalize">Capitalize</option>')}${field('Text shadow','shadow',e.shadow?'yes':'no','select','<option value="yes">On</option><option value="no">Off</option>')}${field('Element animation','animationType',e.animationType||'none','select',ANIMATIONS.map(a=>`<option value="${a}">${a}</option>`).join(''))}`;
+      specific = `${e.type==='text'?field('Text content','text',e.text,'textarea'):''}${field('Font family','fontFamily',e.fontFamily,'select','<option value="condensed">Sports Condensed</option><option value="system">Modern Sans</option><option value="arial">Arial</option><option value="trebuchet">Trebuchet</option><option value="georgia">Georgia</option><option value="mono">Monospace</option><option value="impact">Impact</option>')}${field('Font size (design px)','fontSize',e.fontSize,'number','min="6" max="220" step="1"')}${field('Font weight','fontWeight',e.fontWeight,'number','min="100" max="1000" step="100"')}${field('Text colour','color',e.color,'color')}${field('Background colour','fill',e.fill==='transparent'?'#171033':e.fill,'color')}${field('Border colour','stroke',e.stroke,'color')}${field('Border thickness (pt)','strokeWidth',e.strokeWidth,'number','min="0" max="12" step="0.25"')}${field('Corner roundness (canvas units)','radius',e.radius,'number','min="0" max="48" step="0.5"')}${field('Text alignment','align',e.align,'select','<option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>')}${field('Letter spacing (px)','letterSpacing',e.letterSpacing,'number','min="-8" max="30" step="0.5"')}${field('Vertical align','valign',e.valign,'select','<option value="top">Top</option><option value="middle">Middle</option><option value="bottom">Bottom</option>')}${field('Text transform','textTransform',e.textTransform,'select','<option value="none">Normal</option><option value="uppercase">UPPERCASE</option><option value="lowercase">lowercase</option><option value="capitalize">Capitalize</option>')}${field('Text shadow','shadow',e.shadow?'yes':'no','select','<option value="yes">On</option><option value="no">Off</option>')}${field('Shadow colour','shadowColor',e.shadowColor||'#000000','color')}${field('Shadow blur (px)','shadowBlur',e.shadowBlur??9,'number','min="0" max="30" step="1"')}${field('Element animation','animationType',e.animationType||'none','select',ANIMATIONS.map(a=>`<option value="${a}">${a}</option>`).join(''))}`;
     }
     panel.innerHTML = `<div class="jc-studio-property-grid">${common}${specific}</div><div class="jc-studio-align"><span>Quick text align</span><button type="button" data-align="left">Left</button><button type="button" data-align="center">Center</button><button type="button" data-align="right">Right</button></div><div class="jc-studio-selected-actions"><button type="button" data-layer-action="duplicate" data-id="${safeText(e.id)}">Duplicate</button><button type="button" data-layer-action="delete" data-id="${safeText(e.id)}" class="isDanger">Delete</button></div>`;
     panel.querySelectorAll('[data-prop]').forEach(el => { if (el.tagName === 'SELECT') el.value = String(e[el.dataset.prop] ?? ''); });
@@ -426,11 +427,11 @@
     const item = selected(); if (!item) return;
     const key = fieldEl.dataset.prop; let value = fieldEl.value;
     if(key==='shadow')value=value==='yes';
-    const numeric = ['x','y','w','h','rotation','opacity','fontSize','fontWeight','strokeWidth','radius','gradientAngle','letterSpacing','imagePositionX','imagePositionY'];
+    const numeric = ['x','y','w','h','rotation','opacity','fontSize','fontWeight','strokeWidth','radius','gradientAngle','letterSpacing','imagePositionX','imagePositionY','shadowBlur'];
     if (numeric.includes(key)) {
-      const ranges = {x:[0,100],y:[0,100],w:[1,100],h:[1,100],rotation:[-180,180],opacity:[0,100],fontSize:[6,220],fontWeight:[100,1000],strokeWidth:[0,12],radius:[0,48],gradientAngle:[0,360],letterSpacing:[-8,20],imagePositionX:[0,100],imagePositionY:[0,100]};
+      const ranges = {x:[0,100],y:[0,100],w:[1,100],h:[1,100],rotation:[-180,180],opacity:[0,100],fontSize:[6,220],fontWeight:[100,1000],strokeWidth:[0,12],radius:[0,48],gradientAngle:[0,360],letterSpacing:[-8,20],imagePositionX:[0,100],imagePositionY:[0,100],shadowBlur:[0,30]};
       value = safeNum(value, ...ranges[key], 0);
-    } else if (['fill','fill2','stroke','color'].includes(key)) value = safeColor(value, '#ffffff');
+    } else if (['fill','fill2','stroke','color','shadowColor'].includes(key)) value = safeColor(value, '#ffffff');
     else value = String(value).slice(0, key === 'text' ? 300 : 80);
     item[key] = value;
     renderViewport();
@@ -521,10 +522,11 @@
   function applySnapshot(snap) {
     try { const saved = JSON.parse(snap), t = activeTemplate(); Object.assign(t, saved); selectedId = t.elements[0]?.id || null; renderAll(); queuePersist(); } catch {}
   }
-  function saveTemplate() {
+  async function saveTemplate() {
     const t = activeTemplate(); if (!t) return;
     t.name = String($('jcStudioTemplateName').value || 'My Scoreboard').trim().slice(0,50) || 'My Scoreboard';
-    t.category=currentCategory;t.published = true; checkpoint(); renderTemplateOptions(); queuePersist(); setHint(`${CATEGORIES[currentCategory].label}: “${t.name}” publish हो गया और अलग Library में सुरक्षित है।`);
+    t.category=currentCategory;t.published = true; checkpoint(); renderTemplateOptions();
+    await persistNow(true);
   }
   function duplicateTemplate() {
     const t = clone(activeTemplate()); if (!t) return;

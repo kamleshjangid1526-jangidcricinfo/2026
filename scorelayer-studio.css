@@ -30,3 +30,14 @@
 .jlStudioBatter .batterInfo small{flex:0 0 auto;font-size:.58em;white-space:nowrap}
 .cardLayer .jlStudioOverlayRoot{height:auto!important;max-height:calc(100vh - 40px)!important;overflow:auto!important;overscroll-behavior:contain!important}
 @media(max-width:640px){.jlStudioBatter .batterInfo{gap:.25em!important}.jlStudioBatter .batterInfo small{font-size:.55em}}
+
+
+/* Text-first theme overlay: live cricket data must not paint panels over uploaded artwork. */
+.jlStudioItem:not(.isShape){background:transparent!important;border-color:transparent!important;border-width:0!important;border-radius:0!important;box-shadow:none!important}
+.jlStudioLogo{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;height:100%!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--studio-color,#fff)!important;overflow:hidden!important}
+.jlStudioLogo img{width:100%;height:100%;object-fit:contain;background:transparent!important}
+.jlStudioPhase i{border:0!important;background:transparent!important;border-radius:0!important;padding:0!important}
+.jlStudioPhase i.active{color:var(--studio-color,#fff)!important;background:transparent!important;text-decoration:underline;text-decoration-color:currentColor;text-underline-offset:.18em}
+.jlStudioChips i{display:inline!important;min-width:0!important;height:auto!important;padding:0!important;margin:0 .08em!important;border:0!important;border-radius:0!important;background:transparent!important;color:inherit!important}
+.jlStudioBallText{display:block;width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.jlStudioBatter .strikeMark{background:transparent!important;border:0!important}

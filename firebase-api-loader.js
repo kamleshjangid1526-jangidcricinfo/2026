@@ -9,6 +9,9 @@
   try{channel=new BroadcastChannel('jangid-cricinfo-local-live-v1');}catch{}
   const clone=x=>store?.clone?store.clone(x):JSON.parse(JSON.stringify(x??null));
   const uidOf=s=>String(s?.user?.id||s?.user?.uid||s?.user?.userId||'');
+  const AUTH_SESSION_KEY='jc-auth-session-uid';
+  function markVerifiedSession(state){const uid=uidOf(state);if(!uid)return;try{sessionStorage.setItem(AUTH_SESSION_KEY,uid);}catch{}}
+  function hasVerifiedSession(state){const uid=uidOf(state);try{return !!uid&&sessionStorage.getItem(AUTH_SESSION_KEY)===uid;}catch{return false;}}
   const key=(uid,type,id)=>'queue:'+uid+':'+type+(id?':'+id:'');
   const isNetworkError=e=>!navigator.onLine||e?.name==='TypeError'||['unavailable','network-request-failed'].includes(e?.code)||/network|offline|failed to fetch|connection|timed out/i.test(String(e?.message||''));
   const localStatus=(state,detail='')=>{const d={state,detail,online:navigator.onLine,pending:0,updatedAt:new Date().toISOString()};window.dispatchEvent(new CustomEvent('jc-offline-status',{detail:d}));try{channel?.postMessage({type:'status',state,detail});}catch{}return d;};
@@ -65,8 +68,8 @@
     const method=String(init.method||'GET').toUpperCase(),body=(()=>{try{return init.body?JSON.parse(init.body):{};}catch{return {};}})();
     try{
       if(url.pathname==='/api/state'&&method==='GET'){
-        try{const result=await apiRequest(url,init);if((result.status||200)<400&&result.body?.user){await saveState(result.body);const merged=await withPending(clone(result.body));await saveState(merged);const pending=activeUid?(await records('queue:'+activeUid+':')).length:0;localStatus(pending?'pending':'synced',pending?pending+' pending items.':'Firebase connected.');return toResponse({status:200,body:merged});}return toResponse(result);}
-        catch(error){if(!isNetworkError(error))throw error;const saved=await readState();if(!saved)throw error;const merged=await withPending(saved);localStatus('offline','Offline mode · पिछला Match और Teams डेटा लोड हुआ।');return toResponse({status:200,body:{...merged,firebaseConnection:'offline',offlineMode:true}});}
+        try{const result=await apiRequest(url,init);if((result.status||200)<400&&result.body?.user){markVerifiedSession(result.body);await saveState(result.body);const merged=await withPending(clone(result.body));await saveState(merged);const pending=activeUid?(await records('queue:'+activeUid+':')).length:0;localStatus(pending?'pending':'synced',pending?pending+' pending items.':'Firebase connected.');return toResponse({status:200,body:merged});}return toResponse(result);}
+        catch(error){if(!isNetworkError(error))throw error;const saved=await readState();if(!saved||!hasVerifiedSession(saved))throw error;const merged=await withPending(saved);localStatus('offline','Offline mode · पिछला Match और Teams डेटा लोड हुआ।');return toResponse({status:200,body:{...merged,firebaseConnection:'offline',offlineMode:true}});}
       }
       const publicMatchPath=url.pathname.match(/^\/api\/public\/match\/([^/]+)$/);
       if(publicMatchPath&&method==='GET'){
@@ -97,6 +100,23 @@
         localStatus(navigator.onLine?'pending':'offline',navigator.onLine?'Broadcast graphics device पर update हुईं; Firebase background में sync होगा।':'Broadcast graphics device पर सेव हैं; reconnect पर Sync होंगी।');
         if(navigator.onLine)scheduleSync(100);
         return toResponse({status:200,body:{ok:true,queued:true,localFirst:true}});
+      }
+      if((url.pathname==='/api/login'||url.pathname==='/api/admin/login')&&method==='POST'){
+        try{sessionStorage.removeItem(AUTH_SESSION_KEY);}catch{}
+        const result=await apiRequest(url,init);
+        if((result.status||200)<400&&result.body?.user)markVerifiedSession(result.body);
+        return toResponse(result);
+      }
+      if(url.pathname==='/api/logout'&&method==='POST'){
+        const uid=activeUid||uidOf(cachedState)||( ()=>{try{return sessionStorage.getItem(AUTH_SESSION_KEY)||'';}catch{return '';}} )();
+        const result=await apiRequest(url,init);
+        if((result.status||200)<400){
+          try{sessionStorage.removeItem(AUTH_SESSION_KEY);}catch{}
+          cachedState=null;activeUid='';
+          await store?.remove('state:last');
+          if(uid)await store?.remove('state:'+uid);
+        }
+        return toResponse(result);
       }
       return toResponse(await apiRequest(url,init));
     }catch(error){
