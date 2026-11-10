@@ -183,3 +183,114 @@ body.scoreLayerBody #eventLayer[data-event-type="no-ball"] .eventSub {color:#9ff
   body.scoreLayerBody #eventLayer[data-event-type="wicket"]::before,
   body.scoreLayerBody #eventLayer[data-event-type="wicket"]::after {animation:none !important;}
 }
+
+
+/* FINAL EVENT COMPOSITION FIX — transparent full-canvas animations.
+   Applied after all legacy event-theme rules so none can restore a panel or crop artwork. */
+body.scoreLayerBody #eventLayer[data-event-type="four"],
+body.scoreLayerBody #eventLayer[data-event-type="six"],
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] {
+  position:fixed !important;inset:0 !important;left:0 !important;right:0 !important;top:0 !important;bottom:0 !important;
+  width:100vw !important;height:100vh !important;min-width:100vw !important;min-height:100vh !important;
+  max-width:none !important;max-height:none !important;margin:0 !important;padding:0 !important;
+  transform:none !important;display:none;place-items:center !important;overflow:visible !important;
+  background:transparent !important;background-color:transparent !important;background-image:none !important;
+  border:0 !important;border-radius:0 !important;box-shadow:none !important;outline:0 !important;
+  backdrop-filter:none !important;-webkit-backdrop-filter:none !important;clip-path:none !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] > .eventInner,
+body.scoreLayerBody #eventLayer[data-event-type="six"] > .eventInner,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] > .eventInner {
+  position:absolute !important;inset:0 !important;left:0 !important;right:0 !important;top:0 !important;bottom:0 !important;
+  display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;
+  width:100vw !important;height:100vh !important;min-width:0 !important;min-height:100vh !important;
+  max-width:none !important;max-height:none !important;margin:0 !important;
+  padding:clamp(18px,4vh,54px) clamp(16px,4vw,70px) !important;gap:clamp(5px,1.1vh,16px) !important;
+  box-sizing:border-box !important;overflow:visible !important;contain:none !important;
+  border:0 !important;border-bottom:0 !important;border-radius:0 !important;
+  background:transparent !important;background-color:transparent !important;background-image:none !important;
+  box-shadow:none !important;outline:0 !important;clip-path:none !important;
+  isolation:isolate !important;z-index:2 !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] > .eventInner::before,
+body.scoreLayerBody #eventLayer[data-event-type="four"] > .eventInner::after,
+body.scoreLayerBody #eventLayer[data-event-type="six"] > .eventInner::before,
+body.scoreLayerBody #eventLayer[data-event-type="six"] > .eventInner::after,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] > .eventInner::before,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] > .eventInner::after {
+  content:none !important;display:none !important;border:0 !important;background:none !important;
+  background-image:none !important;box-shadow:none !important;outline:0 !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .eventSticker,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .eventSticker,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .eventSticker {
+  display:block !important;flex:0 0 auto !important;position:relative !important;
+  width:auto !important;height:auto !important;max-width:min(34vw,300px) !important;
+  max-height:22vh !important;object-fit:contain !important;overflow:visible !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .batBallSticker,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .batBallSticker {
+  width:clamp(90px,14vw,220px) !important;max-width:34vw !important;max-height:22vh !important;
+  height:auto !important;object-fit:contain !important;position:relative !important;
+  inset:auto !important;transform-origin:center !important;z-index:4 !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .celebrateIcon,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .celebrateIcon {
+  flex:0 0 auto !important;margin:0 !important;max-height:30vh !important;
+  font-size:clamp(100px,20vw,300px) !important;line-height:.74 !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .eventTitle,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .eventTitle,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .eventTitle {
+  position:relative !important;z-index:5 !important;display:block !important;
+  max-width:92vw !important;margin:0 !important;padding:0 !important;
+  background:transparent !important;border:0 !important;overflow:visible !important;
+  font-size:clamp(38px,7vw,112px) !important;line-height:.95 !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .eventSub,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .eventSub,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .eventSub {
+  position:relative !important;z-index:5 !important;display:block !important;
+  max-width:90vw !important;margin:0 !important;padding:0 !important;
+  background:transparent !important;border:0 !important;overflow:visible !important;
+  font-size:clamp(11px,1.8vw,24px) !important;line-height:1.2 !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .eventPlayerName,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .eventPlayerName,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .eventPlayerName {
+  position:absolute !important;left:5vw !important;right:5vw !important;bottom:7vh !important;
+  display:block !important;width:auto !important;max-width:90vw !important;margin:0 auto !important;
+  padding:0 !important;overflow:visible !important;z-index:20 !important;
+  color:#fff !important;font-size:clamp(22px,3.4vw,54px) !important;
+  font-weight:1000 !important;line-height:1.12 !important;text-align:center !important;
+  white-space:normal !important;text-overflow:clip !important;
+  text-shadow:0 2px 8px rgba(0,0,0,.95),0 0 22px rgba(0,0,0,.85) !important;
+  background:transparent !important;border:0 !important;box-shadow:none !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .walkingSticker {
+  position:absolute !important;left:clamp(18px,4vw,68px) !important;right:auto !important;
+  bottom:14vh !important;max-width:min(24vw,230px) !important;max-height:22vh !important;
+  width:auto !important;height:auto !important;z-index:3 !important;opacity:.7 !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .umpireSticker {
+  max-width:min(28vw,250px) !important;max-height:24vh !important;width:auto !important;height:auto !important;
+}
+
+/* Studio-made event layouts also use the full canvas instead of a cropped boxed card. */
+body.scoreLayerBody #eventLayer[data-event-type="four"].studioAnimationEvent,
+body.scoreLayerBody #eventLayer[data-event-type="six"].studioAnimationEvent,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"].studioAnimationEvent {
+  position:fixed !important;inset:0 !important;left:0 !important;right:0 !important;top:0 !important;bottom:0 !important;
+  width:100vw !important;height:100vh !important;min-height:100vh !important;max-height:none !important;
+  max-width:none !important;transform:none !important;padding:0 !important;overflow:visible !important;
+  background:transparent !important;background-image:none !important;border:0 !important;
+  border-radius:0 !important;box-shadow:none !important;place-items:center !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .jlStudioOverlayRoot,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .jlStudioOverlayRoot,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .jlStudioOverlayRoot {
+  position:absolute !important;inset:0 !important;width:100vw !important;height:100vh !important;
+  max-width:none !important;max-height:none !important;aspect-ratio:auto !important;overflow:visible !important;
+  border:0 !important;border-radius:0 !important;box-shadow:none !important;filter:none !important;
+  background-color:transparent !important;background-image:none !important;
+}
