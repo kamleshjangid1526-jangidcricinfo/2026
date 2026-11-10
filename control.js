@@ -221,7 +221,7 @@ function renderGraphics(){
  SCORE_DESIGN={...DESIGN_DEFAULTS,...(b.design||{})};
  if(b.eventAnimations)EVENT_ANIM_MAP={...EVENT_ANIM_MAP,...b.eventAnimations};
  EVENT_ANIM_MAP['NO BALL']=EVENT_ANIM_MAP['FREE HIT']||'spotlight';
- if(b.eventDurations)EVENT_DURATION_MAP={...b.eventDurations};
+ if(b.eventDurations)EVENT_DURATION_MAP={...EVENT_DURATION_MAP,...b.eventDurations};
  if(b.cardAnimations)CARD_ANIM_MAP={...CARD_ANIM_MAP,...b.cardAnimations};
  if(b.cardDurations)CARD_DURATION_MAP={...CARD_DURATION_MAP,...b.cardDurations};
  fillGraphics();
