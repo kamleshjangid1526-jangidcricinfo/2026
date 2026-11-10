@@ -196,12 +196,12 @@
     statusAfterDelivery(i);
     try { const saveTask=saveMatch(false); renderScoring(); await saveTask; }
     catch(err) { MATCH=old; if(STATE)STATE.activeMatch=clone(old); renderScoring(); alert(`स्कोर device पर सेव नहीं हुआ: ${err.message}`); return; }
-    if(extraName==='wide') await fireEvent('WIDE');
-    else if(extraName==='noball') await fireEvent('NO BALL');
-    else if(extraName==='legbye') await fireEvent('LEG BYE');
-    else if(extraName==='bye') await fireEvent('BYE');
-    else if(batRuns===4) await fireEvent('FOUR');
-    else if(batRuns===6) await fireEvent('SIX');
+    if(extraName==='wide') void fireEvent('WIDE');
+    else if(extraName==='noball') void fireEvent('NO BALL');
+    else if(extraName==='legbye') void fireEvent('LEG BYE');
+    else if(extraName==='bye') void fireEvent('BYE');
+    else if(batRuns===4) void fireEvent('FOUR');
+    else if(batRuns===6) void fireEvent('SIX');
     if(MATCH?.awaitingNextInnings){setTimeout(()=>{if(MATCH?.awaitingNextInnings)startSecondInnings()},180)}
     else if(i.awaitingBowler && !MATCH?.awaitingMatchFinish){setTimeout(()=>{if(MATCH?.status==='live' && MATCH?.activeInnings?.awaitingBowler)promptBowler()},350)}
     return true;
