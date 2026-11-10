@@ -327,7 +327,8 @@
     canvas.style.backgroundSize = tpl?.backgroundFit==='stretch' ? '100% 100%' : (tpl?.backgroundFit==='contain'?'contain':'cover');
     canvas.style.backgroundPosition = `${tpl?.backgroundPositionX??50}% ${tpl?.backgroundPositionY??50}%`; canvas.style.backgroundRepeat = 'no-repeat';
     canvas.classList.toggle('hasUploadedLayout', !!tpl?.backgroundImage);
-    const items = [...elements()].sort((a,b) => (a.z||0)-(b.z||0));
+    const hasThemeArtwork=!!(isScore&&tpl?.backgroundImage);
+    const items = [...elements()].filter(e=>!(hasThemeArtwork&&e.type==='shape')).sort((a,b) => (a.z||0)-(b.z||0));
     canvas.innerHTML = items.map(renderEditorElement).join('');
     if(currentCategory==='animation' && tpl?.animationPreset && tpl.animationPreset!=='none') canvas.querySelectorAll('.jc-studio-item:not(.isShape)').forEach(el=>el.classList.add(`jc-anim-${tpl.animationPreset}`));
     if (drawMode && drawPoints.length) {
