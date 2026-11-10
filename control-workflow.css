@@ -286,3 +286,26 @@ body:has(#scoring:not(.hidden)){overflow:hidden}
 #scoring .powerplayBtn{transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
 #scoring .powerplayBtn.active{transform:translateY(-1px)}
 #scoring .powerplayBtn.powerplayOff.active{background:#314a61;color:#f4f8fc;border-color:#8ca9c1;box-shadow:0 0 0 2px #9ab4c52a}
+
+
+/* Clear, compact on-field strip for the live scorer. */
+#scoring #currentPlayers{min-width:0}
+#scoring .jcOnFieldGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;min-width:0}
+#scoring .jcFieldPlayer{display:flex;flex-direction:column;justify-content:center;gap:5px;min-width:0;padding:8px 9px;border:1px solid #29465f;border-radius:10px;background:linear-gradient(145deg,#10253a,#0a1a2a)}
+#scoring .jcFieldStriker{border-color:#268c79;background:linear-gradient(145deg,#123c3a,#102537)}
+#scoring .jcFieldNonStriker{border-color:#315b83}
+#scoring .jcFieldBowler{border-color:#815b35;background:linear-gradient(145deg,#392919,#172337)}
+#scoring .jcFieldPlayerTop{display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0}
+#scoring .jcFieldRole{font-size:9px;font-weight:1000;letter-spacing:.06em;color:#9dc2d9;white-space:nowrap}
+#scoring .jcStrikeBadge,#scoring .jcOverBadge{font-size:8px;font-weight:950;letter-spacing:.03em;white-space:nowrap;color:#b8ffe8}
+#scoring .jcStrikeBadge{color:#9af1d4}
+#scoring .jcOverBadge{color:#ffdfa2}
+#scoring .jcFieldPlayerName{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(11px,1vw,14px);line-height:1.15;color:#f5fbff}
+#scoring .jcFieldStats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;min-width:0}
+#scoring .jcBowlerStats{grid-template-columns:repeat(3,minmax(0,1fr))}
+#scoring .jcFieldStats>div{display:flex;align-items:baseline;gap:4px;min-width:0}
+#scoring .jcFieldStats strong{font-size:clamp(12px,1.15vw,16px);font-weight:1000;line-height:1;font-variant-numeric:tabular-nums;color:#fff;white-space:nowrap}
+#scoring .jcFieldStats small{font-size:7px;font-weight:900;letter-spacing:.04em;color:#8fa9bd;white-space:nowrap}
+#scoring .jcFieldExtra{font-size:8px;line-height:1.1;color:#9ab3c7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#scoring .jcFieldExtra span{color:#6f91a8;padding:0 2px}
+#scoring .jcBowlingTeam{color:#e4c79e}
