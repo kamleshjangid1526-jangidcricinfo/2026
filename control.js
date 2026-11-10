@@ -617,8 +617,10 @@ const es=new EventSource('/events');es.onmessage=e=>{try{
  if(STATE?.user?.id){
   if(incomingMine){
    const localMatch=MATCH?.id===incomingMine.id&&MATCH.status==='live'?MATCH:(STATE.activeMatch?.id===incomingMine.id&&STATE.activeMatch.status==='live'?STATE.activeMatch:null);
-   const stamp=value=>{const localVersion=Date.parse(value?.offlineUpdatedAt||'');return Number.isFinite(localVersion)&&localVersion>0?localVersion:(Date.parse(value?.updatedAt||'')||0);};
-   const mine=localMatch&&stamp(localMatch)>stamp(incomingMine)?localMatch:incomingMine;
+   const stamp=value=>({local:Date.parse(value?.offlineUpdatedAt||'')||0,updated:Date.parse(value?.updatedAt||'')||0});
+   const localStamp=stamp(localMatch),incomingStamp=stamp(incomingMine);
+   const keepLocal=localMatch&&(localStamp.local>incomingStamp.local||(localStamp.local===incomingStamp.local&&localStamp.updated>incomingStamp.updated));
+   const mine=keepLocal?localMatch:incomingMine;
    MATCH=mine;STATE.activeMatch=mine;STATE.matches||=[];
    const matchIndex=STATE.matches.findIndex(m=>String(m.id)===String(mine.id));
    if(matchIndex>=0)STATE.matches[matchIndex]=mine;else STATE.matches.push(mine);
