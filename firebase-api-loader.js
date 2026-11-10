@@ -45,10 +45,15 @@
       const broadcastRow=await store?.get(key(uid,'broadcast'));
       if(!matchRows.length&&!finishRows.length&&!broadcastRow){localStatus('synced','कोई pending बदलाव नहीं है।');return true;}
       for(const row of matchRows){
-        const match=row.value?.match;if(!match?.id)continue;
+        const queued=await store?.get(row.key);
+        if(!queued)continue;
+        if(queued.version!==row.value?.version){rerunSync=true;continue;}
+        const match=queued.value?.match;if(!match?.id)continue;
         const result=await apiRequest(new URL('/api/match/state',location.href),{method:'POST',body:JSON.stringify({match})});
         if((result.status||200)>=400)throw Object.assign(new Error(result.body?.error||'Match sync failed'),{code:result.body?.code});
-        const latest=await store?.get(row.key);if(latest?.version===row.value.version)await store?.remove(row.key);
+        const latest=await store?.get(row.key);
+        if(latest?.version===queued.version)await store?.remove(row.key);
+        else rerunSync=true;
       }
       for(const row of finishRows){
         const result=await apiRequest(new URL('/api/match/finish',location.href),{method:'POST',body:JSON.stringify(row.value.body||{})});
