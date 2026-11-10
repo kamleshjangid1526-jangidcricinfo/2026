@@ -5,7 +5,11 @@ html, body.scoreLayerBody {
   overflow:hidden !important;background:transparent !important;background-color:rgba(0,0,0,0) !important;
 }
 body.scoreLayerBody::before,body.scoreLayerBody::after,
-body.scoreLayerBody #jcOfflineStatus,body.scoreLayerBody #offlineScoreStatus {display:none !important;}
+body.scoreLayerBody #jcOfflineStatus,body.scoreLayerBody #offlineScoreStatus,
+body.scoreLayerBody .jcOfflineStatus,body.scoreLayerBody .offlineScoreStatus,
+body.scoreLayerBody [data-jc-offline-status],body.scoreLayerBody [data-offline-status] {
+  display:none !important;visibility:hidden !important;opacity:0 !important;pointer-events:none !important;
+}
 
 /* Decorative artwork behind the existing score fields; the original field layout stays intact. */
 #scoreBar.scoreBar {isolation:isolate;}
