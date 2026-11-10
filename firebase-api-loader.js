@@ -6,6 +6,20 @@
   window.__JC_FIREBASE_BRIDGE_READY__=ready;window.__JC_FIREBASE_BRIDGE_RESOLVE__=resolveBridge;window.__JC_FIREBASE_BRIDGE_REJECT__=rejectBridge;
   window.__JC_FIREBASE_EVENTS__=new Set();window.__JC_LAST_PUBLIC_PAYLOAD__=null;window.__JC_FIREBASE_INIT_ERROR__=null;
   let cachedState=null,activeUid='',syncing=false,channel=null,syncRetryTimer=null;
+  const BG_SYNC_TAG='jangid-cricinfo-pending-sync-v1';
+  function requestBackgroundSync(){
+    if(!('serviceWorker' in navigator))return;
+    void navigator.serviceWorker.ready.then(registration=>{
+      if(registration.sync?.register)return registration.sync.register(BG_SYNC_TAG);
+      return null;
+    }).catch(error=>console.debug('Background Sync unavailable; foreground retry remains active.',error));
+  }
+  navigator.serviceWorker?.addEventListener('message',event=>{
+    if(event.data?.type!=='JC_BACKGROUND_SYNC_REQUEST')return;
+    const port=event.ports?.[0];
+    void syncNow().then(ok=>{try{port?.postMessage({ok:!!ok});}catch{}if(!ok)requestBackgroundSync();}).catch(error=>{try{port?.postMessage({ok:false,error:String(error?.message||error)});}catch{}});
+  });
+
   try{channel=new BroadcastChannel('jangid-cricinfo-local-live-v1');}catch{}
   const clone=x=>store?.clone?store.clone(x):JSON.parse(JSON.stringify(x??null));
   const uidOf=s=>String(s?.user?.id||s?.user?.uid||s?.user?.userId||'');
@@ -89,6 +103,7 @@
       if(url.pathname==='/api/match/state'&&method==='POST'){
         const saved=await cacheMatch(body.match);
         localStatus(navigator.onLine?'pending':'offline',navigator.onLine?'स्कोर device पर सेव है; Firebase background में sync होगा।':'स्कोर device पर सुरक्षित है; internet आने पर Sync होगा।');
+        requestBackgroundSync();
         if(navigator.onLine)scheduleSync(100);
         return toResponse({status:200,body:{ok:true,queued:true,localFirst:true,match:saved.snapshot}});
       }
@@ -98,11 +113,12 @@
         if(cachedState){cachedState.matches||=[];const ix=cachedState.matches.findIndex(x=>String(x.id)===String(finished.id));if(ix>=0)cachedState.matches[ix]=finished;else cachedState.matches.push(finished);cachedState.activeMatch=null;cachedState.savedLiveMatches=(cachedState.savedLiveMatches||[]).filter(x=>String(x.id)!==String(finished.id));await saveState(cachedState);}
         emitPublic(publicPayload(finished,cachedState?.broadcast));
         try{const result=await apiRequest(url,init);if((result.status||200)>=400)throw Object.assign(new Error(result.body?.error||'Finish failed'),{status:result.status,code:result.body?.code});await store?.remove(key(uid,'finish',finished.id));await store?.remove(key(uid,'match',finished.id));localStatus('synced','Match result Firebase में सेव हुआ।');return toResponse(result);}
-        catch(error){if(!isNetworkError(error))throw error;localStatus('pending','Match result offline सेव है; internet आने पर Sync होगा।');return toResponse({status:200,body:{ok:true,offline:true,queued:true,match:finished}});}
+        catch(error){if(!isNetworkError(error))throw error;requestBackgroundSync();localStatus('pending','Match result offline सेव है; internet आने पर Sync होगा।');return toResponse({status:200,body:{ok:true,offline:true,queued:true,match:finished}});}
       }
       if(url.pathname==='/api/broadcast'&&method==='POST'){
         await cacheBroadcast(body);
         localStatus(navigator.onLine?'pending':'offline',navigator.onLine?'Broadcast graphics device पर update हुईं; Firebase background में sync होगा।':'Broadcast graphics device पर सेव हैं; reconnect पर Sync होंगी।');
+        requestBackgroundSync();
         if(navigator.onLine)scheduleSync(100);
         return toResponse({status:200,body:{ok:true,queued:true,localFirst:true}});
       }
@@ -151,8 +167,9 @@
     close(){this.closed=true;this.readyState=2;window.__JC_FIREBASE_EVENTS__?.delete(this);}
   }
   window.EventSource=LocalFirebaseEventSource;
-  window.addEventListener('online',()=>{localStatus('syncing','Internet वापस आया है; Sync शुरू हो रहा है।');syncNow();});
+  window.addEventListener('online',()=>{localStatus('syncing','Internet वापस आया है; Sync शुरू हो रहा है।');requestBackgroundSync();syncNow();});
   window.addEventListener('offline',()=>localStatus('offline','Offline · scoring device पर सेव होगी।'));
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&navigator.onLine)syncNow();});
   setInterval(()=>{if(navigator.onLine)syncNow();},30000);
+  window.addEventListener('load',()=>{requestBackgroundSync();scheduleSync(500);},{once:true});
 })();
