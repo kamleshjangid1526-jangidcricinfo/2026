@@ -138,3 +138,23 @@
  body.jc-scoring-view .scoreGrid.cbLiveDetailsGrid>.panel:has(#currentPlayers)>.panelHead{margin:0 0 4px}
  body.jc-scoring-view .scoreGrid.cbLiveDetailsGrid>.panel:has(#currentPlayers)>.panelHead h3{font-size:8px;line-height:1.1;letter-spacing:.04em}
 }
+
+/* Mobile visibility fix: restore the live on-field panel with both batters and the current bowler.
+   control-workflow.css hides the first live-details panel on narrow screens; override that only here. */
+@media(max-width:700px){
+ body.jc-scoring-view #scoring .cbLiveDetailsGrid>.panel:has(#currentPlayers){
+  display:block !important;visibility:visible !important;flex:0 0 auto !important;
+  min-width:0 !important;min-height:0 !important;width:100% !important;
+ }
+ body.jc-scoring-view #scoring #currentPlayers{
+  display:block !important;visibility:visible !important;min-width:0 !important;width:100% !important;
+ }
+ body.jc-scoring-view #scoring #currentPlayers>.jcOnFieldGrid{
+  display:grid !important;visibility:visible !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:4px !important;
+  width:100% !important;min-width:0 !important;
+ }
+ body.jc-scoring-view #scoring #currentPlayers>.jcOnFieldGrid>.jcFieldPlayer{
+  display:flex !important;visibility:visible !important;min-width:0 !important;
+ }
+}
