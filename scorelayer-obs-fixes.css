@@ -1,0 +1,181 @@
+/* Jangid Cricinfo OBS output polish.
+   Page canvas stays alpha-transparent. Only the scorebug/cards themselves draw opaque panels. */
+html, body.scoreLayerBody {
+  width:100% !important;height:100% !important;margin:0 !important;padding:0 !important;
+  overflow:hidden !important;background:transparent !important;background-color:rgba(0,0,0,0) !important;
+}
+body.scoreLayerBody::before,body.scoreLayerBody::after,
+body.scoreLayerBody #jcOfflineStatus,body.scoreLayerBody #offlineScoreStatus {display:none !important;}
+
+/* Decorative artwork behind the existing score fields; the original field layout stays intact. */
+#scoreBar.scoreBar {isolation:isolate;}
+#scoreBar.scoreBar::before {
+  inset:0 !important;z-index:0 !important;pointer-events:none !important;opacity:.42 !important;
+  background-image:
+    radial-gradient(circle at 91% 22%,rgba(255,255,255,.16) 0 1px,transparent 2px 100%),
+    radial-gradient(circle at 91% 22%,transparent 0 20px,rgba(255,255,255,.14) 21px 22px,transparent 23px 47px,rgba(255,255,255,.08) 48px 49px,transparent 50px),
+    repeating-linear-gradient(128deg,transparent 0 18px,rgba(255,255,255,.045) 19px 20px,transparent 21px 42px),
+    linear-gradient(112deg,transparent 35%,rgba(255,255,255,.05) 68%,transparent 92%) !important;
+  background-repeat:no-repeat,no-repeat,repeat,no-repeat !important;
+}
+#scoreBar.layer1::before,#scoreBar.layer5::before,#scoreBar.layer12::before,#scoreBar.layer18::before {
+  opacity:.52 !important;
+  background-image:
+    radial-gradient(circle at 92% 50%,transparent 0 17px,rgba(255,255,255,.2) 18px 19px,transparent 20px 42px,rgba(255,255,255,.09) 43px 44px,transparent 45px),
+    repeating-linear-gradient(135deg,transparent 0 14px,rgba(255,255,255,.06) 15px 17px,transparent 18px 38px),
+    linear-gradient(110deg,transparent 40%,rgba(255,255,255,.05) 72%,transparent) !important;
+}
+#scoreBar.layer2::before,#scoreBar.layer8::before,#scoreBar.layer14::before,#scoreBar.layer19::before {
+  opacity:.48 !important;
+  background-image:
+    radial-gradient(ellipse at 88% 50%,transparent 0 28px,rgba(255,255,255,.16) 29px 30px,transparent 31px 58px),
+    repeating-linear-gradient(45deg,transparent 0 19px,rgba(255,255,255,.055) 20px 22px,transparent 23px 44px),
+    linear-gradient(90deg,transparent 50%,rgba(255,255,255,.07) 100%) !important;
+}
+#scoreBar.layer3::before,#scoreBar.layer11::before,#scoreBar.layer15::before {
+  opacity:.5 !important;
+  background-image:
+    linear-gradient(90deg,transparent 0 66%,rgba(255,255,255,.08) 66.2% 66.6%,transparent 66.8%),
+    repeating-linear-gradient(90deg,transparent 0 34px,rgba(255,255,255,.045) 35px 36px,transparent 37px 68px),
+    radial-gradient(circle at 88% 48%,rgba(255,255,255,.12),transparent 26%) !important;
+}
+#scoreBar.layer4::before,#scoreBar.layer13::before,#scoreBar.layer17::before {
+  opacity:.5 !important;
+  background-image:
+    radial-gradient(ellipse at 88% 50%,transparent 0 24px,rgba(255,255,255,.19) 25px 26px,transparent 27px 50px,rgba(255,255,255,.08) 51px 52px,transparent 53px),
+    repeating-linear-gradient(155deg,transparent 0 22px,rgba(255,255,255,.05) 23px 25px,transparent 26px 50px) !important;
+}
+#scoreBar.layer6::before,#scoreBar.layer7::before,#scoreBar.layer9::before,
+#scoreBar.layer10::before,#scoreBar.layer16::before,#scoreBar.layer20::before {
+  opacity:.46 !important;
+  background-image:
+    repeating-linear-gradient(135deg,transparent 0 12px,rgba(255,255,255,.06) 13px 15px,transparent 16px 34px),
+    radial-gradient(circle at 91% 50%,rgba(255,255,255,.14),transparent 28%),
+    linear-gradient(115deg,transparent 45%,rgba(255,255,255,.06) 72%,transparent) !important;
+}
+
+/* Full OBS viewport, always alpha transparent. */
+body.scoreLayerBody #eventLayer.eventLayer {
+  position:fixed !important;inset:0 !important;left:0 !important;right:0 !important;top:0 !important;bottom:0 !important;
+  width:100vw !important;height:100vh !important;min-width:100vw !important;min-height:100vh !important;
+  max-width:none !important;max-height:none !important;margin:0 !important;padding:0 !important;transform:none !important;
+  display:none;place-items:center !important;overflow:hidden !important;background:transparent !important;background-color:transparent !important;
+  border:0 !important;border-radius:0 !important;box-shadow:none !important;backdrop-filter:none !important;
+  pointer-events:none !important;z-index:50 !important;
+}
+body.scoreLayerBody #eventLayer.eventLayer::before,body.scoreLayerBody #eventLayer.eventLayer::after {
+  content:"" !important;display:block !important;position:absolute !important;inset:-4% !important;
+  border:0 !important;border-radius:0 !important;background:transparent !important;pointer-events:none !important;z-index:0 !important;opacity:0;
+}
+
+/* FOUR, SIX and WICKET are full-screen alpha graphics, never rectangular cards. */
+body.scoreLayerBody #eventLayer[data-event-type="four"] .eventInner,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .eventInner,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .eventInner {
+  position:absolute !important;inset:0 !important;width:100% !important;height:100% !important;
+  min-width:0 !important;min-height:100% !important;max-width:none !important;max-height:none !important;
+  margin:0 !important;padding:0 !important;display:flex !important;flex-direction:column !important;
+  align-items:center !important;justify-content:center !important;gap:clamp(5px,1.2vw,18px) !important;
+  overflow:visible !important;border:0 !important;border-radius:0 !important;background:transparent !important;
+  background-color:transparent !important;box-shadow:none !important;outline:0 !important;contain:none !important;
+  isolation:isolate !important;z-index:2 !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .eventInner::before,
+body.scoreLayerBody #eventLayer[data-event-type="four"] .eventInner::after,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .eventInner::before,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .eventInner::after,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .eventInner::before,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .eventInner::after {
+  display:none !important;content:none !important;border:0 !important;background:none !important;box-shadow:none !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .eventTitle,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .eventTitle,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .eventTitle {
+  margin:0 !important;padding:0 !important;border:0 !important;background:transparent !important;
+  font-size:clamp(48px,9.5vw,156px) !important;line-height:.88 !important;letter-spacing:.12em !important;
+  font-weight:1000 !important;text-align:center !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .eventSub,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .eventSub,
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .eventSub {
+  margin:0 !important;font-size:clamp(11px,1.8vw,25px) !important;line-height:1.2 !important;
+  letter-spacing:.32em !important;text-align:center !important;text-shadow:0 3px 18px rgba(0,0,0,.65) !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .celebrateIcon,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .celebrateIcon {
+  margin:0 !important;font-size:clamp(150px,29vw,390px) !important;line-height:.66 !important;
+  font-weight:1000 !important;filter:drop-shadow(0 12px 32px rgba(0,0,0,.5)) !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .eventTitle {color:#d8fbff !important;text-shadow:0 0 18px rgba(25,220,255,.75),0 8px 34px rgba(0,0,0,.8) !important;}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .celebrateIcon {color:#42e6f2 !important;text-shadow:0 0 28px rgba(28,226,255,.9),0 12px 42px rgba(0,0,0,.65) !important;}
+body.scoreLayerBody #eventLayer[data-event-type="six"] .eventTitle {color:#fff2c7 !important;text-shadow:0 0 20px rgba(255,178,49,.8),0 8px 34px rgba(0,0,0,.8) !important;}
+body.scoreLayerBody #eventLayer[data-event-type="six"] .celebrateIcon {color:#ffc84d !important;text-shadow:0 0 28px rgba(255,178,49,.95),0 12px 42px rgba(0,0,0,.65) !important;}
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .eventTitle {color:#fff0f2 !important;text-shadow:0 0 20px rgba(255,45,82,.82),0 8px 34px rgba(0,0,0,.82) !important;}
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .eventPlayerName {
+  max-width:88vw !important;color:#fff !important;font-size:clamp(24px,5vw,76px) !important;
+  line-height:1 !important;font-weight:1000 !important;text-align:center !important;
+  text-shadow:0 0 18px rgba(255,45,82,.7),0 8px 28px rgba(0,0,0,.85) !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="wicket"] .eventSticker {
+  width:auto !important;max-width:min(28vw,260px) !important;max-height:min(30vh,260px) !important;
+  object-fit:contain !important;filter:drop-shadow(0 10px 24px rgba(0,0,0,.6)) !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .batBallSticker,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .batBallSticker {
+  width:clamp(72px,12vw,190px) !important;max-height:22vh !important;object-fit:contain !important;
+  filter:drop-shadow(0 10px 24px rgba(0,0,0,.55)) !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"] .fireworks,
+body.scoreLayerBody #eventLayer[data-event-type="six"] .fireworks {
+  inset:0 !important;z-index:1 !important;font-size:clamp(24px,5vw,80px) !important;
+  letter-spacing:3vw !important;opacity:.45 !important;pointer-events:none !important;
+}
+
+/* Alpha rings, rays and streaks; the cricket picture remains visible underneath. */
+body.scoreLayerBody #eventLayer[data-event-type="four"]::before {
+  opacity:1 !important;
+  background:
+    radial-gradient(circle at 50% 50%,transparent 0 18vw,rgba(38,225,245,.18) 18.1vw 18.35vw,transparent 18.5vw 31vw,rgba(38,225,245,.1) 31.1vw 31.3vw,transparent 31.5vw),
+    conic-gradient(from 12deg at 50% 50%,transparent 0 10%,rgba(42,232,255,.16) 10.5% 11%,transparent 11.5% 23%,rgba(42,232,255,.12) 23.5% 24%,transparent 24.5% 48%,rgba(42,232,255,.16) 48.5% 49%,transparent 49.5% 100%) !important;
+  animation:jcObsRingBurst 1.9s ease-out both !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="four"]::after {
+  opacity:.7 !important;background:repeating-linear-gradient(118deg,transparent 0 8vw,rgba(67,230,255,.16) 8.1vw 8.22vw,transparent 8.35vw 17vw) !important;
+  animation:jcObsStreaks 1.65s ease-out both !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="six"]::before {
+  opacity:1 !important;
+  background:
+    radial-gradient(circle at 50% 50%,transparent 0 17vw,rgba(255,194,66,.2) 17.1vw 17.35vw,transparent 17.5vw 30vw,rgba(255,194,66,.12) 30.1vw 30.3vw,transparent 30.5vw),
+    conic-gradient(from 35deg at 50% 50%,transparent 0 7%,rgba(255,198,70,.2) 7.5% 8%,transparent 8.5% 18%,rgba(255,198,70,.13) 18.5% 19%,transparent 19.5% 40%,rgba(255,198,70,.2) 40.5% 41%,transparent 41.5% 100%) !important;
+  animation:jcObsRingBurst 2.15s cubic-bezier(.16,.8,.2,1) both !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="six"]::after {
+  opacity:.72 !important;background:repeating-linear-gradient(62deg,transparent 0 7vw,rgba(255,205,82,.16) 7.1vw 7.25vw,transparent 7.4vw 16vw) !important;
+  animation:jcObsStreaks 1.85s ease-out both !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="wicket"]::before {
+  opacity:1 !important;
+  background:
+    radial-gradient(circle at 50% 50%,transparent 0 16vw,rgba(255,48,83,.2) 16.1vw 16.35vw,transparent 16.5vw 29vw,rgba(255,48,83,.12) 29.1vw 29.3vw,transparent 29.5vw),
+    conic-gradient(from -20deg at 50% 50%,transparent 0 9%,rgba(255,48,83,.18) 9.5% 10%,transparent 10.5% 24%,rgba(255,48,83,.13) 24.5% 25%,transparent 25.5% 48%,rgba(255,48,83,.18) 48.5% 49%,transparent 49.5% 100%) !important;
+  animation:jcObsRingBurst 1.9s cubic-bezier(.2,.8,.2,1) both !important;
+}
+body.scoreLayerBody #eventLayer[data-event-type="wicket"]::after {
+  opacity:.68 !important;background:repeating-linear-gradient(135deg,transparent 0 9vw,rgba(255,66,96,.17) 9.1vw 9.25vw,transparent 9.4vw 18vw) !important;
+  animation:jcObsStreaks 1.7s ease-out both !important;
+}
+
+/* NO BALL keeps the correct event label but borrows FREE HIT's green palette and motion. */
+body.scoreLayerBody #eventLayer[data-event-type="no-ball"] .badgeIcon {background:linear-gradient(135deg,#0c9d75,#075746) !important;border-color:rgba(255,255,255,.45) !important;}
+body.scoreLayerBody #eventLayer[data-event-type="no-ball"] .eventSub {color:#9ff5d5 !important;}
+@keyframes jcObsRingBurst {0%{transform:scale(.72) rotate(-12deg);opacity:0}38%{opacity:1}100%{transform:scale(1.12) rotate(5deg);opacity:0}}
+@keyframes jcObsStreaks {0%{transform:translateX(-5vw) scale(.92);opacity:0}35%{opacity:.8}100%{transform:translateX(5vw) scale(1.08);opacity:0}}
+@media(prefers-reduced-motion:reduce) {
+  body.scoreLayerBody #eventLayer[data-event-type="four"]::before,
+  body.scoreLayerBody #eventLayer[data-event-type="four"]::after,
+  body.scoreLayerBody #eventLayer[data-event-type="six"]::before,
+  body.scoreLayerBody #eventLayer[data-event-type="six"]::after,
+  body.scoreLayerBody #eventLayer[data-event-type="wicket"]::before,
+  body.scoreLayerBody #eventLayer[data-event-type="wicket"]::after {animation:none !important;}
+}
