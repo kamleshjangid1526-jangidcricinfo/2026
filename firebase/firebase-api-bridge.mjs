@@ -103,7 +103,7 @@ async function publishMatch(uid,match) {
   return enriched;
 }
 async function saveMatch(uid,match) {
-  const m={...match,userId:uid,ownerUid:uid,updatedAt:nowIso(),lastActivityAt:nowIso()};
+  const m={...match,userId:uid,ownerUid:uid,updatedAt:match.updatedAt||nowIso(),lastActivityAt:nowIso()};
   // Replace the complete private match snapshot; merge mode can retain removed nested stat keys.
   await setDoc(ownerDoc(uid,'matches',m.id),cleanData(m));
   if(m.status==='live') await setDoc(ownerDoc(uid,'meta','active'),{matchId:m.id,updatedAt:nowIso()});
