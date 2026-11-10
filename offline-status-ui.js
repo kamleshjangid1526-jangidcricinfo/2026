@@ -3,8 +3,8 @@
   const mount=()=>{
     if(!document.body)return;
     const scoring=document.getElementById('scoring');
-    let bar=document.getElementById('jcOfflineStatus');
-    if(scoring&&!bar){bar=document.createElement('div');bar.id='jcOfflineStatus';bar.className='jcOfflineStatus';bar.setAttribute('role','status');bar.setAttribute('aria-live','polite');bar.textContent='Checking connection…';scoring.prepend(bar);}
+    let bar=document.getElementById('jcOfflineStatus')||document.getElementById('offlineScoreStatus');
+    if(!bar){bar=document.createElement('div');bar.id='jcOfflineStatus';bar.className='jcOfflineStatus';bar.setAttribute('role','status');bar.setAttribute('aria-live','polite');bar.textContent='Checking connection…';if(scoring)scoring.prepend(bar);else document.body.prepend(bar);}
     const update=event=>{
       if(!bar)return;
       const d=event?.detail||{},online=navigator.onLine;
