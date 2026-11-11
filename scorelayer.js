@@ -1,6 +1,6 @@
 'use strict';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const q=new URLSearchParams(location.search);const owner=q.get('owner');
+const q=new URLSearchParams(location.search);const owner=q.get('owner');const scoreLayerLoadedAt=Date.now();
 let lastEventId=null,lastEventStorageKey='',eventScopeInitialized=false,lastCardId=null,lastRenderMatchId=null,eventVisible=false,latestBroadcast={},latestSSEBroadcast={},latestMatch=null,ownerBroadcast={},ownerBroadcastVersion='',ownerBroadcastRequestedVersion='',ownerBroadcastUserId='';
 let sponsorLibrary=[],sponsorLibraryVersion='',sponsorLibraryRequested=false,lastSponsorManualToken='',lastSponsorTimeoutToken='',sponsorAutoState={matchId:'',innings:0,over:0,status:''},pendingSponsor=null,sponsorVisible=false,sponsorHideTimer=null,sponsorRotationIndex=0,sponsorRotationBase='',dismissedCardId=null;
 const accentByColor={1:'#58c8ff',2:'#43e09b',3:'#ff6074',4:'#ffae4d',5:'#c59bff',6:'#f5d06c',7:'#ffffff',8:'#44e1d5',9:'#ef8493',10:'#dce5ef'};
@@ -419,11 +419,15 @@ function renderEvent(b,matchId){
   eventScopeInitialized=false;
  }
  const incomingId=String(b.eventId??'');
+ // Ignore an event that belongs to a previous match, even if Firestore delivers its snapshot late.
+ if(b.matchId&&String(b.matchId)!==String(matchId)){clearEventVisual(el,cardEl);return;}
  if(!eventScopeInitialized){
   eventScopeInitialized=true;
-  // On a fresh OBS/browser load, the first broadcast is a snapshot, not a new event.
-  // Mark an already-active event as seen so it does not replay on reconnect/reload.
-  if(b.event&&incomingId&&!lastEventId){
+  // On refresh, skip only an event that was already active before this Score Layer opened.
+  // A newly received event must still play even when it is the first message for this match.
+  const eventAt=Number(b.eventAt)||0;
+  const isOldSnapshot=!!eventAt&&eventAt<scoreLayerLoadedAt;
+  if(b.event&&incomingId&&!lastEventId&&(!eventAt||isOldSnapshot)){
    rememberEventId(incomingId);clearEventVisual(el,cardEl);return;
   }
  }
