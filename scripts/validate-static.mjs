@@ -95,6 +95,7 @@ const checks = [
   ['Broadcast queue revisions are unique even when event IDs are unchanged', offlineLoader.includes("const version=String(Date.now())+':'+String(++cacheWriteSequence);")],
   ['Broadcast saves avoid rewriting the complete cached account profile', offlineLoader.includes('cachedState.broadcast={...(cachedState.broadcast||{}),...clone(payload)};') && !offlineLoader.includes('await saveState(cachedState);}emitPublic(publicPayload(cachedState?.activeMatch,cachedState?.broadcast))')],
   ['Pending broadcast graphics are replayed after Score Layer refresh', offlineLoader.includes("const pendingBroadcast=await store.get(key(uid,'broadcast'))") && offlineLoader.includes('...clone(pendingBroadcast.payload)')],
+  ['Latest broadcast graphics remain available offline after a successful upload clears the queue', offlineLoader.includes("store?.put('broadcast:last:'+uid,clone(payload))") && offlineLoader.includes("store.get('broadcast:last:'+uid)")],
   ['Online sync is lightly debounced and coalesced during an active upload', offlineLoader.includes('function scheduleSync(delay=220)') && offlineLoader.includes('syncRequested=true') && offlineLoader.includes('(rerunSync||syncRequested)')],
   ['Existing-live-match details reach Control Board recovery flow', bridge.includes('Array.isArray(error.matches)') && control.includes('e.details?.matches')],
   ['Tournament scheduling stays in dedicated Schedule Match view', tournament.includes('data-tm-tab="schedule"') && tournament.includes('function renderSchedule(t)')],
