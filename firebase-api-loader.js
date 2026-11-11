@@ -68,7 +68,20 @@
     emitPublic(publicPayload(snapshot,cachedState?.broadcast));
     return {uid,queueKey,snapshot};
   }
-  async function cacheBroadcast(payload){const uid=activeUid||uidOf(cachedState);if(!uid)throw new Error('पहले online Login करें, फिर offline graphics सेव हो सकेंगी।');const queueKey=key(uid,'broadcast'),version=String(payload.eventId||Date.now());const durable=await store?.put(queueKey,{payload:clone(payload),version});if(durable!==true)throw new Error('इस डिवाइस की IndexedDB storage उपलब्ध नहीं है। Browser storage permission और खाली जगह जाँचें।');if(cachedState){cachedState.broadcast={...(cachedState.broadcast||{}),...clone(payload)};await saveState(cachedState);}emitPublic(publicPayload(cachedState?.activeMatch,cachedState?.broadcast));return {uid,queueKey,version};}
+  async function cacheBroadcast(payload){
+    const uid=activeUid||uidOf(cachedState);
+    if(!uid)throw new Error('पहले online Login करें, फिर offline graphics सेव हो सकेंगी।');
+    const queueKey=key(uid,'broadcast');
+    // eventId intentionally stays unchanged when only a layout, palette or card setting changes.
+    // Give every queue write a new revision so an older upload cannot delete a newer setting.
+    const version=String(Date.now())+':'+String(++cacheWriteSequence);
+    const durable=await store?.put(queueKey,{payload:clone(payload),version});
+    if(durable!==true)throw new Error('इस डिवाइस की IndexedDB storage उपलब्ध नहीं है। Browser storage permission और खाली जगह जाँचें।');
+    // The queue is already durable. Do not rewrite both full cached profile records on each graphic update.
+    if(cachedState)cachedState.broadcast={...(cachedState.broadcast||{}),...clone(payload)};
+    emitPublic(publicPayload(cachedState?.activeMatch,cachedState?.broadcast));
+    return {uid,queueKey,version};
+  }
   function scheduleSync(delay=220){
     if(!navigator.onLine)return;
     if(syncing){syncRequested=true;return;}
@@ -191,6 +204,9 @@
       const pending=await records('queue:'+uid+':match:');
       for(const row of pending){const match=row.value?.match;if(!match?.id)continue;const ix=matches.findIndex(x=>String(x.id)===String(match.id));if(ix>=0)matches[ix]=clone(match);else matches.push(clone(match));}
       const broadcasts={...(saved.broadcasts||{})};if(saved.broadcast)broadcasts[uid]=clone(saved.broadcast);
+      // Replay queued graphics after refresh, even if the full profile snapshot is older.
+      const pendingBroadcast=await store.get(key(uid,'broadcast'));
+      if(pendingBroadcast?.payload)broadcasts[uid]={...(broadcasts[uid]||{}),...clone(pendingBroadcast.payload)};
       emitPublic({activeMatches:matches.filter(x=>x.status==='live'),matches,tournaments:saved.tournaments||[],broadcasts,changedCollection:'offline-cache'});
     }catch(error){console.warn('Cached match snapshot could not be emitted:',error);}
   }
