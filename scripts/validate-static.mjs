@@ -71,14 +71,12 @@ const layoutStart = control.indexOf('const LAYERS=[');
 const layoutEnd = control.indexOf('];', layoutStart);
 const layerCount = layoutStart >= 0 && layoutEnd > layoutStart
   ? [...control.slice(layoutStart, layoutEnd).matchAll(/'[^']+'/g)].length : 0;
-const styledLayers = new Set(Array.from({length:20},(_,i)=>i+1).filter(n=>scoreLayerCss.includes('.scoreBar.layer'+n+'{')));
 const animStart = control.indexOf('const ANIMS=[');
 const animEnd = control.indexOf('];', animStart);
 const animationNames = animStart >= 0 && animEnd > animStart
   ? [...control.slice(animStart, animEnd).matchAll(/'([^']+)'/g)].map(match => match[1]).filter(name => name !== 'none') : [];
 const checks = [
-  ['20 distinct Score Layer options', layerCount === 20],
-  ['All 20 layouts have dedicated Score Layer CSS rules', styledLayers.size === 20 && Array.from({length:20},(_,i)=>i+1).every(n=>styledLayers.has(n))],
+  ['One World Cup reference Score Layer layout is available', layerCount === 1],
   ['All 20 event animation names have matching Score Layer styles', animationNames.length === 20 && animationNames.every(name => scoreLayerCss.toLowerCase().includes(name.toLowerCase()))],
   ['Layout and colour are independent', control.includes('changing a layout must never overwrite') && control.includes("$('colorSelect').addEventListener('change'")],
   ['Single-screen scoring layout prevents vertical page scrolling', workflowCss.includes('overflow:hidden;overscroll-behavior:none')],
@@ -87,7 +85,7 @@ const checks = [
   ['Existing-live-match details reach Control Board recovery flow', bridge.includes('Array.isArray(error.matches)') && control.includes('e.details?.matches')],
   ['Tournament scheduling stays in dedicated Schedule Match view', tournament.includes('data-tm-tab="schedule"') && tournament.includes('function renderSchedule(t)')],
   ['Matches tab only renders live matches', tournament.includes("const live=list.filter(m=>m.status==='live')")],
-  ['Score Layer displays the batting team name', scoreLayer.includes('jlScoreTeamName') && scoreLayerCss.includes('.jlScoreTeamName')],
+  ['World Cup Score Layer separates batters, centre score, target team and bowler', scoreLayer.includes('jcWcBatterPanel') && scoreLayer.includes('jcWcScorePanel') && scoreLayer.includes('jcWcTargetPanel') && scoreLayer.includes('jcWcBowlerPanel') && scoreLayer.includes('targetTeam.name')],
   ['Control Board loads scoring engine and Firebase bridge', html.includes('scoring-engine.js') && html.includes('firebase/firebase-api-bridge.mjs')],
   ['Offline storage is loaded before API bridge', html.indexOf('offline-store.js') >= 0 && html.indexOf('offline-store.js') < html.indexOf('firebase-api-loader.js')],
   ['Offline match writes are durably queued before Firebase save', offlineLoader.includes('await cacheMatch(body.match)') && offlineLoader.includes("store?.put(queueKey,{match:snapshot")],
@@ -96,7 +94,7 @@ const checks = [
   ['Public match pages can show a cached match snapshot offline', offlineLoader.includes("const matchCacheKey='public:match:'") && offlineLoader.includes("await store?.put(matchCacheKey,result.body||{})") && offlineLoader.includes('इस Scoreboard का पिछला Match snapshot')],
   ['Static assets use a scoped service worker cache', serviceWorker.includes("addEventListener('fetch'") && serviceWorker.includes('skipWaiting') && offlineUi.includes("navigator.serviceWorker.register")],
   ['Mobile scoring layout is loaded and selected only on scoring page', html.includes('mobile-scoring-v2.css') && control.includes("body.classList.toggle('jc-scoring-view',id==='scoring')") && mobileCss.includes('overflow:hidden;overscroll-behavior:none')],
-  ['Twenty fresh Score Layer geometry rules are present', freshScoreCss.includes('.scoreBar.jlNewTwenty.layer20') && freshScoreCss.includes('.scoreBar.jlNewTwenty.color10')],
+  ['Compact World Cup typography scales to output width', freshScoreCss.includes('.jlWorldCupScorebar') && freshScoreCss.includes('cqi') && freshScoreCss.includes('clamp(') && freshScoreCss.includes('.jcWcTargetPanel')],
   ['Independent FOUR, SIX and WICKET motion themes are connected', control.includes('eventThemeFour') && control.includes('eventThemeSix') && control.includes('eventThemeWicket') && eventCss.includes('jcRipple') && eventCss.includes('jcSurge') && eventCss.includes('jcShards')],
   ['Broadcast cards include an explicit close action', scoreLayer.includes('broadcastCardClose') && scoreLayer.includes("setAttribute('aria-label','Close card')")],
   ['Tournament Schedule is a separate action with dedicated wickets and best-player tabs', tournament.includes("['wickets','Wickets']") && tournament.includes("['best','Best Players']") && tournament.includes('data-tm-tab="schedule"')],

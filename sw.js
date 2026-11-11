@@ -1,8 +1,8 @@
 /* Static asset cache for offline scoring sessions. API writes are handled by firebase-api-loader.js. */
-const JC_CACHE='jangid-cricinfo-static-v22';
+const JC_CACHE='jangid-cricinfo-static-v23';
 const JC_ASSETS=[
   './','./index.html','./control.html','./scorelayer.html','./scoreboard.html','./jangid-cricinfo.html',
-  './firebase-api-loader.js','./firebase-api-loader.js?v=5.0.9','./control.js?v=5.1.6','./firebase/firebase-api-bridge.mjs?v=5.0.5','./scoring-engine.js?v=4.4.19','./mobile-scoring-v2.css?v=5.0.4','./offline-store.js','./offline-status-ui.js','./offline-status-ui.js?v=5.1.4','./scorelayer.js?v=5.2.0','./scorelayer-broadcast-v2.css?v=6.0.2','./scorelayer-obs-fixes.css','./scorelayer-obs-fixes.css?v=5.1.3','./mobile-scoring-v2.css?v=5.0.2','./event-animation-themes.js','./mobile-scoring-v2.css','./event-animation-themes.css','./scorelayer-broadcast-v2.css','./broadcast-ui-fixes.css',
+  './firebase-api-loader.js','./firebase-api-loader.js?v=5.0.9','./control.js?v=5.1.6','./firebase/firebase-api-bridge.mjs?v=5.0.5','./scoring-engine.js?v=4.4.19','./mobile-scoring-v2.css?v=5.0.4','./offline-store.js','./offline-status-ui.js','./offline-status-ui.js?v=5.1.4','./scorelayer.js?v=6.0.0','./scorelayer-broadcast-v2.css?v=7.0.0','./scorelayer-obs-fixes.css','./scorelayer-obs-fixes.css?v=5.1.3','./mobile-scoring-v2.css?v=5.0.2','./event-animation-themes.js','./mobile-scoring-v2.css','./event-animation-themes.css','./scorelayer-broadcast-v2.css','./broadcast-ui-fixes.css',
   './theme.js','./theme.css','./control.js','./scoring-engine.js','./tournament-manager.js',
   './control.css','./control-workflow.css','./tournament-manager.css','./mobile-scoring-v2.css',
   './event-animation-themes.css','./scorelayer.js','./scorelayer.css','./scorelayer-v6.css','./scorelayer-v7.css',

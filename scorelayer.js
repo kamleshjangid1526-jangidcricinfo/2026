@@ -197,46 +197,62 @@ function selectedStudioOverlay(design){
 
 function renderBar(m,b){
  const i=m.activeInnings;if(!i)return;
- const layer=document.getElementById('scoreBar');
- const savedStudio=studioTemplate(b?.studioDesign);
- if(savedStudio){renderStudioBar(layer,m,b,savedStudio);return;}
+ const layer=document.getElementById('scoreBar');if(!layer)return;
  layer.dataset.studio='false';
- const layout=Math.max(1,Math.min(20,Number(b.layer)||1)),color=Math.max(1,Math.min(10,Number(b.color)||1));
- layer.className=`scoreBar jlCompactPattern jlFreshTwenty layer${layout} ${layout>=8?'jlNewTwenty ':''}color${color}`;
- layer.dataset.layout=String(layout);layer.dataset.family='fresh-twenty';layer.dataset.color=String(color);
- const freshAccents=['#53d9ee','#46d69b','#ff526f','#ff9a50','#a58bff','#f5ce58','#1e5a84','#4de3d5','#ff6c91','#c6d2df'];
- layer.style.setProperty('--accent',freshAccents[color-1]||freshAccents[0]);
- applyScoreDesign(b.design||{});
- const battingId=i.battingId??m.teamA,batting=teamMeta(battingId,m,'BAT'),bowling=teamMeta(i.bowlingId??m.teamB,m,'BOWL');
- const s=i.batStats?.[i.striker],n=i.batStats?.[i.nonStriker],bw=i.bowlStats?.[i.currentBowler];
- const runs=Number(i.score)||0,wickets=Number(i.wickets)||0,balls=Number(i.balls)||0,overs=fmtOvers(balls),target=Number(i.target)||0;
- const totalBalls=Math.max(0,Number(m.oversLimit||m.overs||0)*6),ballsLeft=target>0?Math.max(0,totalBalls-balls):0,runsNeeded=target>0?Math.max(0,target-runs):0;
- const crr=balls>0?(runs/(balls/6)).toFixed(2):'0.00',rrr=target>0&&ballsLeft>0?(runsNeeded/(ballsLeft/6)).toFixed(2):'—';
+ const color=Math.max(1,Math.min(10,Number(b?.color)||1));
+ layer.className=\`scoreBar jlWorldCupScorebar color\${color}\`;
+ layer.dataset.layout='world-cup';layer.dataset.family='world-cup-compact';layer.dataset.color=String(color);
+ layer.removeAttribute('style');
+ applyScoreDesign({enabled:false});
+
+ const batting=teamMeta(i.battingId??m.teamA,m,'BAT');
+ const bowling=teamMeta(i.bowlingId??m.teamB,m,'BOWL');
+ const striker=i.batStats?.[i.striker],nonStriker=i.batStats?.[i.nonStriker],bw=i.bowlStats?.[i.currentBowler];
+ const runs=Number(i.score)||0,wickets=Number(i.wickets)||0,balls=Number(i.balls)||0;
+ const overs=fmtOvers(balls),target=Number(i.target)||0;
+ const totalBalls=Math.max(0,Number(m.oversLimit||m.overs||0)*6);
+ const ballsLeft=target>0?Math.max(0,totalBalls-balls):0;
+ const runsNeeded=target>0?Math.max(0,target-runs):0;
+ const crr=balls>0?(runs/(balls/6)).toFixed(2):'0.00';
+ const rrr=target>0&&ballsLeft>0?(runsNeeded/(ballsLeft/6)).toFixed(2):'—';
+ const inningsNo=Math.max(1,Number(m.inningsNo)||1);
  const activePowerplay=String(i.powerplay||'').trim().toUpperCase();
- const batLine=(p,kind)=>`<div class="jlBatterRow ${kind==='striker'?'isStriker':'isNonStriker'}"><span class="jlStrikeIcon" aria-label="${kind==='striker'?'On strike':''}">${kind==='striker'?'🏏':'•'}</span><b class="jlBatterName ${String(p?.name||'').length>15?'isLong':''}">${esc(p?.name||'—')}</b><span class="jlBatterStats"><strong class="jlBatterRuns">${Number(p?.runs)||0}${kind==='striker'?'*':''}</strong><small class="jlBatterBalls">(${Number(p?.balls)||0})</small></span></div>`;
- const deliveries=overEvents(i.events||[]).map(e=>{const d=deliveryInfo(e);return `<span class="jlBallChip ${d.cls}" title="${esc(d.title)}">${d.label}</span>`}).join('');
- const bowlerOvers=bw?fmtOvers(bw.balls||0):'0.0',bowlerRuns=Number(bw?.runs)||0,bowlerWickets=Number(bw?.wickets)||0;
- const inningsNo=Math.max(1,Number(m.inningsNo)||1),pp=['P1','P2','P3'].map(phase=>`<span class="jlPhaseTag ${activePowerplay===phase?'isActive':''}">${phase}</span>`).join('');
+ const targetTeam=teamMeta(target>0?(i.battingId??m.teamA):(i.bowlingId??m.teamB),m,'TARGET');
+ const logo=(team,side)=>\`<span class="jcWcLogo \${side}" title="\${esc(team.name)}" aria-label="\${esc(team.name)}">\${team.logo?\`<img src="\${esc(team.logo)}" alt="" onerror="this.remove();this.parentElement.classList.add('isFallback')">\`:\`<b>\${esc(initials(team.name))}</b>\`}</span>\`;
+ const batterLine=(player,kind)=>\`<div class="jcWcBatterRow \${kind==='striker'?'isStriker':'isNonStriker'}"><span class="jcWcStrike">\${kind==='striker'?'▶':'·'}</span><b class="jcWcBatterName" title="\${esc(player?.name||'—')}">\${esc(player?.name||'—')}</b><span class="jcWcBatterStats"><strong>\${Number(player?.runs)||0}\${kind==='striker'?'*':''}</strong><small>(\${Number(player?.balls)||0})</small></span></div>\`;
+ const deliveries=overEvents(i.events||[]).map(event=>{const item=deliveryInfo(event);return \`<span class="jcWcBall \${item.cls}" title="\${esc(item.title)}">\${item.label}</span>\`}).join('');
  const recentOver=balls>0?Math.floor((balls-1)/6)+1:Math.max(1,Number(i.currentOver)||1);
- layer.innerHTML=`
-  <div class="jlTeam jlBatTeam">${logoBadge(batting)}<div class="jlTeamCopy"><span class="jlRoleTag">BATTING TEAM</span><b class="jlTeamName" title="${esc(batting.name)}">${esc(batting.name||'BAT TEAM')}</b></div></div>
-  <div class="jlBatters"><div class="jlSectionLabel">AT THE CREASE · BATTERS</div><div class="jlBatterList">${batLine(s,'striker')}${batLine(n,'nonStriker')}</div></div>
-  <div class="jlScoreWrap">
-   <div class="jlScoreTop"><span class="jlScoreKicker"><span class="jlLiveDot">LIVE</span><b>INNINGS ${inningsNo}</b></span><span class="jlInningsPill">${overs} OV</span></div>
-   <div class="jlScoreTeamName" title="${esc(batting.name)}">${esc(batting.name||'BATTING TEAM')}</div>
-   <div class="jlScoreMain"><strong class="jlRuns">${runs}</strong><span class="jlSlash">/</span><strong class="jlWickets">${wickets}</strong></div>
-   <div class="jlScoreMeta"><span>OVERS <b>${overs}</b></span><span>CRR <b>${crr}</b></span></div>
-  </div>
-  <div class="jlTeam jlBowlTeam">${logoBadge(bowling)}<div class="jlTeamCopy"><span class="jlRoleTag">BOWLING TEAM</span><b class="jlTeamName" title="${esc(bowling.name)}">${esc(bowling.name||'BOWL TEAM')}</b></div></div>
-  <div class="jlBowler"><div class="jlSectionLabel">CURRENT BOWLER</div><b class="jlBowlerName ${String(bw?.name||'').length>15?'isLong':''}">${esc(bw?.name||'—')}</b><strong class="jlBowlerFigures">${bowlerOvers} · ${bowlerRuns} · ${bowlerWickets}</strong><small class="jlBowlerMeta">OVERS · RUNS · WICKETS</small></div>
-  <div class="jlBalls"><span class="jlRecentLabel">OVER ${recentOver}</span><div class="jlBallRail">${deliveries||'<span class="jlBallEmpty">No balls yet</span>'}</div></div>
-  <div class="jlChase">
-   <div class="jlChaseHeading"><span>CHASE & TARGET</span><b>${target>0?target:'TBD'}</b></div>
-   <div class="jlChaseStats"><span><b>${target>0?runsNeeded:'—'}</b><small>NEED</small></span><span><b>${target>0?ballsLeft:'—'}</b><small>BALLS LEFT</small></span><span><b>${rrr}</b><small>RRR</small></span></div>
-   <small class="jlChaseHint">${target>0?'TARGET':'TARGET AFTER INNINGS'}</small>
-  </div>
-  <div class="jlPowerplay"><span class="jlPowerplayLabel">POWERPLAY PHASE</span><div class="jlPowerplayGroup">${pp}</div><small class="jlPowerplayState">${activePowerplay||'POWERPLAY OFF'}</small></div>`;
+ const bowlerOvers=bw?fmtOvers(bw.balls||0):'0.0';
+ const bowlerRuns=Number(bw?.runs)||0,bowlerWickets=Number(bw?.wickets)||0;
+ layer.innerHTML=\`
+  <section class="jcWcPanel jcWcBatterPanel" aria-label="Batters">
+   \${logo(batting,'left')}
+   <div class="jcWcBatterContent">
+    <div class="jcWcPanelLabel">BATTERS <span>AT THE CREASE</span></div>
+    \${batterLine(striker,'striker')}\${batterLine(nonStriker,'nonStriker')}
+   </div>
+  </section>
+  <section class="jcWcPanel jcWcScorePanel" aria-label="Live match score">
+   <div class="jcWcScoreTop"><span><i></i> LIVE · INNINGS \${inningsNo}</span><b>\${activePowerplay||'POWERPLAY OFF'}</b></div>
+   <div class="jcWcScoreMain"><strong>\${runs}</strong><span>–</span><b>\${wickets}</b></div>
+   <div class="jcWcScoreBottom"><span>\${overs} OVERS</span><i></i><span>CRR \${crr}</span></div>
+  </section>
+  <section class="jcWcPanel jcWcTargetPanel" aria-label="Target and required run rate">
+   <div class="jcWcTargetTeam" title="Target for \${esc(targetTeam.name)}">TARGET FOR <b>\${esc(targetTeam.name)}</b></div>
+   <strong class="jcWcTargetValue">\${target>0?target:'TBD'}</strong>
+   <div class="jcWcTargetNeed">\${target>0?\`NEED <b>\${runsNeeded}</b> · \${ballsLeft} BALLS · RRR <b>\${rrr}</b>\`:'TARGET AFTER INNINGS 1'}</div>
+  </section>
+  <section class="jcWcPanel jcWcBowlerPanel" aria-label="Current bowler">
+   <div class="jcWcBowlerContent">
+    <div class="jcWcPanelLabel">CURRENT BOWLER</div>
+    <div class="jcWcBowlerMain"><b class="jcWcBowlerName" title="\${esc(bw?.name||'—')}">\${esc(bw?.name||'—')}</b><strong>\${bowlerWickets}-\${bowlerRuns}</strong></div>
+    <div class="jcWcBowlerMeta">\${bowlerOvers} OVERS <span>·</span> \${bowlerWickets} WICKETS</div>
+    <div class="jcWcBallRail"><small>OVER \${recentOver}</small>\${deliveries||'<span class="jcWcBallEmpty">—</span>'}</div>
+   </div>
+   \${logo(bowling,'right')}
+  </section>\`;
 }
+
 
 function tableRows(players,kind){
  if(!players?.length)return '<tr><td colspan="8" class="emptyCell">No player figures recorded yet.</td></tr>';
