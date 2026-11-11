@@ -59,12 +59,13 @@ for (const file of cssFiles) {
 }
 
 const read = async name => readFile(path.join(root, name), 'utf8');
-const [control, engine, bridge, tournament, scoreLayer, scoreLayerCss, workflowCss, html, offlineStore, offlineLoader, serviceWorker, mobileCss, eventCss, offlineUi, freshScoreCss] = await Promise.all([
+const [control, engine, bridge, tournament, scoreLayer, scoreLayerCss, workflowCss, html, offlineStore, offlineLoader, serviceWorker, mobileCss, eventCss, offlineUi, freshScoreCss, mobileTapCss, readabilityCss, scoreLayerHtml] = await Promise.all([
   read('control.js'), read('scoring-engine.js'), read('firebase/firebase-api-bridge.mjs'),
   read('tournament-manager.js'), read('scorelayer.js'), read('scorelayer.css'),
   read('control-workflow.css'), read('control.html'), read('offline-store.js'),
   read('firebase-api-loader.js'), read('sw.js'), read('mobile-scoring-v2.css'),
-  read('event-animation-themes.css'), read('offline-status-ui.js'), read('scorelayer-broadcast-v2.css')
+  read('event-animation-themes.css'), read('offline-status-ui.js'), read('scorelayer-broadcast-v2.css'),
+  read('mobile-scoring-tap-targets.css'), read('scorelayer-readability.css'), read('scorelayer.html')
 ]);
 
 const layoutStart = control.indexOf('const LAYERS=[');
@@ -119,6 +120,10 @@ const checks = [
   ['Independent FOUR, SIX and WICKET motion themes are connected', control.includes('eventThemeFour') && control.includes('eventThemeSix') && control.includes('eventThemeWicket') && eventCss.includes('jcRipple') && eventCss.includes('jcSurge') && eventCss.includes('jcShards')],
   ['FOUR/SIX event overlays have transparent interiors and no borders', freshScoreCss.includes('.eventLayer[data-event-type="four"] .eventInner') && freshScoreCss.includes('.eventLayer[data-event-type="six"] .eventInner') && freshScoreCss.includes('background:transparent!important') && freshScoreCss.includes('border:0!important') && freshScoreCss.includes('content:none!important')],
   ['Firebase authentication persists across refreshes with browser-local persistence', bridge.includes('browserLocalPersistence') && bridge.includes('setPersistence(auth, browserLocalPersistence)') && !bridge.includes('browserSessionPersistence')],
+  ['Firebase waits for restored local auth state before resolving the signed-in user', bridge.includes("if (typeof auth.authStateReady === 'function') await auth.authStateReady();") && bridge.includes('await authPersistenceReady;')],
+  ['Mobile scoring buttons have larger tap targets and the CARDS opener stays visible', mobileTapCss.includes('min-height:38px!important') && mobileTapCss.includes('flex:0 0 36px!important') && mobileTapCss.includes('visibility:visible!important') && html.includes('mobile-scoring-tap-targets.css?v=1.0.0')],
+  ['Score Layer details are more readable without changing its total height', readabilityCss.includes('.jcIntlBatterName') && readabilityCss.includes('.jcIntlBowlerName') && !/\\b(?:min-|max-)?height\\s*:/.test(readabilityCss) && scoreLayerHtml.includes('scorelayer-readability.css?v=1.0.0')],
+  ['Service worker precaches the refreshed auth module and responsive CSS', serviceWorker.includes('firebase/firebase-api-bridge.mjs?v=5.0.9') && serviceWorker.includes('mobile-scoring-tap-targets.css?v=1.0.0') && serviceWorker.includes('scorelayer-readability.css?v=1.0.0') && serviceWorker.includes('jangid-cricinfo-static-v36')],
   ['Broadcast cards include an explicit close action', scoreLayer.includes('broadcastCardClose') && scoreLayer.includes("setAttribute('aria-label','Close card')")],
   ['Event animations never wait out a display-duration queue', control.includes('eventPublishGeneration') && control.includes('enqueueCurrentEvent') && !control.includes('await new Promise(resolve=>setTimeout(resolve,duration+100))')],
   ['A newer event cancels delayed event-sequence timers', control.includes('cancelEventSequenceTimers') && control.includes('eventSequenceTimers.clear()') && control.includes('generation!==eventPublishGeneration')],
