@@ -55,7 +55,8 @@
     const snapshot=clone({...match,updatedAt:match.updatedAt||stamp,offlineUpdatedAt:stamp});
     const queueKey=key(uid,'match',snapshot.id);
     // The match queue is the durable local source; avoid rewriting the full profile after every ball.
-    await store?.put(queueKey,{match:snapshot,version});
+    const durable=await store?.put(queueKey,{match:snapshot,version});
+    if(durable!==true) throw new Error('इस डिवाइस की IndexedDB storage उपलब्ध नहीं है। Browser storage permission और खाली जगह जाँचें; Firebase Sync queue सुरक्षित नहीं बन पाई।');
     if(cachedState){
       cachedState.matches||=[];
       const ix=cachedState.matches.findIndex(x=>String(x.id)===String(snapshot.id));
@@ -67,7 +68,7 @@
     emitPublic(publicPayload(snapshot,cachedState?.broadcast));
     return {uid,queueKey,snapshot};
   }
-  async function cacheBroadcast(payload){const uid=activeUid||uidOf(cachedState);if(!uid)throw new Error('पहले online Login करें, फिर offline graphics सेव हो सकेंगी।');const queueKey=key(uid,'broadcast'),version=String(payload.eventId||Date.now());await store?.put(queueKey,{payload:clone(payload),version});if(cachedState){cachedState.broadcast={...(cachedState.broadcast||{}),...clone(payload)};await saveState(cachedState);}emitPublic(publicPayload(cachedState?.activeMatch,cachedState?.broadcast));return {uid,queueKey,version};}
+  async function cacheBroadcast(payload){const uid=activeUid||uidOf(cachedState);if(!uid)throw new Error('पहले online Login करें, फिर offline graphics सेव हो सकेंगी।');const queueKey=key(uid,'broadcast'),version=String(payload.eventId||Date.now());const durable=await store?.put(queueKey,{payload:clone(payload),version});if(durable!==true)throw new Error('इस डिवाइस की IndexedDB storage उपलब्ध नहीं है। Browser storage permission और खाली जगह जाँचें।');if(cachedState){cachedState.broadcast={...(cachedState.broadcast||{}),...clone(payload)};await saveState(cachedState);}emitPublic(publicPayload(cachedState?.activeMatch,cachedState?.broadcast));return {uid,queueKey,version};}
   function scheduleSync(delay=220){
     if(!navigator.onLine)return;
     if(syncing){syncRequested=true;return;}
@@ -92,7 +93,7 @@
         if(queued.version!==row.value?.version){rerunSync=true;continue;}
         const match=queued?.match;if(!match?.id)throw new Error('Offline queue में Match snapshot सही रूप में नहीं मिला।');
         const result=await apiRequest(new URL('/api/match/state',location.href),{method:'POST',body:JSON.stringify({match})});
-        if((result.status||200)>=400)throw Object.assign(new Error(result.body?.error||'Match sync failed'),{code:result.body?.code});
+        if((result.status||200)>=400)throw Object.assign(new Error(result.body?.error||'Match sync failed'),{code:result.body?.code,status:result.status});
         const latest=await store?.get(row.key);
         if(latest?.version===queued.version)await store?.remove(row.key);
         else rerunSync=true;
@@ -105,7 +106,15 @@
       if(broadcastRow){const result=await apiRequest(new URL('/api/broadcast',location.href),{method:'POST',body:JSON.stringify(broadcastRow.payload)});if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast save failed');const latest=await store?.get(key(uid,'broadcast'));if(latest?.version===broadcastRow.version)await store?.remove(key(uid,'broadcast'));}
       const pending=(await records('queue:'+uid+':')).length;rerunSync=pending>0;syncFailureCount=0;localStatus(pending?'syncing':'synced',pending?pending+' बदलाव Sync के लिए queue में हैं।':'सभी बदलाव Firebase से Sync हो गए।');return pending===0;
     }catch(error){syncFailureCount=Math.min(6,syncFailureCount+1);const detail=String(error?.message||'Sync अभी पूरा नहीं हुआ; फिर प्रयास होगा।');window.__JC_LAST_SYNC_ERROR__=detail;localStatus('error',detail);console.error('Jangid Firebase background sync failed:',error);return false;}
-    finally{syncing=false;clearTimeout(syncStatusTimer);syncStatusTimer=null;if((rerunSync||syncRequested)&&navigator.onLine){syncRequested=false;scheduleSync(160);}}
+    finally{
+      syncing=false;clearTimeout(syncStatusTimer);syncStatusTimer=null;
+      if((rerunSync||syncRequested)&&navigator.onLine){syncRequested=false;scheduleSync(160);}
+      else if(syncFailureCount>0&&navigator.onLine){
+        // A failed upload used to wait for the 30-second poll. Retry with capped backoff instead.
+        const retryDelay=Math.min(30000,1000*Math.pow(2,Math.min(5,syncFailureCount-1)));
+        scheduleSync(retryDelay);
+      }
+    }
   }
   window.JangidOfflineSync={syncNow,getStatus:()=>({online:navigator.onLine,userId:activeUid}),getCachedState:readState};
   window.fetch=async(input,init={})=>{
