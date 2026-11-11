@@ -200,7 +200,7 @@ function renderBar(m,b){
  const layer=document.getElementById('scoreBar');if(!layer)return;
  layer.dataset.studio='false';
  const color=Math.max(1,Math.min(10,Number(b?.color)||1));
- layer.className=\`scoreBar jlWorldCupScorebar color\${color}\`;
+ layer.className=`scoreBar jlWorldCupScorebar color${color}`;
  layer.dataset.layout='world-cup';layer.dataset.family='world-cup-compact';layer.dataset.color=String(color);
  layer.removeAttribute('style');
  applyScoreDesign({enabled:false});
@@ -218,39 +218,39 @@ function renderBar(m,b){
  const inningsNo=Math.max(1,Number(m.inningsNo)||1);
  const activePowerplay=String(i.powerplay||'').trim().toUpperCase();
  const targetTeam=teamMeta(target>0?(i.battingId??m.teamA):(i.bowlingId??m.teamB),m,'TARGET');
- const logo=(team,side)=>\`<span class="jcWcLogo \${side}" title="\${esc(team.name)}" aria-label="\${esc(team.name)}">\${team.logo?\`<img src="\${esc(team.logo)}" alt="" onerror="this.remove();this.parentElement.classList.add('isFallback')">\`:\`<b>\${esc(initials(team.name))}</b>\`}</span>\`;
- const batterLine=(player,kind)=>\`<div class="jcWcBatterRow \${kind==='striker'?'isStriker':'isNonStriker'}"><span class="jcWcStrike">\${kind==='striker'?'▶':'·'}</span><b class="jcWcBatterName" title="\${esc(player?.name||'—')}">\${esc(player?.name||'—')}</b><span class="jcWcBatterStats"><strong>\${Number(player?.runs)||0}\${kind==='striker'?'*':''}</strong><small>(\${Number(player?.balls)||0})</small></span></div>\`;
- const deliveries=overEvents(i.events||[]).map(event=>{const item=deliveryInfo(event);return \`<span class="jcWcBall \${item.cls}" title="\${esc(item.title)}">\${item.label}</span>\`}).join('');
+ const logo=(team,side)=>`<span class="jcWcLogo ${side}" title="${esc(team.name)}" aria-label="${esc(team.name)}">${team.logo?`<img src="${esc(team.logo)}" alt="" onerror="this.remove();this.parentElement.classList.add('isFallback')">`:`<b>${esc(initials(team.name))}</b>`}</span>`;
+ const batterLine=(player,kind)=>`<div class="jcWcBatterRow ${kind==='striker'?'isStriker':'isNonStriker'}"><span class="jcWcStrike">${kind==='striker'?'▶':'·'}</span><b class="jcWcBatterName" title="${esc(player?.name||'—')}">${esc(player?.name||'—')}</b><span class="jcWcBatterStats"><strong>${Number(player?.runs)||0}${kind==='striker'?'*':''}</strong><small>(${Number(player?.balls)||0})</small></span></div>`;
+ const deliveries=overEvents(i.events||[]).map(event=>{const item=deliveryInfo(event);return `<span class="jcWcBall ${item.cls}" title="${esc(item.title)}">${item.label}</span>`}).join('');
  const recentOver=balls>0?Math.floor((balls-1)/6)+1:Math.max(1,Number(i.currentOver)||1);
  const bowlerOvers=bw?fmtOvers(bw.balls||0):'0.0';
  const bowlerRuns=Number(bw?.runs)||0,bowlerWickets=Number(bw?.wickets)||0;
- layer.innerHTML=\`
+ layer.innerHTML=`
   <section class="jcWcPanel jcWcBatterPanel" aria-label="Batters">
-   \${logo(batting,'left')}
+   ${logo(batting,'left')}
    <div class="jcWcBatterContent">
     <div class="jcWcPanelLabel">BATTERS <span>AT THE CREASE</span></div>
-    \${batterLine(striker,'striker')}\${batterLine(nonStriker,'nonStriker')}
+    ${batterLine(striker,'striker')}${batterLine(nonStriker,'nonStriker')}
    </div>
   </section>
   <section class="jcWcPanel jcWcScorePanel" aria-label="Live match score">
-   <div class="jcWcScoreTop"><span><i></i> LIVE · INNINGS \${inningsNo}</span><b>\${activePowerplay||'POWERPLAY OFF'}</b></div>
-   <div class="jcWcScoreMain"><strong>\${runs}</strong><span>–</span><b>\${wickets}</b></div>
-   <div class="jcWcScoreBottom"><span>\${overs} OVERS</span><i></i><span>CRR \${crr}</span></div>
+   <div class="jcWcScoreTop"><span><i></i> LIVE · INNINGS ${inningsNo}</span><b>${activePowerplay||'POWERPLAY OFF'}</b></div>
+   <div class="jcWcScoreMain"><strong>${runs}</strong><span>–</span><b>${wickets}</b></div>
+   <div class="jcWcScoreBottom"><span>${overs} OVERS</span><i></i><span>CRR ${crr}</span></div>
   </section>
   <section class="jcWcPanel jcWcTargetPanel" aria-label="Target and required run rate">
-   <div class="jcWcTargetTeam" title="Target for \${esc(targetTeam.name)}">TARGET FOR <b>\${esc(targetTeam.name)}</b></div>
-   <strong class="jcWcTargetValue">\${target>0?target:'TBD'}</strong>
-   <div class="jcWcTargetNeed">\${target>0?\`NEED <b>\${runsNeeded}</b> · \${ballsLeft} BALLS · RRR <b>\${rrr}</b>\`:'TARGET AFTER INNINGS 1'}</div>
+   <div class="jcWcTargetTeam" title="Target for ${esc(targetTeam.name)}">TARGET FOR <b>${esc(targetTeam.name)}</b></div>
+   <strong class="jcWcTargetValue">${target>0?target:'TBD'}</strong>
+   <div class="jcWcTargetNeed">${target>0?`NEED <b>${runsNeeded}</b> · ${ballsLeft} BALLS · RRR <b>${rrr}</b>`:'TARGET AFTER INNINGS 1'}</div>
   </section>
   <section class="jcWcPanel jcWcBowlerPanel" aria-label="Current bowler">
    <div class="jcWcBowlerContent">
     <div class="jcWcPanelLabel">CURRENT BOWLER</div>
-    <div class="jcWcBowlerMain"><b class="jcWcBowlerName" title="\${esc(bw?.name||'—')}">\${esc(bw?.name||'—')}</b><strong>\${bowlerWickets}-\${bowlerRuns}</strong></div>
-    <div class="jcWcBowlerMeta">\${bowlerOvers} OVERS <span>·</span> \${bowlerWickets} WICKETS</div>
-    <div class="jcWcBallRail"><small>OVER \${recentOver}</small>\${deliveries||'<span class="jcWcBallEmpty">—</span>'}</div>
+    <div class="jcWcBowlerMain"><b class="jcWcBowlerName" title="${esc(bw?.name||'—')}">${esc(bw?.name||'—')}</b><strong>${bowlerWickets}-${bowlerRuns}</strong></div>
+    <div class="jcWcBowlerMeta">${bowlerOvers} OVERS <span>·</span> ${bowlerWickets} WICKETS</div>
+    <div class="jcWcBallRail"><small>OVER ${recentOver}</small>${deliveries||'<span class="jcWcBallEmpty">—</span>'}</div>
    </div>
-   \${logo(bowling,'right')}
-  </section>\`;
+   ${logo(bowling,'right')}
+  </section>`;
 }
 
 

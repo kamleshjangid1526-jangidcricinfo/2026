@@ -377,10 +377,10 @@ $('sponsorControlInterval')?.addEventListener('change',async()=>{const prev=STAT
 function updateLayerPreview(){
  const p=$('layerPreview');if(!p)return;
  const color=+$('colorSelect').value||1;
- p.className=\`layerPreview jlWorldCupPreview color\${color}\`;p.dataset.layout='world-cup';
+ p.className=`layerPreview jlWorldCupPreview color${color}`;p.dataset.layout='world-cup';
  $('colorSelect').disabled=false;$('colorSelect').title='Colour changes independently; the World Cup layout and block positions stay fixed.';
  const hint=$('colorStyleHint');if(hint)hint.textContent='एक fixed compact layout · Batter left · Score centre · Target + team · Bowler right · Fonts auto-fit to output size.';
- p.innerHTML=\`<div class="wcPvPanel wcPvBatter"><small>BATTERS</small><span class="wcPvPlayer"><b>Batter 58*</b><small>(31)</small></span><span class="wcPvPlayer"><b>Player 17</b><small>(12)</small></span></div><div class="wcPvPanel wcPvScore"><small>LIVE · INNINGS 2</small><strong>189–2</strong><small>17.3 OV · CRR 10.80</small></div><div class="wcPvPanel wcPvTarget"><small>TARGET FOR SRH</small><strong>206</strong><small>NEED 17 · 39 BALLS</small></div><div class="wcPvPanel wcPvBowler"><small>CURRENT BOWLER</small><b>Natarajan · 0–56</b><small>OVER 18</small><span class="wcPvBalls"><i>1</i><i class="four">4</i><i>0</i><i class="six">6</i><i class="wicket">W</i><i>1</i></span></div>\`;
+ p.innerHTML=`<div class="wcPvPanel wcPvBatter"><small>BATTERS</small><span class="wcPvPlayer"><b>Batter 58*</b><small>(31)</small></span><span class="wcPvPlayer"><b>Player 17</b><small>(12)</small></span></div><div class="wcPvPanel wcPvScore"><small>LIVE · INNINGS 2</small><strong>189–2</strong><small>17.3 OV · CRR 10.80</small></div><div class="wcPvPanel wcPvTarget"><small>TARGET FOR SRH</small><strong>206</strong><small>NEED 17 · 39 BALLS</small></div><div class="wcPvPanel wcPvBowler"><small>CURRENT BOWLER</small><b>Natarajan · 0–56</b><small>OVER 18</small><span class="wcPvBalls"><i>1</i><i class="four">4</i><i>0</i><i class="six">6</i><i class="wicket">W</i><i>1</i></span></div>`;
 }
 let EVENT_ANIM_MAP={FOUR:'boundary-ripple',SIX:'stadium-surge',WICKET:'shard-break','FREE HIT':'spotlight',FIFTY:'orbit',CENTURY:'fireworks','NO BALL':'spotlight',WIDE:'fade','LEG BYE':'fade',BYE:'fade','NEW BATSMAN':'bounce','NEW BOWLER':'flip',RESULT:'fireworks','INNINGS BREAK':'shatter',POWERPLAY:'glitch',PARTNERSHIP:'rotate','50 PARTNERSHIP':'spark'};
 async function saveBroadcast(extra={}){
