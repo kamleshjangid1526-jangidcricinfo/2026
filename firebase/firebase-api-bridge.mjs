@@ -45,6 +45,9 @@ const dateMs = v => { const n=Date.parse(v||''); return Number.isFinite(n)?n:0; 
 const toList = snap => snap.docs.map(d => ({id:d.id,...d.data()}));
 async function currentUser() {
   await authPersistenceReady;
+  // Wait until Firebase has restored the persisted browser session before an API
+  // state request can interpret a temporary null currentUser as a real logout.
+  if (typeof auth.authStateReady === 'function') await auth.authStateReady();
   return auth.currentUser;
 }
 async function profileFor(uid) { const s=await getDoc(doc(db,'users',uid)); return s.exists()?{uid:s.id,...s.data()}:null; }
