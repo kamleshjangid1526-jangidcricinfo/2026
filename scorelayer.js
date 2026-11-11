@@ -76,9 +76,7 @@ function applyScoreDesign(d){
  const innerRadius=d.shape==='square'||['angled','chamfer','hex'].includes(d.shape)?'0px':d.shape==='pill'?'18px':`${Math.max(3,Math.round(radius*.6))}px`;
  const muted=designRgba(text,.72),line=designRgba(accent,.7),panel=designRgba(bg,Math.min(.98,opacity*.9)),scorePanel=designRgba(accent,.15);
  style.textContent=`
-#scoreBar.scoreBar[data-custom="true"]{left:${l}!important;right:${r}!important;top:${top?'3vh':'auto'}!important;bottom:${top?'auto':'2.25vh'}!important;width:${adjustedWidth}vw!important;max-width:${adjustedWidth}vw!important;min-width:0!important;transform:${xform}!important;transform-origin:${origin}!important;border-radius:${outerRadius}!important;clip-path:${clip}!important;border:${border}px solid ${accent}!important;background:${designRgba(bg,opacity)}!important;color:${text}!important;font-family:${font}!important;--accent:${accent};--jl-surface:${designRgba(bg,opacity)};--jl-panel:${panel};--jl-line:${line};--jl-ink:${text};--jl-muted:${muted};--jl-score-panel:${scorePanel};--jl-logo-bg:${panel};--jl-score-font:${score}px;--jl-wicket-font:${Math.max(16,Math.round(score*.72))}px;--jl-meta-font:${meta}px;--jl-stat-font:${Math.round(meta*1.45)}px;--jl-small-font:${Math.max(7,Math.round(meta*.78))}px;--jl-logo-size:${logo}px;--jl-inner-radius:${innerRadius};--jl-ball-radius:${d.shape==='square'?'0px':d.shape==='pill'?'999px':innerRadius};--jl-logo-radius:${d.shape==='square'||['angled','chamfer','hex'].includes(d.shape)?'4px':'50%'}}
-#scoreBar.scoreBar[data-custom="true"] .jlTeam,#scoreBar.scoreBar[data-custom="true"] .jlScoreWrap,#scoreBar.scoreBar[data-custom="true"] .jlBatters,#scoreBar.scoreBar[data-custom="true"] .jlBowler,#scoreBar.scoreBar[data-custom="true"] .jlBalls,#scoreBar.scoreBar[data-custom="true"] .jlChase,#scoreBar.scoreBar[data-custom="true"] .jlBrandBay{background:transparent!important;border:0!important;box-shadow:none!important;color:${text}!important;border-radius:0!important;font-family:${font}!important}
-#scoreBar.scoreBar[data-custom="true"] .jlScoreWrap{background:transparent!important;border:0!important;box-shadow:none!important}
+#scoreBar.scoreBar[data-custom="true"]{left:${l}!important;right:${r}!important;top:${top?'3vh':'auto'}!important;bottom:${top?'auto':'2.25vh'}!important;width:${adjustedWidth}vw!important;max-width:${adjustedWidth}vw!important;min-width:0!important;transform:${xform}!important;transform-origin:${origin}!important;border-radius:${outerRadius}!important;clip-path:${clip}!important;border:${border}px solid ${accent}!important;background:${designRgba(bg,opacity)}!important;color:${text}!important;font-family:${font}!important;--accent:${accent};--jl-surface:${designRgba(bg,opacity)};--jl-panel:${panel};--jl-line:${line};--jl-ink:${text};--jl-muted:${muted};--jl-score-panel:${scorePanel};--jl-fresh-field:${panel};--jl-fresh-team:${designRgba(bg,Math.min(.98,opacity*.96))};--jl-fresh-score:${scorePanel};--jl-fresh-balls:${designRgba(bg,Math.min(.98,opacity*.84))};--jl-fresh-chase:${panel};--jl-fresh-row:${designRgba(bg,Math.min(.98,opacity*.78))};--jl-fresh-line:${line};--jl-fresh-ink:${text};--jl-fresh-muted:${muted};--jl-fresh-accent:${accent};--jl-logo-bg:${panel};--jl-score-font:${score}px;--jl-wicket-font:${Math.max(16,Math.round(score*.72))}px;--jl-meta-font:${meta}px;--jl-stat-font:${Math.round(meta*1.45)}px;--jl-small-font:${Math.max(7,Math.round(meta*.78))}px;--jl-logo-size:${logo}px;--jl-inner-radius:${innerRadius};--jl-ball-radius:${d.shape==='square'?'0px':d.shape==='pill'?'999px':innerRadius};--jl-logo-radius:${d.shape==='square'||['angled','chamfer','hex'].includes(d.shape)?'4px':'50%'}}
 #scoreBar.scoreBar[data-custom="true"] .jlRuns{font-size:${score}px!important;line-height:.95!important;color:${text}!important}
 #scoreBar.scoreBar[data-custom="true"] .jlWickets{font-size:${Math.max(16,Math.round(score*.72))}px!important;line-height:.95!important;color:${accent}!important}
 #scoreBar.scoreBar[data-custom="true"] .jlTeamName,#scoreBar.scoreBar[data-custom="true"] .jlScoreTeamName,#scoreBar.scoreBar[data-custom="true"] .jlBatterName,#scoreBar.scoreBar[data-custom="true"] .jlBowlerName{font-size:${meta}px!important;font-family:${font}!important;color:${text}!important}
@@ -204,42 +202,41 @@ function renderBar(m,b){
  if(savedStudio){renderStudioBar(layer,m,b,savedStudio);return;}
  layer.dataset.studio='false';
  const layout=Math.max(1,Math.min(20,Number(b.layer)||1)),color=Math.max(1,Math.min(10,Number(b.color)||1));
- layer.className=`scoreBar layer${layout} jlCompactPattern ${layout>=8?'jlNewTwenty ':''}color${color}${layout<=7?` referenceEra${layout}`:''}`;layer.dataset.layout=String(layout);layer.dataset.family='compact';layer.dataset.color=String(color);
+ layer.className=\`scoreBar jlCompactPattern jlFreshTwenty layer\${layout} \${layout>=8?'jlNewTwenty ':''}color\${color}\`;
+ layer.dataset.layout=String(layout);layer.dataset.family='fresh-twenty';layer.dataset.color=String(color);
  const freshAccents=['#53d9ee','#46d69b','#ff526f','#ff9a50','#a58bff','#f5ce58','#1e5a84','#4de3d5','#ff6c91','#c6d2df'];
- const referenceAccents={1:'#00c7dc',2:'#d6b34b',3:'#8c9daa',4:'#23a4da',5:'#e81d87',6:'#df2e8c',7:'#138d45'};
- layer.style.setProperty('--accent',layout<=7?referenceAccents[layout]:(freshAccents[color-1]||accentByColor[1]));
+ layer.style.setProperty('--accent',freshAccents[color-1]||freshAccents[0]);
  applyScoreDesign(b.design||{});
- const battingId=i.battingId??m.teamA;
- const batting=teamMeta(battingId,m,'BAT');
- const bowling=teamMeta(i.bowlingId??m.teamB,m,'BOWL');
+ const battingId=i.battingId??m.teamA,batting=teamMeta(battingId,m,'BAT'),bowling=teamMeta(i.bowlingId??m.teamB,m,'BOWL');
  const s=i.batStats?.[i.striker],n=i.batStats?.[i.nonStriker],bw=i.bowlStats?.[i.currentBowler];
- const runs=Number(i.score)||0,wickets=Number(i.wickets)||0,balls=Number(i.balls)||0;
- const overs=fmtOvers(balls);
- const target=Number(i.target)||0;
+ const runs=Number(i.score)||0,wickets=Number(i.wickets)||0,balls=Number(i.balls)||0,overs=fmtOvers(balls),target=Number(i.target)||0;
+ const totalBalls=Math.max(0,Number(m.oversLimit||m.overs||0)*6),ballsLeft=target>0?Math.max(0,totalBalls-balls):0,runsNeeded=target>0?Math.max(0,target-runs):0;
+ const crr=balls>0?(runs/(balls/6)).toFixed(2):'0.00',rrr=target>0&&ballsLeft>0?(runsNeeded/(ballsLeft/6)).toFixed(2):'—';
  const activePowerplay=String(i.powerplay||'').trim().toUpperCase();
- const batLine=(p,kind)=>`<div class="jlBatterRow ${kind==='striker'?'isStriker':'isNonStriker'}"><span class="jlStrikeIcon" aria-label="${kind==='striker'?'On strike':''}">${kind==='striker'?'🏏':''}</span><b class="jlBatterName ${String(p?.name||'').length>15?'isLong':''}">${esc(p?.name||(kind==='striker'?'—':'—'))}</b><span class="jlBatterStats"><strong class="jlBatterRuns">${Number(p?.runs)||0}${kind==='striker'?'*':''}</strong><small class="jlBatterBalls">(${Number(p?.balls)||0})</small></span></div>`;
- const deliveries=overEvents(i.events||[]).map(e=>{const d=deliveryInfo(e);return `<span class="jlBallChip ${d.cls}" title="${esc(d.title)}">${d.label}</span>`}).join('');
- const bowlerOvers=bw?fmtOvers(bw.balls||0):'0.0';
- const bowlerRuns=Number(bw?.runs)||0,bowlerWickets=Number(bw?.wickets)||0;
- const targetBadge=target>0?`<span class="jlTargetBadge">TARGET ${target}</span>`:'';
- const pp=['P1','P2','P3'].map(pp=>`<span class="jlPhaseTag ${activePowerplay===pp?'isActive':''}">${pp}</span>`).join('');
- layer.innerHTML=`
-  <div class="jlBatters">
-   ${compactLogo(batting)}
-   <div class="jlBatterList">${batLine(s,'striker')}${batLine(n,'nonStriker')}</div>
-  </div>
+ const batLine=(p,kind)=>\`<div class="jlBatterRow \${kind==='striker'?'isStriker':'isNonStriker'}"><span class="jlStrikeIcon" aria-label="\${kind==='striker'?'On strike':''}">\${kind==='striker'?'🏏':'•'}</span><b class="jlBatterName \${String(p?.name||'').length>15?'isLong':''}">\${esc(p?.name||'—')}</b><span class="jlBatterStats"><strong class="jlBatterRuns">\${Number(p?.runs)||0}\${kind==='striker'?'*':''}</strong><small class="jlBatterBalls">(\${Number(p?.balls)||0})</small></span></div>\`;
+ const deliveries=overEvents(i.events||[]).map(e=>{const d=deliveryInfo(e);return \`<span class="jlBallChip \${d.cls}" title="\${esc(d.title)}">\${d.label}</span>\`}).join('');
+ const bowlerOvers=bw?fmtOvers(bw.balls||0):'0.0',bowlerRuns=Number(bw?.runs)||0,bowlerWickets=Number(bw?.wickets)||0;
+ const inningsNo=Math.max(1,Number(m.inningsNo)||1),pp=['P1','P2','P3'].map(phase=>\`<span class="jlPhaseTag \${activePowerplay===phase?'isActive':''}">\${phase}</span>\`).join('');
+ const recentOver=balls>0?Math.floor((balls-1)/6)+1:Math.max(1,Number(i.currentOver)||1);
+ layer.innerHTML=\`
+  <div class="jlTeam jlBatTeam">\${logoBadge(batting)}<div class="jlTeamCopy"><span class="jlRoleTag">BATTING TEAM</span><b class="jlTeamName" title="\${esc(batting.name)}">\${esc(batting.name||'BAT TEAM')}</b></div></div>
+  <div class="jlBatters"><div class="jlSectionLabel">AT THE CREASE · BATTERS</div><div class="jlBatterList">\${batLine(s,'striker')}\${batLine(n,'nonStriker')}</div></div>
   <div class="jlScoreWrap">
-   <div class="jlScoreTop">${targetBadge}<div class="jlPowerplayGroup">${pp}</div></div>
-   <div class="jlScoreTeamName" title="${esc(batting.name)}">${esc(batting.name||"BATTING TEAM")}</div>
-   <div class="jlScoreMain"><strong class="jlRuns">${runs}</strong><span class="jlSlash">/</span><strong class="jlWickets">${wickets}</strong><span class="jlOversValue">${overs}</span></div>
+   <div class="jlScoreTop"><span class="jlScoreKicker"><span class="jlLiveDot">LIVE</span><b>INNINGS \${inningsNo}</b></span><span class="jlInningsPill">\${overs} OV</span></div>
+   <div class="jlScoreTeamName" title="\${esc(batting.name)}">\${esc(batting.name||'BATTING TEAM')}</div>
+   <div class="jlScoreMain"><strong class="jlRuns">\${runs}</strong><span class="jlSlash">/</span><strong class="jlWickets">\${wickets}</strong></div>
+   <div class="jlScoreMeta"><span>OVERS <b>\${overs}</b></span><span>CRR <b>\${crr}</b></span></div>
   </div>
-  <div class="jlBowler">
-   <b class="jlBowlerName ${String(bw?.name||'').length>15?'isLong':''}">${esc(bw?.name||'—')}</b>
-   <strong class="jlBowlerFigures">${bowlerOvers} – ${bowlerRuns} – ${bowlerWickets}</strong>
+  <div class="jlTeam jlBowlTeam">\${logoBadge(bowling)}<div class="jlTeamCopy"><span class="jlRoleTag">BOWLING TEAM</span><b class="jlTeamName" title="\${esc(bowling.name)}">\${esc(bowling.name||'BOWL TEAM')}</b></div></div>
+  <div class="jlBowler"><div class="jlSectionLabel">CURRENT BOWLER</div><b class="jlBowlerName \${String(bw?.name||'').length>15?'isLong':''}">\${esc(bw?.name||'—')}</b><strong class="jlBowlerFigures">\${bowlerOvers} · \${bowlerRuns} · \${bowlerWickets}</strong><small class="jlBowlerMeta">OVERS · RUNS · WICKETS</small></div>
+  <div class="jlBalls"><span class="jlRecentLabel">OVER \${recentOver}</span><div class="jlBallRail">\${deliveries||'<span class="jlBallEmpty">No balls yet</span>'}</div></div>
+  <div class="jlChase">
+   <div class="jlChaseHeading"><span>CHASE & TARGET</span><b>\${target>0?target:'TBD'}</b></div>
+   <div class="jlChaseStats"><span><b>\${target>0?runsNeeded:'—'}</b><small>NEED</small></span><span><b>\${target>0?ballsLeft:'—'}</b><small>BALLS LEFT</small></span><span><b>\${rrr}</b><small>RRR</small></span></div>
+   <small class="jlChaseHint">\${target>0?'TARGET':'TARGET AFTER INNINGS'}</small>
   </div>
-  <div class="jlBalls"><div class="jlBallRail">${deliveries||'<span class="jlBallEmpty">—</span>'}</div></div>`;
+  <div class="jlPowerplay"><span class="jlPowerplayLabel">POWERPLAY PHASE</span><div class="jlPowerplayGroup">\${pp}</div><small class="jlPowerplayState">\${activePowerplay||'POWERPLAY OFF'}</small></div>\`;
 }
-
 
 function tableRows(players,kind){
  if(!players?.length)return '<tr><td colspan="8" class="emptyCell">No player figures recorded yet.</td></tr>';
