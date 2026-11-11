@@ -62,7 +62,7 @@
         const queued=await store?.get(row.key);
         if(!queued)continue;
         if(queued.version!==row.value?.version){rerunSync=true;continue;}
-        const match=queued.value?.match;if(!match?.id)continue;
+        const match=queued?.match;if(!match?.id)throw new Error('Offline queue में Match snapshot सही रूप में नहीं मिला।');
         const result=await apiRequest(new URL('/api/match/state',location.href),{method:'POST',body:JSON.stringify({match})});
         if((result.status||200)>=400)throw Object.assign(new Error(result.body?.error||'Match sync failed'),{code:result.body?.code});
         const latest=await store?.get(row.key);
