@@ -5,7 +5,7 @@
   const ready=new Promise((resolve,reject)=>{resolveBridge=resolve;rejectBridge=reject;});
   window.__JC_FIREBASE_BRIDGE_READY__=ready;window.__JC_FIREBASE_BRIDGE_RESOLVE__=resolveBridge;window.__JC_FIREBASE_BRIDGE_REJECT__=rejectBridge;
   window.__JC_FIREBASE_EVENTS__=new Set();window.__JC_LAST_PUBLIC_PAYLOAD__=null;window.__JC_FIREBASE_INIT_ERROR__=null;
-  let cachedState=null,activeUid='',syncing=false,channel=null,syncRetryTimer=null;
+  let cachedState=null,activeUid='',syncing=false,channel=null,syncRetryTimer=null,syncFailureCount=0;
   const BG_SYNC_TAG='jangid-cricinfo-pending-sync-v1';
   function requestBackgroundSync(){
     if(!('serviceWorker' in navigator))return;
@@ -75,8 +75,8 @@
         await store?.remove(row.key);await store?.remove(key(uid,'match',String(row.key).split(':').pop()));
       }
       if(broadcastRow){const result=await apiRequest(new URL('/api/broadcast',location.href),{method:'POST',body:JSON.stringify(broadcastRow.payload)});if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast save failed');const latest=await store?.get(key(uid,'broadcast'));if(latest?.version===broadcastRow.version)await store?.remove(key(uid,'broadcast'));}
-      const pending=(await records('queue:'+uid+':')).length;rerunSync=pending>0;localStatus(pending?'pending':'synced',pending?pending+' pending items remain.':'सभी बदलाव Firebase से Sync हो गए।');return pending===0;
-    }catch(error){localStatus('pending',error?.message||'Sync अभी पूरा नहीं हुआ; फिर प्रयास होगा।');return false;}
+      const pending=(await records('queue:'+uid+':')).length;rerunSync=pending>0;syncFailureCount=0;localStatus(pending?'syncing':'synced',pending?pending+' बदलाव Sync के लिए queue में हैं।':'सभी बदलाव Firebase से Sync हो गए।');return pending===0;
+    }catch(error){syncFailureCount=Math.min(6,syncFailureCount+1);const detail=String(error?.message||'Sync अभी पूरा नहीं हुआ; फिर प्रयास होगा।');localStatus('error',detail);console.error('Jangid Firebase background sync failed:',error);return false;}
     finally{syncing=false;if(rerunSync&&navigator.onLine)scheduleSync(180);}
   }
   window.JangidOfflineSync={syncNow,getStatus:()=>({online:navigator.onLine,userId:activeUid}),getCachedState:readState};
@@ -102,7 +102,7 @@
       }
       if(url.pathname==='/api/match/state'&&method==='POST'){
         const saved=await cacheMatch(body.match);
-        localStatus(navigator.onLine?'pending':'offline',navigator.onLine?'स्कोर device पर सेव है; Firebase background में sync होगा।':'स्कोर device पर सुरक्षित है; internet आने पर Sync होगा।');
+        localStatus(navigator.onLine?'syncing':'offline',navigator.onLine?'स्कोर device पर सुरक्षित है; Firebase background में upload हो रहा है।':'स्कोर device पर सुरक्षित है; internet आने पर Sync होगा।');
         requestBackgroundSync();
         if(navigator.onLine)scheduleSync(100);
         return toResponse({status:200,body:{ok:true,queued:true,localFirst:true,match:saved.snapshot}});
@@ -117,7 +117,7 @@
       }
       if(url.pathname==='/api/broadcast'&&method==='POST'){
         await cacheBroadcast(body);
-        localStatus(navigator.onLine?'pending':'offline',navigator.onLine?'Broadcast graphics device पर update हुईं; Firebase background में sync होगा।':'Broadcast graphics device पर सेव हैं; reconnect पर Sync होंगी।');
+        localStatus(navigator.onLine?'syncing':'offline',navigator.onLine?'Broadcast graphics device पर सेव हैं; Firebase में upload हो रही हैं।':'Broadcast graphics device पर सेव हैं; reconnect पर Sync होंगी।');
         requestBackgroundSync();
         if(navigator.onLine)scheduleSync(100);
         return toResponse({status:200,body:{ok:true,queued:true,localFirst:true}});
@@ -160,7 +160,7 @@
     }catch(error){console.warn('Cached match snapshot could not be emitted:',error);}
   }
   class LocalFirebaseEventSource{
-    constructor(url){this.url=url;this.onmessage=null;this.onerror=null;this.onopen=null;this.listeners=new Map();this.closed=false;this.readyState=0;window.__JC_FIREBASE_EVENTS__?.add(this);ready.then(async bridge=>{try{bridge?.subscribePublic?.();}catch(error){console.error('Realtime subscriptions could not start:',error);}await emitCachedSession();if(this.closed)return;this.readyState=1;const e=new Event('open');try{this.onopen?.(e);}catch{}for(const fn of this.listeners.get('open')||[])try{fn(e);}catch{}}).catch(error=>{this.readyState=2;const e=new Event('error');e.error=error;try{this.onerror?.(e);}catch{}for(const fn of this.listeners.get('error')||[])try{fn(e);}catch{}});}
+    constructor(url){this.url=url;this.onmessage=null;this.onerror=null;this.onopen=null;this.listeners=new Map();this.closed=false;this.readyState=0;window.__JC_FIREBASE_EVENTS__?.add(this);ready.then(async bridge=>{try{bridge?.subscribePublic?.(undefined,error=>{console.error('Firebase live Score Layer subscription failed:',error);localStatus('error','Live Score Layer realtime connection: '+(error?.message||'Firebase subscription failed'));});}catch(error){console.error('Realtime subscriptions could not start:',error);}await emitCachedSession();if(this.closed)return;this.readyState=1;const e=new Event('open');try{this.onopen?.(e);}catch{}for(const fn of this.listeners.get('open')||[])try{fn(e);}catch{}}).catch(error=>{this.readyState=2;const e=new Event('error');e.error=error;try{this.onerror?.(e);}catch{}for(const fn of this.listeners.get('error')||[])try{fn(e);}catch{}});}
     addEventListener(type,fn){if(!this.listeners.has(type))this.listeners.set(type,new Set());this.listeners.get(type).add(fn);}
     removeEventListener(type,fn){this.listeners.get(type)?.delete(fn);}
     dispatchEvent(event){for(const fn of this.listeners.get(event.type)||[])try{fn(event);}catch(error){console.error(error);}return true;}
