@@ -5,7 +5,7 @@ const JC_ASSETS=[
   './firebase-api-loader.js','./firebase-api-loader.js?v=5.1.3','./control.js?v=5.1.10','./firebase/firebase-api-bridge.mjs?v=5.0.8','./scoring-engine.js?v=4.4.21','./mobile-scoring-v2.css?v=5.0.4','./offline-store.js','./offline-store.js?v=5.0.1','./offline-status-ui.js','./offline-status-ui.js?v=5.1.4','./scorelayer.js?v=8.1.1','./scorelayer-broadcast-v2.css?v=9.0.1','./scorelayer-obs-fixes.css','./scorelayer-obs-fixes.css?v=5.1.3','./mobile-scoring-v2.css?v=5.0.2','./event-animation-themes.js','./mobile-scoring-v2.css','./event-animation-themes.css','./scorelayer-broadcast-v2.css','./broadcast-ui-fixes.css','./broadcast-ui-fixes.css?v=5.0.1',
   './theme.js','./theme.css','./control.js','./scoring-engine.js','./tournament-manager.js',
   './control.css','./control-workflow.css','./tournament-manager.css','./mobile-scoring-v2.css',
-  './event-animation-themes.css','./scorelayer.js','./scorelayer.css','./scorelayer-v6.css','./scorelayer-v7.css',
+  './event-animation-themes.css','./scorelayer.js','./scorelayer.css','./scorelayer.css?v=4.4.17','./scorelayer-v6.css','./scorelayer-v7.css',
   './scorelayer-designer.css','./scorelayer-compact-pattern.css','./scorelayer-studio.css','./scorelayer-text-only.css','./scorelayer-overlays-v446.css',
   './scorelayer-v4_4_11-fixes.css','./scorelayer-card-layout-v4414.css','./scorelayer-broadcast-v2.css',
   './firebase/firebase-api-bridge.mjs','./firebase/firebase-config.js','./firebase/firebase-init.mjs',
