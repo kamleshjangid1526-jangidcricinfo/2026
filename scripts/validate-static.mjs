@@ -131,6 +131,7 @@ const checks = [
   ['Score Layer plays the first new event after opening while suppressing older snapshots', scoreLayer.includes('const scoreLayerLoadedAt=Date.now()') && scoreLayer.includes('const isOldSnapshot=!!eventAt&&eventAt<scoreLayerLoadedAt') && scoreLayer.includes('b.matchId&&String(b.matchId)!==String(matchId)')],
   ['FOUR, SIX and WICKET themes are not disabled by reduced-motion media rules', !eventCss.includes('@media(prefers-reduced-motion:reduce){.eventLayer[data-event-type=\"four\"] .eventInner')],
   ['Score Layer base CSS never disables broadcast event animations for reduced-motion devices', !scoreLayerCss.includes('@media(prefers-reduced-motion:reduce){.eventInner,.broadcastCardStage,.scoreBar{animation:none!important')],
+  ['Score Layer HTML and service worker use the refreshed animation stylesheet', html.includes('scorelayer.css?v=4.4.17') && serviceWorker.includes('scorelayer.css?v=4.4.17') && serviceWorker.includes('jangid-cricinfo-static-v35')],
   ['Tournament Schedule is a separate action with dedicated wickets and best-player tabs', tournament.includes("['wickets','Wickets']") && tournament.includes("['best','Best Players']") && tournament.includes('data-tm-tab="schedule"')],
   ['Realtime listener starts without a false Promise catch', bridge.includes('subscribePublic();') && !bridge.includes('subscribePublic().catch(')]
 ];
