@@ -14,7 +14,24 @@
   const getTeam = id => (STATE?.teams||[]).find(t => String(t.id)===String(id));
   const player = (teamId,id) => (getTeam(teamId)?.players||[]).find(p=>String(p.id)===String(id));
   const playerLabel = (teamId,id) => player(teamId,id)?.name || 'Player';
-  const isLive = () => !!MATCH && MATCH.status === 'live' && !!MATCH.activeInnings;
+  function recoverLiveMatch() {
+    if(MATCH?.status==='live' && MATCH.activeInnings) return MATCH;
+    // Do not resurrect a match that was deliberately finished or abandoned.
+    if(MATCH && MATCH.status!=='live') return MATCH;
+    const currentId=String(MATCH?.id||'');
+    const candidates=[STATE?.activeMatch,...(STATE?.savedLiveMatches||[]),...(STATE?.matches||[])].filter(Boolean);
+    const recovered=candidates.find(match=>match.status==='live'&&match.activeInnings&&(!currentId||String(match.id)===currentId));
+    if(recovered) {
+      MATCH=clone(recovered);
+      if(STATE) STATE.activeMatch=clone(recovered);
+      return MATCH;
+    }
+    return MATCH;
+  }
+  const isLive = () => {
+    const match=recoverLiveMatch();
+    return !!match && match.status==='live' && !!match.activeInnings;
+  };
   const rosterIds = teamId => (MATCH?.teamXIs?.[String(teamId)] || MATCH?.teamXIs?.[teamId] || []).map(String);
   // The Playing XI, not the full team squad and not a fixed 10-wicket rule,
   // determines when a batting innings is all out.
@@ -170,7 +187,7 @@
     return String(e.runs ?? 0);
   }
   async function saveMatch(shouldRender=true) {
-    if(!MATCH?.id || MATCH.status!=='live') throw new Error('कोई LIVE match नहीं है। पहले नया मैच शुरू करें।');
+    if(!isLive() || !MATCH?.id) throw new Error('कोई LIVE मैच नहीं मिला। Match State दोबारा जाँचें या Dashboard से Live Match खोलें।');
     MATCH.updatedAt=new Date().toISOString();
     // Migrate older saved matches' oversized Undo snapshots once, before upload.
     compactMatchUndoHistory(MATCH);
@@ -349,6 +366,7 @@
     });
   }
   function renderScoring() {
+    recoverLiveMatch();
     const header=el('scoreHeader'),players=el('currentPlayers'),recent=el('recentBalls'),grid=el('scoreActionGrid');
     const finish=el('finishMatch'),resume=el('resumeSetup'),nextInnings=el('startNextInningsBtn');
     if(!MATCH || !MATCH.activeInnings) {
