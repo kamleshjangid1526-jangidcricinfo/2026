@@ -21,9 +21,10 @@
       const d=event?.detail||{},online=navigator.onLine;
       const state=d.state||(online?'synced':'offline');
       bar.dataset.state=state;
-      const labels={offline:'● OFFLINE · Device में सुरक्षित',pending:'◷ SYNC PENDING · Internet पर Sync होगा',syncing:'↻ SYNCING · Firebase से जुड़ रहा है',synced:'✓ SYNCED · सभी बदलाव सुरक्षित'};
-      bar.textContent=labels[state]||labels[online?'synced':'offline'];
-      bar.title=d.detail||bar.textContent;
+      const labels={offline:'● OFFLINE · Device में सुरक्षित',pending:'◷ SYNC PENDING · Internet पर Sync होगा',syncing:'↻ SAVED · Firebase में Background Sync',synced:'✓ SYNCED · सभी बदलाव सुरक्षित',error:'⚠ SYNC ERROR · नीचे कारण देखें'};
+      const detail=String(d.detail||'').trim();
+      bar.textContent=state==='error'&&detail?`⚠ SYNC ERROR · ${detail.slice(0,90)}`:(labels[state]||labels[online?'synced':'offline']);
+      bar.title=detail||bar.textContent;
     };
     if(bar){window.addEventListener('jc-offline-status',update);update({detail:{state:navigator.onLine?'synced':'offline'}});}
     if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
