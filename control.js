@@ -394,7 +394,11 @@ async function saveBroadcast(extra={}){
   // Only a real event change (or explicit eventId) advances the animation token.
   // Palette, layout and other settings must never replay the previous event.
   if(hasEventIdOverride)payload.eventId=extra.eventId;
-  else if(hasEventUpdate)payload.eventId=++broadcastSequence;
+  else if(hasEventUpdate){
+    payload.eventId=++broadcastSequence;
+    payload.eventAt=extra.event?Number(extra.eventAt||Date.now()):null;
+    payload.matchId=extra.event?String(extra.matchId||MATCH?.id||''):null;
+  }
   else if(STATE?.broadcast?.eventId!==undefined)payload.eventId=STATE.broadcast.eventId;
   await api('/api/broadcast',{method:'POST',body:JSON.stringify(payload)});
   if(STATE)STATE.broadcast={...(STATE.broadcast||{}),...payload};
@@ -407,7 +411,7 @@ async function publishEventNow(event,meta={}){
  if(!activePlan())return {ok:false,skipped:true};
  const duration=EVENT_DURATION_MAP[event]||Math.max(300,Math.min(10000,+$('animationDuration').value||2200));
  try{
-  await saveBroadcast({event,eventStyle:eventStyle(event),animation:EVENT_ANIM_MAP[event]||$('animationSelect').value,duration,...meta});
+  await saveBroadcast({event,eventStyle:eventStyle(event),animation:EVENT_ANIM_MAP[event]||$('animationSelect').value,duration,...meta,matchId:MATCH?.id||meta.matchId||null,eventAt:Date.now()});
   return {ok:true};
  }catch(error){
   console.warn(`Broadcast effect ${event} could not be shown; scoring remains saved.`,error);
