@@ -116,21 +116,39 @@ async function publishMatch(uid,match) {
   // every public team document on each ball, which would waste Spark daily writes.
   return enriched;
 }
+function publicMatchSnapshot(match) {
+  const snapshot={...match};
+  const stripUndo=innings=>{
+    if(!innings||typeof innings!=='object')return innings;
+    const copy={...innings};
+    // Undo data is private scorer state; public scorecards only need the actual score/events.
+    delete copy.undoStack;
+    delete copy._undoEventsLength;
+    delete copy._undoFirstEvent;
+    delete copy._undoFallOfWicketsLength;
+    return copy;
+  };
+  snapshot.activeInnings=stripUndo(snapshot.activeInnings);
+  if(Array.isArray(snapshot.inningsHistory))snapshot.inningsHistory=snapshot.inningsHistory.map(stripUndo);
+  return snapshot;
+}
 async function saveMatch(uid,match) {
   const m={...match,userId:uid,ownerUid:uid,updatedAt:match.updatedAt||nowIso(),lastActivityAt:nowIso()};
   const enriched=await enrichMatch(uid,m);
-  // One complete sanitized snapshot updates private and public documents in parallel.
-  // Match Start writes the active pointer transactionally; don't rewrite it after every ball.
-  const data=cleanData(enriched);
-  const writes=[
-    setDoc(ownerDoc(uid,'matches',m.id),data),
-    setDoc(publicDoc('publicMatches',m.id),data)
-  ];
+  // Private document retains Undo history for the scorer. Public snapshots omit it:
+  // spectator pages never use Undo and should not receive those repeated snapshots.
+  const privateData=cleanData(enriched);
+  const publicData=cleanData(publicMatchSnapshot(enriched));
+  // Commit both documents in one Firestore request so they stay in sync atomically.
+  // Match Start writes the active pointer; don't rewrite it after every ball.
+  const batch=writeBatch(db);
+  batch.set(ownerDoc(uid,'matches',m.id),privateData);
+  batch.set(publicDoc('publicMatches',m.id),publicData);
   if(m.status!=='live'){
     const active=await getOwner(uid,'meta','active');
-    if(active?.matchId===m.id)writes.push(deleteDoc(ownerDoc(uid,'meta','active')));
+    if(active?.matchId===m.id)batch.delete(ownerDoc(uid,'meta','active'));
   }
-  await Promise.all(writes);
+  await batch.commit();
   return enriched;
 }
 async function loadPublicMatches() { return toList(await getDocs(query(publicCol('publicMatches'),orderBy('updatedAt','desc'),limit(250)))); }
