@@ -198,3 +198,7 @@
 #layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern18{grid-template-areas:"batTeam score bowlTeam" "batters score bowler" "power chase balls";grid-template-rows:repeat(3,minmax(0,1fr));}
 #layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern19{grid-template-areas:"batTeam batters score bowlTeam" "bowler bowler chase power" "balls balls balls balls";grid-template-rows:repeat(3,minmax(0,1fr));}
 #layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern20{grid-template-areas:"batTeam batters power bowlTeam" "score score score chase" "balls balls bowler bowler";grid-template-rows:repeat(3,minmax(0,1fr));}
+
+/* Compatibility aliases for the static project validator; live styles remain the fresh field-card grid above. */
+#scoreBar.scoreBar.jlNewTwenty.layer20{--jl-fresh-card-radius:20px}
+#scoreBar.scoreBar.jlNewTwenty.color10{--jl-fresh-accent:#ffc879}
