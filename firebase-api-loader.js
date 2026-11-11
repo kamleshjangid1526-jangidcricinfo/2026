@@ -77,7 +77,11 @@
     const version=String(Date.now())+':'+String(++cacheWriteSequence);
     const durable=await store?.put(queueKey,{payload:clone(payload),version});
     if(durable!==true)throw new Error('इस डिवाइस की IndexedDB storage उपलब्ध नहीं है। Browser storage permission और खाली जगह जाँचें।');
-    // The queue is already durable. Do not rewrite both full cached profile records on each graphic update.
+    // Keep a compact last-known broadcast snapshot after the upload queue is cleared.
+    // This restores the selected graphics on a later offline Score Layer refresh.
+    const localSnapshotSaved=await store?.put('broadcast:last:'+uid,clone(payload));
+    if(localSnapshotSaved!==true)throw new Error('Broadcast queue सुरक्षित है, लेकिन आखिरी Graphics की offline copy सेव नहीं हो पाई।');
+    // Do not rewrite both full cached profile records on each graphic update.
     if(cachedState)cachedState.broadcast={...(cachedState.broadcast||{}),...clone(payload)};
     emitPublic(publicPayload(cachedState?.activeMatch,cachedState?.broadcast));
     return {uid,queueKey,version};
@@ -204,7 +208,10 @@
       const pending=await records('queue:'+uid+':match:');
       for(const row of pending){const match=row.value?.match;if(!match?.id)continue;const ix=matches.findIndex(x=>String(x.id)===String(match.id));if(ix>=0)matches[ix]=clone(match);else matches.push(clone(match));}
       const broadcasts={...(saved.broadcasts||{})};if(saved.broadcast)broadcasts[uid]=clone(saved.broadcast);
-      // Replay queued graphics after refresh, even if the full profile snapshot is older.
+      // Restore the latest local graphics snapshot even when its Firebase queue was already cleared.
+      const savedBroadcast=await store.get('broadcast:last:'+uid);
+      if(savedBroadcast)broadcasts[uid]={...(broadcasts[uid]||{}),...clone(savedBroadcast)};
+      // A still-pending upload is newer than the last-known local snapshot.
       const pendingBroadcast=await store.get(key(uid,'broadcast'));
       if(pendingBroadcast?.payload)broadcasts[uid]={...(broadcasts[uid]||{}),...clone(pendingBroadcast.payload)};
       emitPublic({activeMatches:matches.filter(x=>x.status==='live'),matches,tournaments:saved.tournaments||[],broadcasts,changedCollection:'offline-cache'});
