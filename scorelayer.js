@@ -1,7 +1,7 @@
 'use strict';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const q=new URLSearchParams(location.search);const owner=q.get('owner');
-let lastEventId=null,lastCardId=null,lastRenderMatchId=null,eventVisible=false,latestBroadcast={},latestSSEBroadcast={},latestMatch=null,ownerBroadcast={},ownerBroadcastVersion='',ownerBroadcastRequestedVersion='',ownerBroadcastUserId='';
+let lastEventId=null,lastEventStorageKey='',eventScopeInitialized=false,lastCardId=null,lastRenderMatchId=null,eventVisible=false,latestBroadcast={},latestSSEBroadcast={},latestMatch=null,ownerBroadcast={},ownerBroadcastVersion='',ownerBroadcastRequestedVersion='',ownerBroadcastUserId='';
 let sponsorLibrary=[],sponsorLibraryVersion='',sponsorLibraryRequested=false,lastSponsorManualToken='',lastSponsorTimeoutToken='',sponsorAutoState={matchId:'',innings:0,over:0,status:''},pendingSponsor=null,sponsorVisible=false,sponsorHideTimer=null,sponsorRotationIndex=0,sponsorRotationBase='',dismissedCardId=null;
 const accentByColor={1:'#58c8ff',2:'#43e09b',3:'#ff6074',4:'#ffae4d',5:'#c59bff',6:'#f5d06c',7:'#ffffff',8:'#44e1d5',9:'#ef8493',10:'#dce5ef'};
 function currentTeamName(id,m){return id===m.teamA?m.teamAName:id===m.teamB?m.teamBName:id}
@@ -399,11 +399,42 @@ function incomingCornerMarkup(eventName,meta={}){
  const detail=eventName==='NEW BOWLER'?`${fmtOvers(p.balls||0)} OV · ${Number(p.wickets||0)} W · ${Number(p.runs||0)} RUNS`:`${Number(p.runs||0)} RUNS · ${Number(p.balls||0)} BALLS`;
  return `<div class="incomingPlayerToast ${eventName==='NEW BOWLER'?'isBowler':'isBatter'}"><span class="incomingKicker">${label}</span><b>${esc(name)}</b><small>${esc(team)}</small><em>${detail}</em></div>`;
 }
-function renderEvent(b){
+function eventStorageKey(matchId){return `jc:last-event:${owner||'public'}:${String(matchId||'unknown')}`;}
+function rememberEventId(id){
+ lastEventId=String(id??'');
+ if(!lastEventStorageKey||!lastEventId)return;
+ try{localStorage.setItem(lastEventStorageKey,lastEventId);}catch{}
+}
+function clearEventVisual(el,cardEl){
+ clearTimeout(el._hide);eventVisible=false;el.style.display='none';el.innerHTML='';
+ el.classList.remove('incomingCornerLayer');
+ if(!cardEl.classList.contains('isVisible'))flushPendingSponsor();
+}
+function renderEvent(b,matchId){
  const el=document.getElementById('eventLayer'),cardEl=document.getElementById('cardLayer');
- if(!b.event){clearTimeout(el._hide);eventVisible=false;el.style.display='none';el.innerHTML='';el.classList.remove('incomingCornerLayer');lastEventId=b.eventId??lastEventId;if(!cardEl.classList.contains('isVisible'))flushPendingSponsor();return}
- if(String(b.eventId??'')===String(lastEventId??'')){if(eventVisible){el.style.display='grid';cardEl.style.display='none'}return}
- clearTimeout(el._hide);lastEventId=b.eventId;eventVisible=true;hideSponsorLayer();
+ const scope=eventStorageKey(matchId);
+ if(scope!==lastEventStorageKey){
+  lastEventStorageKey=scope;
+  try{lastEventId=localStorage.getItem(scope)||null;}catch{lastEventId=null;}
+  eventScopeInitialized=false;
+ }
+ const incomingId=String(b.eventId??'');
+ if(!eventScopeInitialized){
+  eventScopeInitialized=true;
+  // On a fresh OBS/browser load, the first broadcast is a snapshot, not a new event.
+  // Mark an already-active event as seen so it does not replay on reconnect/reload.
+  if(b.event&&incomingId&&!lastEventId){
+   rememberEventId(incomingId);clearEventVisual(el,cardEl);return;
+  }
+ }
+ if(!b.event){
+  clearEventVisual(el,cardEl);
+  if(incomingId)rememberEventId(incomingId);
+  return;
+ }
+ // Each event ID can animate only once for this match, even after SSE re-renders.
+ if(!incomingId||incomingId===String(lastEventId??''))return;
+ clearTimeout(el._hide);rememberEventId(incomingId);eventVisible=true;hideSponsorLayer();
  if(cardEl.classList.contains('isVisible')){dismissedCardId=String(latestBroadcast?.cardId??'');cardEl.classList.remove('isVisible');cardEl.style.display='none';cardEl.innerHTML='';cardEl.dataset.cardMarkup='';cardEl.dataset.cardId='';document.body.classList.remove('cardActive')}
  const eventName=String(b.event||'').toUpperCase();const corner=['NEW BATSMAN','NEW BOWLER'].includes(eventName);
  const animationTemplate=!corner?selectedStudioOverlay(b.animationDesign):null;
@@ -458,7 +489,7 @@ function renderCard(b,m){
  if(newCard)lastCardId=b.cardId??Date.now();
 }
 
-function render(m,b){if(!m?.activeInnings)return;latestMatch=m;latestBroadcast=b||{};renderBar(m,b||{});renderCard(b||{},m);renderEvent(b||{});processSponsorBroadcast(m,b||{});lastRenderMatchId=m.id;}
+function render(m,b){if(!m?.activeInnings)return;latestMatch=m;latestBroadcast=b||{};renderBar(m,b||{});renderCard(b||{},m);renderEvent(b||{},m.id);processSponsorBroadcast(m,b||{});lastRenderMatchId=m.id;}
 async function loadOwnerBroadcast(userId,version){
  if(!userId)return;
  if(ownerBroadcastUserId===String(userId)&&ownerBroadcastRequestedVersion===String(version||''))return;

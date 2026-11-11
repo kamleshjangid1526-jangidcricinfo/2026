@@ -1,5 +1,6 @@
 let STATE=null, MATCH=null, selectedTeamId=null, matchStep=1, modalCloseHook=null, PUBLIC_LIVE=[], activeCardType=null, draftSaveTimer=null, restoringMatchDraft=false, secondSetupModalOpen=false, secondSetupDismissed=false, secondSetupOpenScheduled=false, nextInningsModalOpen=false, nextInningsPromptDismissed=false, nextInningsPromptScheduled=false, newBatterModalOpen=false, newBatterDismissed=false, newBatterOpenScheduled=false;
-let broadcastSequence=Date.now(),eventBroadcastQueue=Promise.resolve();
+let broadcastSequence=Date.now(),eventBroadcastQueue=Promise.resolve(),eventPublishGeneration=0;
+const eventSequenceTimers=new Set();
 // Auth bootstrap guard: an initial unauthenticated /api/state request must never undo a later successful login.
 let authBootSequence=0, loginSubmitting=false;
 const DESIGN_DEFAULTS={enabled:false,width:92,scale:100,scoreFont:56,metaFont:11,logoSize:36,opacity:94,radius:15,border:1,shape:'rounded',fontFamily:'system',position:'bottom-center',bg:'#071626',accent:'#58c8ff',text:'#f4f9ff'};
@@ -387,7 +388,14 @@ function updateLayerPreview(){
 }
 let EVENT_ANIM_MAP={FOUR:'boundary-ripple',SIX:'stadium-surge',WICKET:'shard-break','FREE HIT':'spotlight',FIFTY:'orbit',CENTURY:'fireworks','NO BALL':'spotlight',WIDE:'fade','LEG BYE':'fade',BYE:'fade','NEW BATSMAN':'bounce','NEW BOWLER':'flip',RESULT:'fireworks','INNINGS BREAK':'shatter',POWERPLAY:'glitch',PARTNERSHIP:'rotate','50 PARTNERSHIP':'spark'};
 async function saveBroadcast(extra={}){
-  const payload={layer:+$('layerSelect').value,color:+$('colorSelect').value,design:readDesignControls(),animation:$('animationSelect').value,duration:Math.max(300,Math.min(10000,+$('animationDuration').value||2200)),cardAnimation:$('cardAnimationSelect')?.value||'zoom',cardDuration:Math.max(300,Math.min(10000,+$('cardAnimationDuration')?.value||1800)),eventAnimations:EVENT_ANIM_MAP,eventDurations:EVENT_DURATION_MAP,cardAnimations:CARD_ANIM_MAP,cardDurations:CARD_DURATION_MAP,...extra,eventId:++broadcastSequence};
+  const hasEventUpdate=Object.prototype.hasOwnProperty.call(extra,'event');
+  const hasEventIdOverride=Object.prototype.hasOwnProperty.call(extra,'eventId');
+  const payload={layer:+$('layerSelect').value,color:+$('colorSelect').value,design:readDesignControls(),animation:$('animationSelect').value,duration:Math.max(300,Math.min(10000,+$('animationDuration').value||2200)),cardAnimation:$('cardAnimationSelect')?.value||'zoom',cardDuration:Math.max(300,Math.min(10000,+$('cardAnimationDuration')?.value||1800)),eventAnimations:EVENT_ANIM_MAP,eventDurations:EVENT_DURATION_MAP,cardAnimations:CARD_ANIM_MAP,cardDurations:CARD_DURATION_MAP,...extra};
+  // Only a real event change (or explicit eventId) advances the animation token.
+  // Palette, layout and other settings must never replay the previous event.
+  if(hasEventIdOverride)payload.eventId=extra.eventId;
+  else if(hasEventUpdate)payload.eventId=++broadcastSequence;
+  else if(STATE?.broadcast?.eventId!==undefined)payload.eventId=STATE.broadcast.eventId;
   await api('/api/broadcast',{method:'POST',body:JSON.stringify(payload)});
   if(STATE)STATE.broadcast={...(STATE.broadcast||{}),...payload};
 }
@@ -408,25 +416,40 @@ async function publishEventNow(event,meta={}){
   return {ok:false,error:error?.message||'Broadcast unavailable'};
  }
 }
-function fireEvent(event,meta={}){
- const task=eventBroadcastQueue.then(async()=>{
-  const result=await publishEventNow(event,meta);
-  if(result?.ok){
-   const duration=Math.max(900,Number(EVENT_DURATION_MAP[event]||$('animationDuration')?.value||2200));
-   await new Promise(resolve=>setTimeout(resolve,duration+100));
-  }
-  return result;
+function cancelEventSequenceTimers(){
+ for(const timer of eventSequenceTimers)clearTimeout(timer);
+ eventSequenceTimers.clear();
+}
+function enqueueCurrentEvent(event,meta,generation){
+ const task=eventBroadcastQueue.catch(()=>({ok:false})).then(()=>{
+  // A newer ball/event arrived while this save was waiting; discard the stale one.
+  if(generation!==eventPublishGeneration)return {ok:false,skipped:true};
+  return publishEventNow(event,meta);
  });
- eventBroadcastQueue=task.catch(error=>{console.warn('Queued broadcast event failed:',error);return {ok:false,error:error?.message||'Broadcast unavailable'};});
+ eventBroadcastQueue=task.catch(error=>{console.warn('Broadcast event save failed:',error);return {ok:false,error:error?.message||'Broadcast unavailable'};});
  return task;
 }
+function fireEvent(event,meta={}){
+ cancelEventSequenceTimers();
+ const generation=++eventPublishGeneration;
+ // Do not wait for the previous animation's display duration. The newest event wins.
+ return enqueueCurrentEvent(event,meta,generation);
+}
 function fireEventSequence(events){
- let delay=0;
- for(const event of events.filter(Boolean)){
-  const duration=EVENT_DURATION_MAP[event]||Math.max(300,Math.min(10000,+$('animationDuration').value||2200));
-  setTimeout(()=>fireEvent(event),delay);
-  delay+=duration+250;
- }
+ cancelEventSequenceTimers();
+ const generation=++eventPublishGeneration;
+ const sequence=events.filter(Boolean);
+ let index=0;
+ const showNext=async()=>{
+  if(generation!==eventPublishGeneration||index>=sequence.length)return;
+  const event=sequence[index++];
+  const result=await enqueueCurrentEvent(event,{},generation);
+  if(!result?.ok||generation!==eventPublishGeneration||index>=sequence.length)return;
+  const duration=Math.max(900,Number(EVENT_DURATION_MAP[event]||$('animationDuration')?.value||2200));
+  const timer=setTimeout(()=>{eventSequenceTimers.delete(timer);void showNext();},duration+100);
+  eventSequenceTimers.add(timer);
+ };
+ return showNext();
 }
 function cardDataFor(type){
  const i=currentInnings();if(!i)return null;

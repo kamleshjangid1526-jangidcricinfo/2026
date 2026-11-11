@@ -105,6 +105,10 @@ const checks = [
   ['International Control Board preview contains full player and bowler details', control.includes('ROHIT') && control.includes('58 (31)') && control.includes('THIS OVER') && freshScoreCss.includes('.jlInternationalPreview')],
   ['Independent FOUR, SIX and WICKET motion themes are connected', control.includes('eventThemeFour') && control.includes('eventThemeSix') && control.includes('eventThemeWicket') && eventCss.includes('jcRipple') && eventCss.includes('jcSurge') && eventCss.includes('jcShards')],
   ['Broadcast cards include an explicit close action', scoreLayer.includes('broadcastCardClose') && scoreLayer.includes("setAttribute('aria-label','Close card')")],
+  ['Event animations never wait out a display-duration queue', control.includes('eventPublishGeneration') && control.includes('enqueueCurrentEvent') && !control.includes('await new Promise(resolve=>setTimeout(resolve,duration+100))')],
+  ['A newer event cancels delayed event-sequence timers', control.includes('cancelEventSequenceTimers') && control.includes('eventSequenceTimers.clear()') && control.includes('generation!==eventPublishGeneration')],
+  ['Non-event graphics saves preserve the event ID', control.includes('hasEventUpdate=Object.prototype.hasOwnProperty.call(extra,\'event\')') && control.includes('else if(hasEventUpdate)payload.eventId=++broadcastSequence') && !control.includes('...extra,eventId:++broadcastSequence')],
+  ['Score Layer stores event IDs and ignores duplicate or stale replay', scoreLayer.includes('jc:last-event:') && scoreLayer.includes('localStorage.setItem(lastEventStorageKey,lastEventId)') && scoreLayer.includes('incomingId===String(lastEventId??\'\')') && scoreLayer.includes('eventScopeInitialized')],
   ['Tournament Schedule is a separate action with dedicated wickets and best-player tabs', tournament.includes("['wickets','Wickets']") && tournament.includes("['best','Best Players']") && tournament.includes('data-tm-tab="schedule"')],
   ['Realtime listener starts without a false Promise catch', bridge.includes('subscribePublic();') && !bridge.includes('subscribePublic().catch(')]
 ];
