@@ -202,7 +202,7 @@ function renderBar(m,b){
  if(savedStudio){renderStudioBar(layer,m,b,savedStudio);return;}
  layer.dataset.studio='false';
  const layout=Math.max(1,Math.min(20,Number(b.layer)||1)),color=Math.max(1,Math.min(10,Number(b.color)||1));
- layer.className=\`scoreBar jlCompactPattern jlFreshTwenty layer\${layout} \${layout>=8?'jlNewTwenty ':''}color\${color}\`;
+ layer.className=`scoreBar jlCompactPattern jlFreshTwenty layer${layout} ${layout>=8?'jlNewTwenty ':''}color${color}`;
  layer.dataset.layout=String(layout);layer.dataset.family='fresh-twenty';layer.dataset.color=String(color);
  const freshAccents=['#53d9ee','#46d69b','#ff526f','#ff9a50','#a58bff','#f5ce58','#1e5a84','#4de3d5','#ff6c91','#c6d2df'];
  layer.style.setProperty('--accent',freshAccents[color-1]||freshAccents[0]);
@@ -213,29 +213,29 @@ function renderBar(m,b){
  const totalBalls=Math.max(0,Number(m.oversLimit||m.overs||0)*6),ballsLeft=target>0?Math.max(0,totalBalls-balls):0,runsNeeded=target>0?Math.max(0,target-runs):0;
  const crr=balls>0?(runs/(balls/6)).toFixed(2):'0.00',rrr=target>0&&ballsLeft>0?(runsNeeded/(ballsLeft/6)).toFixed(2):'—';
  const activePowerplay=String(i.powerplay||'').trim().toUpperCase();
- const batLine=(p,kind)=>\`<div class="jlBatterRow \${kind==='striker'?'isStriker':'isNonStriker'}"><span class="jlStrikeIcon" aria-label="\${kind==='striker'?'On strike':''}">\${kind==='striker'?'🏏':'•'}</span><b class="jlBatterName \${String(p?.name||'').length>15?'isLong':''}">\${esc(p?.name||'—')}</b><span class="jlBatterStats"><strong class="jlBatterRuns">\${Number(p?.runs)||0}\${kind==='striker'?'*':''}</strong><small class="jlBatterBalls">(\${Number(p?.balls)||0})</small></span></div>\`;
- const deliveries=overEvents(i.events||[]).map(e=>{const d=deliveryInfo(e);return \`<span class="jlBallChip \${d.cls}" title="\${esc(d.title)}">\${d.label}</span>\`}).join('');
+ const batLine=(p,kind)=>`<div class="jlBatterRow ${kind==='striker'?'isStriker':'isNonStriker'}"><span class="jlStrikeIcon" aria-label="${kind==='striker'?'On strike':''}">${kind==='striker'?'🏏':'•'}</span><b class="jlBatterName ${String(p?.name||'').length>15?'isLong':''}">${esc(p?.name||'—')}</b><span class="jlBatterStats"><strong class="jlBatterRuns">${Number(p?.runs)||0}${kind==='striker'?'*':''}</strong><small class="jlBatterBalls">(${Number(p?.balls)||0})</small></span></div>`;
+ const deliveries=overEvents(i.events||[]).map(e=>{const d=deliveryInfo(e);return `<span class="jlBallChip ${d.cls}" title="${esc(d.title)}">${d.label}</span>`}).join('');
  const bowlerOvers=bw?fmtOvers(bw.balls||0):'0.0',bowlerRuns=Number(bw?.runs)||0,bowlerWickets=Number(bw?.wickets)||0;
- const inningsNo=Math.max(1,Number(m.inningsNo)||1),pp=['P1','P2','P3'].map(phase=>\`<span class="jlPhaseTag \${activePowerplay===phase?'isActive':''}">\${phase}</span>\`).join('');
+ const inningsNo=Math.max(1,Number(m.inningsNo)||1),pp=['P1','P2','P3'].map(phase=>`<span class="jlPhaseTag ${activePowerplay===phase?'isActive':''}">${phase}</span>`).join('');
  const recentOver=balls>0?Math.floor((balls-1)/6)+1:Math.max(1,Number(i.currentOver)||1);
- layer.innerHTML=\`
-  <div class="jlTeam jlBatTeam">\${logoBadge(batting)}<div class="jlTeamCopy"><span class="jlRoleTag">BATTING TEAM</span><b class="jlTeamName" title="\${esc(batting.name)}">\${esc(batting.name||'BAT TEAM')}</b></div></div>
-  <div class="jlBatters"><div class="jlSectionLabel">AT THE CREASE · BATTERS</div><div class="jlBatterList">\${batLine(s,'striker')}\${batLine(n,'nonStriker')}</div></div>
+ layer.innerHTML=`
+  <div class="jlTeam jlBatTeam">${logoBadge(batting)}<div class="jlTeamCopy"><span class="jlRoleTag">BATTING TEAM</span><b class="jlTeamName" title="${esc(batting.name)}">${esc(batting.name||'BAT TEAM')}</b></div></div>
+  <div class="jlBatters"><div class="jlSectionLabel">AT THE CREASE · BATTERS</div><div class="jlBatterList">${batLine(s,'striker')}${batLine(n,'nonStriker')}</div></div>
   <div class="jlScoreWrap">
-   <div class="jlScoreTop"><span class="jlScoreKicker"><span class="jlLiveDot">LIVE</span><b>INNINGS \${inningsNo}</b></span><span class="jlInningsPill">\${overs} OV</span></div>
-   <div class="jlScoreTeamName" title="\${esc(batting.name)}">\${esc(batting.name||'BATTING TEAM')}</div>
-   <div class="jlScoreMain"><strong class="jlRuns">\${runs}</strong><span class="jlSlash">/</span><strong class="jlWickets">\${wickets}</strong></div>
-   <div class="jlScoreMeta"><span>OVERS <b>\${overs}</b></span><span>CRR <b>\${crr}</b></span></div>
+   <div class="jlScoreTop"><span class="jlScoreKicker"><span class="jlLiveDot">LIVE</span><b>INNINGS ${inningsNo}</b></span><span class="jlInningsPill">${overs} OV</span></div>
+   <div class="jlScoreTeamName" title="${esc(batting.name)}">${esc(batting.name||'BATTING TEAM')}</div>
+   <div class="jlScoreMain"><strong class="jlRuns">${runs}</strong><span class="jlSlash">/</span><strong class="jlWickets">${wickets}</strong></div>
+   <div class="jlScoreMeta"><span>OVERS <b>${overs}</b></span><span>CRR <b>${crr}</b></span></div>
   </div>
-  <div class="jlTeam jlBowlTeam">\${logoBadge(bowling)}<div class="jlTeamCopy"><span class="jlRoleTag">BOWLING TEAM</span><b class="jlTeamName" title="\${esc(bowling.name)}">\${esc(bowling.name||'BOWL TEAM')}</b></div></div>
-  <div class="jlBowler"><div class="jlSectionLabel">CURRENT BOWLER</div><b class="jlBowlerName \${String(bw?.name||'').length>15?'isLong':''}">\${esc(bw?.name||'—')}</b><strong class="jlBowlerFigures">\${bowlerOvers} · \${bowlerRuns} · \${bowlerWickets}</strong><small class="jlBowlerMeta">OVERS · RUNS · WICKETS</small></div>
-  <div class="jlBalls"><span class="jlRecentLabel">OVER \${recentOver}</span><div class="jlBallRail">\${deliveries||'<span class="jlBallEmpty">No balls yet</span>'}</div></div>
+  <div class="jlTeam jlBowlTeam">${logoBadge(bowling)}<div class="jlTeamCopy"><span class="jlRoleTag">BOWLING TEAM</span><b class="jlTeamName" title="${esc(bowling.name)}">${esc(bowling.name||'BOWL TEAM')}</b></div></div>
+  <div class="jlBowler"><div class="jlSectionLabel">CURRENT BOWLER</div><b class="jlBowlerName ${String(bw?.name||'').length>15?'isLong':''}">${esc(bw?.name||'—')}</b><strong class="jlBowlerFigures">${bowlerOvers} · ${bowlerRuns} · ${bowlerWickets}</strong><small class="jlBowlerMeta">OVERS · RUNS · WICKETS</small></div>
+  <div class="jlBalls"><span class="jlRecentLabel">OVER ${recentOver}</span><div class="jlBallRail">${deliveries||'<span class="jlBallEmpty">No balls yet</span>'}</div></div>
   <div class="jlChase">
-   <div class="jlChaseHeading"><span>CHASE & TARGET</span><b>\${target>0?target:'TBD'}</b></div>
-   <div class="jlChaseStats"><span><b>\${target>0?runsNeeded:'—'}</b><small>NEED</small></span><span><b>\${target>0?ballsLeft:'—'}</b><small>BALLS LEFT</small></span><span><b>\${rrr}</b><small>RRR</small></span></div>
-   <small class="jlChaseHint">\${target>0?'TARGET':'TARGET AFTER INNINGS'}</small>
+   <div class="jlChaseHeading"><span>CHASE & TARGET</span><b>${target>0?target:'TBD'}</b></div>
+   <div class="jlChaseStats"><span><b>${target>0?runsNeeded:'—'}</b><small>NEED</small></span><span><b>${target>0?ballsLeft:'—'}</b><small>BALLS LEFT</small></span><span><b>${rrr}</b><small>RRR</small></span></div>
+   <small class="jlChaseHint">${target>0?'TARGET':'TARGET AFTER INNINGS'}</small>
   </div>
-  <div class="jlPowerplay"><span class="jlPowerplayLabel">POWERPLAY PHASE</span><div class="jlPowerplayGroup">\${pp}</div><small class="jlPowerplayState">\${activePowerplay||'POWERPLAY OFF'}</small></div>\`;
+  <div class="jlPowerplay"><span class="jlPowerplayLabel">POWERPLAY PHASE</span><div class="jlPowerplayGroup">${pp}</div><small class="jlPowerplayState">${activePowerplay||'POWERPLAY OFF'}</small></div>`;
 }
 
 function tableRows(players,kind){
