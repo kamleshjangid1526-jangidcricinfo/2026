@@ -83,6 +83,8 @@ const checks = [
   ['Layout and colour are independent', control.includes('changing a layout must never overwrite') && control.includes("$('colorSelect').addEventListener('change'")],
   ['Single-screen scoring layout prevents vertical page scrolling', workflowCss.includes('overflow:hidden;overscroll-behavior:none')],
   ['Scoring engine exposes save and finish handlers', engine.includes('window.saveMatch=saveMatch') && engine.includes('window.finalizeMatch=finalizeMatch')],
+  ['Undo history no longer duplicates full commentary arrays in every snapshot', engine.includes('function compactUndoEntry') && engine.includes('delete previous.events') && engine.includes('compactMatchUndoHistory(MATCH)')],
+  ['Undo restores the event and fall-of-wicket history from compact lengths', engine.includes('function restoreUndoEntry') && engine.includes('restoreUndoEntry(snapshot,i)') && engine.includes('_undoFallOfWicketsLength')],
   ['Firebase writes complete private and public match snapshots in parallel', bridge.includes('const data=cleanData(enriched)') && bridge.includes("setDoc(ownerDoc(uid,'matches',m.id),data)") && bridge.includes("setDoc(publicDoc('publicMatches',m.id),data)") && bridge.includes('await Promise.all(writes)')],
   ['Live score uploads do not rewrite the active pointer on every ball', !bridge.includes("if(m.status==='live') await setDoc(ownerDoc(uid,'meta','active')") && bridge.includes('active pointer transactionally')],
   ['Live team-pair validation is cached after the first match save', bridge.includes('const validatedMatchTeams=new Map()') && bridge.includes('validatedMatchTeams.get(validationKey)') && bridge.includes('validatedMatchTeams.set(validationKey,teamPair)')],

@@ -66,11 +66,62 @@
   }
   function ensureExtras(i) { i.extras ||= {wide:0,noBall:0,legBye:0,bye:0,total:0}; i.extras.bye ||= 0; i.extras.total ||= 0; }
   function ensureStats(i) { i.batStats ||= {}; i.bowlStats ||= {}; i.events ||= []; i.fallOfWickets ||= []; i.undoStack ||= []; i.partnership ||= {runs:0,balls:0}; ensureExtras(i); }
+  // Undo history stores only the changing score state plus event-list lengths.
+  // Copying the entire ball-by-ball commentary into 50 snapshots made every upload
+  // grow quadratically as the innings progressed.
+  function compactUndoEntry(entry) {
+    const previous=clone(entry||{});
+    if(Array.isArray(previous.events)) {
+      previous._undoEventsLength=previous.events.length;
+      previous._undoFirstEvent=previous.events.length?clone(previous.events[0]):null;
+      delete previous.events;
+    }
+    if(Array.isArray(previous.fallOfWickets)) {
+      previous._undoFallOfWicketsLength=previous.fallOfWickets.length;
+      delete previous.fallOfWickets;
+    }
+    delete previous.undoStack;
+    delete previous.lastDelivery;
+    return previous;
+  }
+  function compactMatchUndoHistory(match) {
+    const inningsList=[...(Array.isArray(match?.inningsHistory)?match.inningsHistory:[]),match?.activeInnings].filter(Boolean);
+    for(const inn of inningsList) {
+      ensureStats(inn);
+      if(inn.undoStack.length) inn.undoStack=inn.undoStack.map(compactUndoEntry);
+    }
+  }
   function pushUndo(i) {
     ensureStats(i);
-    const previous=clone(i); delete previous.undoStack; delete previous.lastDelivery;
-    i.undoStack.push(previous);
+    i.undoStack=i.undoStack.map(compactUndoEntry);
+    i.undoStack.push(compactUndoEntry(i));
     if(i.undoStack.length>50) i.undoStack.shift();
+  }
+  function restoreUndoEntry(snapshot,currentInnings) {
+    const restored=clone(snapshot||{});
+    const currentEvents=Array.isArray(currentInnings?.events)?currentInnings.events:[];
+    const currentWickets=Array.isArray(currentInnings?.fallOfWickets)?currentInnings.fallOfWickets:[];
+    if(Array.isArray(restored.events)) {
+      // Legacy undo entry: it already contains its historical event list.
+    } else {
+      const length=Math.max(0,Number(restored._undoEventsLength)||0);
+      let events=currentEvents.slice(0,length);
+      // When the 2,000-event cap shifted the oldest delivery, put it back on Undo.
+      if(length>=2000&&currentEvents.length===length&&restored._undoFirstEvent&&
+         JSON.stringify(currentEvents[0]||null)!==JSON.stringify(restored._undoFirstEvent)) {
+        events=[clone(restored._undoFirstEvent),...currentEvents.slice(0,Math.max(0,length-1))];
+      }
+      restored.events=events;
+    }
+    if(!Array.isArray(restored.fallOfWickets)) {
+      const length=Math.max(0,Number(restored._undoFallOfWicketsLength)||0);
+      restored.fallOfWickets=currentWickets.slice(0,length);
+    }
+    delete restored._undoEventsLength;
+    delete restored._undoFirstEvent;
+    delete restored._undoFallOfWicketsLength;
+    restored.lastDelivery=restored.events?.[restored.events.length-1]||null;
+    return restored;
   }
   function swapStrike(i) { const s=i.striker; i.striker=i.nonStriker; i.nonStriker=s; }
   function updateOverState(i,legal) {
@@ -121,6 +172,8 @@
   async function saveMatch(shouldRender=true) {
     if(!MATCH?.id || MATCH.status!=='live') throw new Error('कोई LIVE match नहीं है। पहले नया मैच शुरू करें।');
     MATCH.updatedAt=new Date().toISOString();
+    // Migrate older saved matches' oversized Undo snapshots once, before upload.
+    compactMatchUndoHistory(MATCH);
     const snapshot=clone(MATCH);
     if(STATE) {
       STATE.activeMatch=clone(snapshot);
@@ -375,7 +428,7 @@
     if(!i.undoStack.length)return alert('Undo करने के लिए कोई पिछली scoring action नहीं है।');
     const stack=i.undoStack.slice(),snapshot=stack.pop();
     const mOld=clone(MATCH);
-    MATCH.activeInnings={...clone(snapshot),undoStack:stack};MATCH.awaitingNextInnings=false;MATCH.awaitingMatchFinish=false;MATCH.awaitingInningsSetup=false;
+    MATCH.activeInnings={...restoreUndoEntry(snapshot,i),undoStack:stack};MATCH.awaitingNextInnings=false;MATCH.awaitingMatchFinish=false;MATCH.awaitingInningsSetup=false;
     try {await saveMatch(false);renderScoring();await saveBroadcast({event:null,card:null,cardId:Date.now()});}
     catch(e){MATCH=mOld;if(STATE)STATE.activeMatch=clone(mOld);renderScoring();alert(`Undo save नहीं हुआ: ${e.message}`)}
   }
