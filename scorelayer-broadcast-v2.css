@@ -167,3 +167,34 @@
 #layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern18{grid-template-areas:"batTeam score bowlTeam" "batters score bowler" "power chase balls";grid-template-columns:minmax(0,1.1fr) minmax(0,1.3fr) minmax(0,1.1fr);grid-template-rows:50px 72px 42px;--pv-radius:30px;}
 #layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern19{grid-template-areas:"batTeam batters score bowlTeam" "bowler bowler chase power" "balls balls balls balls";grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.2fr) minmax(0,1fr);grid-template-rows:55px 50px 40px;--pv-radius:14px 14px 4px 4px;}
 #layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern20{grid-template-areas:"batTeam batters power bowlTeam" "score score score chase" "balls balls bowler bowler";grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr) minmax(0,1.05fr);grid-template-rows:48px 70px 50px;--pv-radius:20px;}
+
+/* Ensure each miniature preview child occupies the same semantic area as the OBS output. */
+#layerPreview.layerPreview.jlFreshTwentyPreview{height:194px!important;min-height:194px!important}
+#layerPreview.layerPreview.jlFreshTwentyPreview .pvBatTeam{grid-area:batTeam!important}
+#layerPreview.layerPreview.jlFreshTwentyPreview .pvPlayers{grid-area:batters!important}
+#layerPreview.layerPreview.jlFreshTwentyPreview .pvMidScore{grid-area:score!important}
+#layerPreview.layerPreview.jlFreshTwentyPreview .pvBowlTeam{grid-area:bowlTeam!important}
+#layerPreview.layerPreview.jlFreshTwentyPreview .pvBowler{grid-area:bowler!important}
+#layerPreview.layerPreview.jlFreshTwentyPreview .pvBalls{grid-area:balls!important}
+#layerPreview.layerPreview.jlFreshTwentyPreview .pvChase{grid-area:chase!important}
+#layerPreview.layerPreview.jlFreshTwentyPreview .pvPower{grid-area:power!important}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern1{grid-template-areas:"batTeam batters score bowlTeam" "bowler balls chase power";grid-template-rows:repeat(2,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern2{grid-template-areas:"batTeam score bowlTeam bowler" "batters chase balls power";grid-template-rows:repeat(2,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern3{grid-template-areas:"batTeam score score bowlTeam" "batters score score bowler" "power balls chase chase";grid-template-rows:repeat(3,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern4{grid-template-areas:"batTeam batters score bowlTeam" "chase bowler power balls";grid-template-rows:repeat(2,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern5{grid-template-areas:"batTeam score bowlTeam power" "batters chase bowler balls";grid-template-rows:repeat(2,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern6{grid-template-areas:"batTeam score score bowlTeam" "batters balls chase bowler" "power power power power";grid-template-rows:repeat(3,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern7{grid-template-areas:"batTeam batters score bowlTeam" "power balls balls bowler" "chase chase chase chase";grid-template-rows:repeat(3,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern8{grid-template-areas:"batTeam score bowlTeam power" "batters balls chase bowler";grid-template-rows:repeat(2,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern9{grid-template-areas:"batTeam score bowlTeam power" "batters score bowler balls" "chase chase chase chase";grid-template-rows:repeat(3,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern10{grid-template-areas:"batTeam score bowlTeam" "batters score bowler" "chase balls power";grid-template-rows:repeat(3,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern11{grid-template-areas:"batTeam batters score bowlTeam" "power chase bowler balls";grid-template-rows:repeat(2,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern12{grid-template-areas:"score score score score" "batTeam batters bowlTeam bowler" "chase balls power power";grid-template-rows:repeat(3,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern13{grid-template-areas:"batTeam score bowlTeam" "batters score bowler" "power chase balls";grid-template-rows:repeat(3,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern14{grid-template-areas:"batTeam bowlTeam" "batters bowler" "score score" "chase power" "balls balls";grid-template-rows:repeat(5,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern15{grid-template-areas:"batTeam batters score bowlTeam power" "bowler balls chase chase power";grid-template-rows:repeat(2,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern16{grid-template-areas:"batTeam score bowlTeam" "batters power bowler" "chase chase balls";grid-template-rows:repeat(3,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern17{grid-template-areas:"batTeam batters score bowlTeam" "chase power bowler balls";grid-template-rows:repeat(2,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern18{grid-template-areas:"batTeam score bowlTeam" "batters score bowler" "power chase balls";grid-template-rows:repeat(3,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern19{grid-template-areas:"batTeam batters score bowlTeam" "bowler bowler chase power" "balls balls balls balls";grid-template-rows:repeat(3,minmax(0,1fr));}
+#layerPreview.layerPreview.jlFreshTwentyPreview.previewPattern20{grid-template-areas:"batTeam batters power bowlTeam" "score score score chase" "balls balls bowler bowler";grid-template-rows:repeat(3,minmax(0,1fr));}
