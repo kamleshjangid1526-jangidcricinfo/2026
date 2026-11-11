@@ -186,3 +186,41 @@
  #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBowlerMeta{font-size:5px!important}
  #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBall{width:10px!important;height:10px!important;flex-basis:10px!important;font-size:6px!important}
 }
+
+/* Keep the Control Board preview colour in sync with the selected OBS palette. */
+#layerPreview.layerPreview.jlWorldCupPreview.color2 .wcPvBatter{background:linear-gradient(110deg,#0d4976,#092c51)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color2 .wcPvScore{background:linear-gradient(135deg,#061b31,#164b70)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color2 .wcPvTarget{background:linear-gradient(145deg,#f8d66a,#b8882b)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color2 .wcPvBowler{background:linear-gradient(110deg,#176d78,#0d4b58)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color3 .wcPvBatter{background:linear-gradient(110deg,#176343,#0d3e2b)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color3 .wcPvScore{background:linear-gradient(135deg,#092b26,#135a4c)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color3 .wcPvTarget{background:linear-gradient(145deg,#e6e776,#a7a83c)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color3 .wcPvBowler{background:linear-gradient(110deg,#386c36,#254c29)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color4 .wcPvBatter{background:linear-gradient(110deg,#7b244c,#441934)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color4 .wcPvScore{background:linear-gradient(135deg,#241833,#55315f)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color4 .wcPvTarget{background:linear-gradient(145deg,#f2c3dc,#c17ca8)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color4 .wcPvBowler{background:linear-gradient(110deg,#91404e,#652a37)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color5 .wcPvBatter{background:linear-gradient(110deg,#9a4e13,#5b2b0a)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color5 .wcPvScore{background:linear-gradient(135deg,#2b1d10,#6d4216)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color5 .wcPvTarget{background:linear-gradient(145deg,#fff0a1,#dcae3c)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color5 .wcPvBowler{background:linear-gradient(110deg,#b75c1b,#74320f)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color6 .wcPvBatter{background:linear-gradient(110deg,#414f69,#25334b)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color6 .wcPvScore{background:linear-gradient(135deg,#101827,#293a5a)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color6 .wcPvTarget{background:linear-gradient(145deg,#f1f2f4,#bdc9d9)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color6 .wcPvBowler{background:linear-gradient(110deg,#4a6f94,#284b72)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color7 .wcPvBatter{background:linear-gradient(110deg,#653d92,#3d245e)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color7 .wcPvScore{background:linear-gradient(135deg,#19162f,#48306a)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color7 .wcPvTarget{background:linear-gradient(145deg,#ecd0ff,#c8a3e3)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color7 .wcPvBowler{background:linear-gradient(110deg,#8d4f9e,#592b73)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color8 .wcPvBatter{background:linear-gradient(110deg,#0c6665,#084341)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color8 .wcPvScore{background:linear-gradient(135deg,#082d34,#12626b)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color8 .wcPvTarget{background:linear-gradient(145deg,#95ece5,#42b9b1)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color8 .wcPvBowler{background:linear-gradient(110deg,#167b80,#105056)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color9 .wcPvBatter{background:linear-gradient(110deg,#343c45,#1a232b)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color9 .wcPvScore{background:linear-gradient(135deg,#0c1720,#374756)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color9 .wcPvTarget{background:linear-gradient(145deg,#dce5e8,#9facb5)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color9 .wcPvBowler{background:linear-gradient(110deg,#596773,#34414c)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color10 .wcPvBatter{background:linear-gradient(110deg,#842d2d,#4c191f)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color10 .wcPvScore{background:linear-gradient(135deg,#151b2a,#374c6d)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color10 .wcPvTarget{background:linear-gradient(145deg,#e9bd72,#b48140)!important}
+#layerPreview.layerPreview.jlWorldCupPreview.color10 .wcPvBowler{background:linear-gradient(110deg,#a64b32,#6c2b25)!important}
