@@ -35,7 +35,15 @@
   async function all(prefix=''){
     const db=await openDb();
     if(!db)return [...memory.entries()].filter(([key])=>key.startsWith(prefix)).map(([key,value])=>({key,value:structuredCloneSafe(value)}));
-    try{return await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly'),request=tx.objectStore(STORE).getAll();request.onsuccess=()=>resolve((request.result||[]).filter(x=>String(x.key).startsWith(prefix)));request.onerror=()=>reject(request.error);});}
+    try{return await new Promise((resolve,reject)=>{
+      const tx=db.transaction(STORE,'readonly'),objectStore=tx.objectStore(STORE);
+      // The store's primary key is the record key, so a bounded range reads only this queue.
+      // This avoids loading cached account and public-match data during every sync check.
+      const range=prefix?IDBKeyRange.bound(String(prefix),String(prefix)+'\\uffff'):null;
+      const request=range?objectStore.getAll(range):objectStore.getAll();
+      request.onsuccess=()=>resolve((request.result||[]).filter(x=>String(x.key).startsWith(prefix)));
+      request.onerror=()=>reject(request.error);
+    });}
     catch{return [...memory.entries()].filter(([key])=>key.startsWith(prefix)).map(([key,value])=>({key,value:structuredCloneSafe(value)}));}
   }
   function structuredCloneSafe(value){try{return structuredClone(value);}catch{return JSON.parse(JSON.stringify(value??null));}}
