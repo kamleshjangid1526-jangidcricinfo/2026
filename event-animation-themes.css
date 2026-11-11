@@ -61,7 +61,7 @@
 @keyframes jcBloom{0%{background-size:10% 10%;background-position:50% 50%;filter:saturate(3)}100%{background-size:100% 100%;background-position:50% 50%;filter:none}}
 @keyframes jcShards{0%{clip-path:polygon(0 0,0 0,0 100%,0 100%);transform:skewX(18deg)}35%{clip-path:polygon(0 0,100% 0,76% 100%,0 100%);transform:skewX(-5deg)}70%{clip-path:polygon(0 0,100% 0,100% 100%,0 100%);transform:skewX(2deg)}100%{clip-path:inset(0);transform:none}}
 @keyframes jcSpotlight{0%{background:radial-gradient(circle at 50% 50%,#ffffff 0,#ffffff00 0);filter:brightness(2)}55%{background:radial-gradient(circle at 50% 50%,#ffffff22 0,#ffffff00 65%)}100%{background:linear-gradient(125deg,#06182ceF,#102f50f2 52%,#071222f4);filter:none}}
-@media(prefers-reduced-motion:reduce){.eventLayer[data-event-type="four"] .eventInner,.eventLayer[data-event-type="six"] .eventInner,.eventLayer[data-event-type="wicket"] .eventInner{animation:none!important}}
+/* Broadcast event motion stays enabled for OBS regardless of the browser's UI motion preference. */
 
 /* Additional original motion designs: themes 11–20. */
 .eventLayer[data-event-type="four"][data-anim="laser-sweep"] .eventInner,.eventLayer[data-event-type="six"][data-anim="laser-sweep"] .eventInner,.eventLayer[data-event-type="wicket"][data-anim="laser-sweep"] .eventInner{animation:jcLaserSweep .92s ease-out both}
@@ -113,4 +113,4 @@
 @keyframes jcGlassShatter{0%{transform:rotate(-7deg) scale(.76);opacity:0}38%{transform:rotate(3deg) scale(1.06);opacity:1}100%{transform:none;opacity:1}}
 @keyframes jcOrbitLaunch{0%{transform:perspective(700px) rotateY(-72deg) rotateZ(-6deg) scale(.7);opacity:0}65%{transform:perspective(700px) rotateY(10deg) rotateZ(2deg) scale(1.05);opacity:1}100%{transform:none;opacity:1}}
 @keyframes jcImpactDigital{0%{transform:scaleY(.08);opacity:0}45%{transform:scaleY(1.08);opacity:1}100%{transform:scaleY(1);opacity:1}}
-@media(prefers-reduced-motion:reduce){.eventLayer[data-event-type="four"] .eventInner,.eventLayer[data-event-type="six"] .eventInner,.eventLayer[data-event-type="wicket"] .eventInner{animation:none!important;will-change:auto}}
+/* Broadcast event motion stays enabled for OBS regardless of the browser's UI motion preference. */
