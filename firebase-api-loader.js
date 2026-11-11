@@ -76,7 +76,7 @@
       }
       if(broadcastRow){const result=await apiRequest(new URL('/api/broadcast',location.href),{method:'POST',body:JSON.stringify(broadcastRow.payload)});if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast save failed');const latest=await store?.get(key(uid,'broadcast'));if(latest?.version===broadcastRow.version)await store?.remove(key(uid,'broadcast'));}
       const pending=(await records('queue:'+uid+':')).length;rerunSync=pending>0;syncFailureCount=0;localStatus(pending?'syncing':'synced',pending?pending+' बदलाव Sync के लिए queue में हैं।':'सभी बदलाव Firebase से Sync हो गए।');return pending===0;
-    }catch(error){syncFailureCount=Math.min(6,syncFailureCount+1);const detail=String(error?.message||'Sync अभी पूरा नहीं हुआ; फिर प्रयास होगा।');localStatus('error',detail);console.error('Jangid Firebase background sync failed:',error);return false;}
+    }catch(error){syncFailureCount=Math.min(6,syncFailureCount+1);const detail=String(error?.message||'Sync अभी पूरा नहीं हुआ; फिर प्रयास होगा।');window.__JC_LAST_SYNC_ERROR__=detail;localStatus('error',detail);console.error('Jangid Firebase background sync failed:',error);return false;}
     finally{syncing=false;clearTimeout(syncStatusTimer);syncStatusTimer=null;if(rerunSync&&navigator.onLine)scheduleSync(180);}
   }
   window.JangidOfflineSync={syncNow,getStatus:()=>({online:navigator.onLine,userId:activeUid}),getCachedState:readState};
@@ -102,7 +102,7 @@
       }
       if(url.pathname==='/api/match/state'&&method==='POST'){
         const saved=await cacheMatch(body.match);
-        localStatus(navigator.onLine?'syncing':'offline',navigator.onLine?'स्कोर device पर सुरक्षित है; Firebase background में upload हो रहा है।':'स्कोर device पर सुरक्षित है; internet आने पर Sync होगा।');
+        localStatus(navigator.onLine?'saved':'offline',navigator.onLine?'स्कोर device पर सुरक्षित है; Firebase में background upload queue हो गई है।':'स्कोर device पर सुरक्षित है; internet आने पर Sync होगा।');
         requestBackgroundSync();
         if(navigator.onLine)scheduleSync(100);
         return toResponse({status:200,body:{ok:true,queued:true,localFirst:true,match:saved.snapshot}});
