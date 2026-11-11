@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
 import {
-  getAuth, browserSessionPersistence, setPersistence,
+  getAuth, browserLocalPersistence, setPersistence,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendEmailVerification,
   sendPasswordResetEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
@@ -26,8 +26,8 @@ if (missing.length) {
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
-// Keep authenticated state only for the current browser session, not indefinitely on a shared device.
-const authPersistenceReady = setPersistence(auth, browserSessionPersistence);
+// Keep the user signed in across refreshes and browser restarts until they explicitly log out.
+const authPersistenceReady = setPersistence(auth, browserLocalPersistence);
 const db = getFirestore(app);
 const nowIso = () => new Date().toISOString();
 const rid = prefix => `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2,8)}`;

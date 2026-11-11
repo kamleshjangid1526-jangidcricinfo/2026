@@ -430,3 +430,29 @@
  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetPartnership>span{font-size:5px!important}
  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetPartnership>b{font-size:8px!important}
 }
+
+
+/* FOUR/SIX event overlays float over the live picture: no panel fill or border. */
+.eventLayer[data-event-type="four"] .eventInner,
+.eventLayer[data-event-type="six"] .eventInner{
+  background:transparent!important;
+  border:0!important;
+  border-bottom:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  backdrop-filter:none!important;
+}
+.eventLayer[data-event-type="four"] .eventInner::before,
+.eventLayer[data-event-type="four"] .eventInner::after,
+.eventLayer[data-event-type="six"] .eventInner::before,
+.eventLayer[data-event-type="six"] .eventInner::after,
+.eventLayer[data-event-type="four"]::before,
+.eventLayer[data-event-type="four"]::after,
+.eventLayer[data-event-type="six"]::before,
+.eventLayer[data-event-type="six"]::after{
+  content:none!important;
+  display:none!important;
+  border:0!important;
+  box-shadow:none!important;
+}
