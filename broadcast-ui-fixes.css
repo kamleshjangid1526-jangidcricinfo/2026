@@ -12,3 +12,33 @@ body.scoreLayerBody>.jcOfflineStatus{position:fixed;z-index:120;top:8px;left:50%
  body.jc-scoring-view .scoreCommandTeamNameMobile{display:block;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(10px,3vw,14px);font-weight:900;color:#bfeeff;margin:1px 0}
  body.jc-scoring-view #offlineScoreStatus{font-size:8px;min-height:18px;padding:2px 6px}
 }
+
+/* Scoring desk stability: long team, batter and bowler names must never resize
+   the side cards or pull the central runs/wickets vertically. */
+#scoring .scoreCommandMainGrid{align-items:stretch}
+#scoring .scoreCommandTeamBody{min-width:0;overflow:hidden}
+#scoring .scoreCommandTeamCopy{display:grid;min-width:0;max-width:100%;overflow:hidden}
+#scoring .scoreCommandTeamCopy>b,
+#scoring .scoreCommandTeamCopy>span,
+#scoring .scoreCommandTeamFoot>b,
+#scoring .mobileFieldPlayer>b,
+#scoring .mobileFieldHeading{
+ display:block;min-width:0;max-width:100%;overflow:hidden!important;
+ text-overflow:ellipsis!important;white-space:nowrap!important;
+ overflow-wrap:normal!important;word-break:normal!important;
+}
+#scoring .scoreCommandTeamCopy>b{line-height:1.15}
+#scoring .scoreCommandTeamCopy>span{line-height:1.2}
+#scoring .scoreCommandTeamFoot{min-width:0;overflow:hidden}
+#scoring .scoreCommandCenter{align-self:stretch;min-width:0}
+#scoring .jcFieldPlayerName{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;overflow-wrap:normal!important;word-break:normal!important}
+
+@media(max-width:700px){
+ #scoring .scoreCommandTeamCard,
+ #scoring .scoreCommandCenter{min-width:0}
+ #scoring .scoreCommandTeamBody{min-width:0;overflow:hidden}
+ body.jc-scoring-view #scoring .scoreCommandMainGrid{align-items:stretch}
+ body.jc-scoring-view #scoring .scoreCommandTeamCard.battingSide,
+ body.jc-scoring-view #scoring .scoreCommandCenter{height:100px;min-height:100px;max-height:100px;box-sizing:border-box}
+ body.jc-scoring-view #scoring .scoreCommandTeamCopy>b{font-size:clamp(11px,3.2vw,15px);line-height:1.15}
+}
