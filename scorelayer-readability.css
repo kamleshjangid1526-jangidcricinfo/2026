@@ -1,0 +1,103 @@
+/* Broadcast lower-third readability refinement.
+   Typography only: the Score Layer's existing height, width and field positions stay unchanged. */
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTeamName{
+  font-size:clamp(10px,.92cqi,16px)!important;
+  text-shadow:0 1px 2px #0009!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlSectionHead strong{
+  font-size:clamp(9px,.78cqi,14px)!important;
+  line-height:1!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlSectionHead span{
+  font-size:clamp(7px,.62cqi,10px)!important;
+  line-height:1!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterHead{
+  font-size:clamp(7px,.60cqi,10px)!important;
+  line-height:1.05!important;
+  letter-spacing:.025em!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterName{
+  font-size:clamp(10px,1cqi,18px)!important;
+  line-height:1.05!important;
+  text-shadow:0 1px 2px #0009!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore b{
+  font-size:clamp(11px,1.12cqi,20px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore small{
+  font-size:clamp(8px,.72cqi,12px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBoundaryStat{
+  font-size:clamp(10px,.95cqi,16px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlStrikeRate{
+  font-size:clamp(9px,.85cqi,14px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlPartnership>span,
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetPartnership>span{
+  font-size:clamp(7px,.62cqi,10px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlPartnership>b,
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetPartnership>b{
+  font-size:clamp(10px,.96cqi,16px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreHeader{
+  font-size:clamp(8px,.70cqi,12px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreStats b{
+  font-size:clamp(10px,.98cqi,17px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreStats small{
+  font-size:clamp(7px,.58cqi,10px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetHeader{
+  font-size:clamp(8px,.75cqi,12px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetStats{
+  font-size:clamp(7px,.62cqi,10px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetPending{
+  font-size:clamp(8px,.70cqi,11px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerName{
+  font-size:clamp(12px,1.10cqi,20px)!important;
+  text-shadow:0 1px 2px #0009!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats b{
+  font-size:clamp(10px,.98cqi,17px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats small,
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlThisOver>small{
+  font-size:clamp(7px,.62cqi,10px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBall{
+  font-size:clamp(8px,.68cqi,12px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetPartnership small{
+  font-size:clamp(7px,.60cqi,10px)!important;
+}
+@media(max-width:580px){
+  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlTeamName,
+  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterName,
+  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerName{
+    text-shadow:0 1px 2px #000b!important;
+  }
+  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterHead,
+  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetStats,
+  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats small,
+  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlThisOver>small{
+    font-size:8px!important;
+  }
+  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterName,
+  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerName{
+    font-size:clamp(10px,2vw,13px)!important;
+  }
+  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore b,
+  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats b{
+    font-size:clamp(10px,2vw,14px)!important;
+  }
+  #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBoundaryStat{
+    font-size:clamp(9px,1.8vw,12px)!important;
+  }
+}
