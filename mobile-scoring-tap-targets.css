@@ -1,0 +1,79 @@
+/* Mobile scoring tap-target refinement.
+   Keep the compact one-screen desk; reserve a visible, non-shrinking CARDS opener. */
+@media(max-width:700px){
+  body.jc-scoring-view #scoring .powerplayControl{min-height:30px!important;gap:5px!important}
+  body.jc-scoring-view #scoring .powerplayControl button{
+    min-height:28px!important;padding:4px 7px!important;font-size:9px!important;
+  }
+  body.jc-scoring-view #scoring .scoreManagementButtons{
+    display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    width:100%!important;gap:5px!important;
+  }
+  body.jc-scoring-view #scoring .scoreManagementButtons>*{
+    min-width:0!important;min-height:35px!important;padding:5px 4px!important;
+    font-size:9px!important;line-height:1.12!important;white-space:normal!important;
+  }
+  body.jc-scoring-view #scoring #scoreActionGrid{
+    display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:5px!important;flex:0 0 auto!important;
+  }
+  body.jc-scoring-view #scoring #scoreActionGrid button{
+    min-width:0!important;min-height:38px!important;padding:5px 3px!important;
+    border-radius:9px!important;font-size:13px!important;line-height:1.1!important;
+  }
+  body.jc-scoring-view #scoring #scoreActionGrid .extra,
+  body.jc-scoring-view #scoring #scoreActionGrid .wicket{
+    font-size:9px!important;letter-spacing:.01em!important;
+  }
+  body.jc-scoring-view #scoring .scoringCardPanel{
+    display:block!important;visibility:visible!important;opacity:1!important;
+    flex:0 0 auto!important;flex-shrink:0!important;min-height:36px!important;
+    width:100%!important;overflow:visible!important;
+  }
+  body.jc-scoring-view #scoring .scoringCardSummary{
+    display:flex!important;visibility:visible!important;opacity:1!important;
+    align-items:center!important;justify-content:flex-start!important;
+    flex:0 0 36px!important;min-height:36px!important;width:100%!important;
+    padding:7px 11px!important;font-size:11px!important;font-weight:950!important;
+    line-height:1.1!important;cursor:pointer!important;position:relative!important;
+    z-index:2!important;white-space:nowrap!important;
+  }
+  body.jc-scoring-view #scoring .scoringCardPanel[open]{
+    position:fixed!important;z-index:500!important;inset:7% 3% 7%!important;
+    width:auto!important;max-height:none!important;height:auto!important;
+    overflow:auto!important;overscroll-behavior:contain!important;
+    box-shadow:0 18px 60px #000b!important;
+  }
+  body.jc-scoring-view #scoring .scoringCardPanel[open]>.scoringCardSummary{
+    position:sticky!important;top:0!important;background:#102d43!important;
+  }
+  body.jc-scoring-view #scoring .scoreCardActionGrid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;padding:7px!important;
+  }
+  body.jc-scoring-view #scoring .scoreCardAction{
+    min-height:38px!important;padding:6px 4px!important;font-size:10px!important;
+  }
+}
+@media(max-width:390px){
+  body.jc-scoring-view #scoring .scoreManagementButtons{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  body.jc-scoring-view #scoring .scoreManagementButtons>*{
+    min-height:34px!important;font-size:9px!important;
+  }
+  body.jc-scoring-view #scoring #scoreActionGrid{gap:4px!important}
+  body.jc-scoring-view #scoring #scoreActionGrid button{
+    min-height:36px!important;font-size:12px!important;padding:4px 2px!important;
+  }
+  body.jc-scoring-view #scoring #scoreActionGrid .extra,
+  body.jc-scoring-view #scoring #scoreActionGrid .wicket{font-size:8px!important}
+  body.jc-scoring-view #scoring .scoringCardSummary{
+    flex-basis:35px!important;min-height:35px!important;font-size:10px!important;
+  }
+}
+@media(max-height:650px) and (max-width:700px){
+  body.jc-scoring-view #scoring .scoreManagementButtons>*{min-height:32px!important;padding:4px 3px!important}
+  body.jc-scoring-view #scoring #scoreActionGrid button{min-height:34px!important}
+  body.jc-scoring-view #scoring .scoringCardSummary{flex-basis:34px!important;min-height:34px!important}
+  body.jc-scoring-view #scoring .powerplayControl button{min-height:26px!important}
+}
