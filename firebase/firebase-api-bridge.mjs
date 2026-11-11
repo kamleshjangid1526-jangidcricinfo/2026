@@ -89,9 +89,23 @@ async function profileAndState(uid, profile, admin=false) {
   return {user:publicUser(profile,admin),localTestMode:false,backendMode:'firebase-github-pages',firebaseConnection:'connected',plans:Object.values(PLANS),teams,tournaments,matches,activeMatch,savedLiveMatches:activeMatches,matchDraft:draft?.draft||null,broadcast:broadcast||{},demoData:{hasDemo:false,matchId:null,tournamentId:null,tournamentName:'Jangid Demo Cup'},contact:CONTACT};
 }
 async function teamDetails(uid,id) { return await getOwner(uid,'teams',id); }
+const validatedMatchTeams=new Map();
 async function enrichMatch(uid,match) {
-  const [a,b,t]=await Promise.all([teamDetails(uid,match.teamA),teamDetails(uid,match.teamB),match.tournamentId?getOwner(uid,'tournaments',match.tournamentId):null]);
-  return {...match,userId:uid,ownerUid:uid,teamAName:a?.name||match.teamAName||'Team A',teamBName:b?.name||match.teamBName||'Team B',teamALogo:a?.logo||match.teamALogo||'',teamBLogo:b?.logo||match.teamBLogo||'',tournamentName:t?.name||match.tournamentName||''};
+  // Match Start stores this metadata in every normal live snapshot. Read only legacy fields that are missing.
+  const needA=!match.teamAName||typeof match.teamALogo!=='string';
+  const needB=!match.teamBName||typeof match.teamBLogo!=='string';
+  const needTournament=!!match.tournamentId&&!match.tournamentName;
+  const [a,b,t]=await Promise.all([
+    needA?teamDetails(uid,match.teamA):Promise.resolve(null),
+    needB?teamDetails(uid,match.teamB):Promise.resolve(null),
+    needTournament?getOwner(uid,'tournaments',match.tournamentId):Promise.resolve(null)
+  ]);
+  return {...match,userId:uid,ownerUid:uid,
+    teamAName:match.teamAName||a?.name||'Team A',
+    teamBName:match.teamBName||b?.name||'Team B',
+    teamALogo:typeof match.teamALogo==='string'?match.teamALogo:(a?.logo||''),
+    teamBLogo:typeof match.teamBLogo==='string'?match.teamBLogo:(b?.logo||''),
+    tournamentName:match.tournamentName||t?.name||''};
 }
 async function publishMatch(uid,match) {
   const enriched=await enrichMatch(uid,match);
@@ -104,14 +118,20 @@ async function publishMatch(uid,match) {
 }
 async function saveMatch(uid,match) {
   const m={...match,userId:uid,ownerUid:uid,updatedAt:match.updatedAt||nowIso(),lastActivityAt:nowIso()};
-  // Replace the complete private match snapshot; merge mode can retain removed nested stat keys.
-  await setDoc(ownerDoc(uid,'matches',m.id),cleanData(m));
-  if(m.status==='live') await setDoc(ownerDoc(uid,'meta','active'),{matchId:m.id,updatedAt:nowIso()});
-  else {
-    const a=await getOwner(uid,'meta','active'); if(a?.matchId===m.id) await deleteDoc(ownerDoc(uid,'meta','active'));
+  const enriched=await enrichMatch(uid,m);
+  // One complete sanitized snapshot updates private and public documents in parallel.
+  // Match Start writes the active pointer transactionally; don't rewrite it after every ball.
+  const data=cleanData(enriched);
+  const writes=[
+    setDoc(ownerDoc(uid,'matches',m.id),data),
+    setDoc(publicDoc('publicMatches',m.id),data)
+  ];
+  if(m.status!=='live'){
+    const active=await getOwner(uid,'meta','active');
+    if(active?.matchId===m.id)writes.push(deleteDoc(ownerDoc(uid,'meta','active')));
   }
-  await publishMatch(uid,m);
-  return m;
+  await Promise.all(writes);
+  return enriched;
 }
 async function loadPublicMatches() { return toList(await getDocs(query(publicCol('publicMatches'),orderBy('updatedAt','desc'),limit(250)))); }
 async function loadPublicTournaments() { return toList(await getDocs(query(publicCol('publicTournaments'),orderBy('updatedAt','desc'),limit(100)))).filter(x=>x.published!==false); }
@@ -392,7 +412,7 @@ async function handleApi(url,init={}) {
       const {user}=await requireUser();if(method==='POST'){await saveOwner(user.uid,'drafts','current',{draft:body.draft||{},updatedAt:nowIso()});return ok({draft:body.draft||{}});}if(method==='DELETE'){await deleteDoc(ownerDoc(user.uid,'drafts','current'));return ok({});}
     }
     if(path==='/api/match/start'&&method==='POST'){const {user,profile}=await requireUser();gate(profile,'basic');const match=await startMatch(user.uid,body);return ok({match});}
-    if(path==='/api/match/state'&&method==='POST'){const {user,profile}=await requireUser();gate(profile,'basic');const match=body.match;if(!match?.id||match.userId!==user.uid||match.status!=='live')return fail(400,'Match डेटा गलत है।');const teams=await Promise.all([teamDetails(user.uid,match.teamA),teamDetails(user.uid,match.teamB)]);if(!teams[0]||!teams[1]||match.teamA===match.teamB)return fail(400,'Match की Teams सही नहीं हैं।');await saveMatch(user.uid,match);return ok({});}
+    if(path==='/api/match/state'&&method==='POST'){const {user,profile}=await requireUser();gate(profile,'basic');const match=body.match;if(!match?.id||match.userId!==user.uid||match.status!=='live'||!match.teamA||!match.teamB||match.teamA===match.teamB)return fail(400,'Match डेटा गलत है।');const validationKey=user.uid+':'+match.id,teamPair=JSON.stringify([match.teamA,match.teamB]);if(validatedMatchTeams.get(validationKey)!==teamPair){const teams=await Promise.all([teamDetails(user.uid,match.teamA),teamDetails(user.uid,match.teamB)]);if(!teams[0]||!teams[1])return fail(400,'Match की Teams सही नहीं हैं।');validatedMatchTeams.set(validationKey,teamPair);}await saveMatch(user.uid,match);return ok({});}
     if(path==='/api/match/finish'&&method==='POST'){const {user,profile}=await requireUser();gate(profile,'basic');const m=await getOwner(user.uid,'matches',String(body.matchId||''));if(!m)return fail(404,'Live Match नहीं मिला।');if(m.status!=='live')return fail(409,'यह Match LIVE नहीं है।');const type=['winner','tie','no-result'].includes(body.resultType)?body.resultType:'winner';if(type==='winner'){if(![m.teamA,m.teamB].includes(String(body.winnerTeamId)))return fail(400,'Winner Team चुनें।');m.winnerTeamId=String(body.winnerTeamId);m.resultType='winner';m.result=`${m.winnerTeamId===m.teamA?m.teamAName:m.teamBName} won`;}else{m.winnerTeamId=null;m.resultType=type==='tie'?'tie':'no-result';m.result=type==='tie'?'Match tied':'No Result';}m.status='finished';m.completedAt=nowIso();m.updatedAt=m.completedAt;await saveMatch(user.uid,m);return ok({match:m});}
     if(path==='/api/match/recover-stale'&&method==='POST'){const {user}=await requireUser();const m=await getOwner(user.uid,'matches',String(body.matchId||''));if(!m)return fail(404,'Match नहीं मिला।');if(m.status!=='live')return fail(409,'यह Match अब LIVE नहीं है।');m.status='abandoned';m.resultType='abandoned';m.result='Abandoned / closed by account owner';m.completedAt=nowIso();await saveMatch(user.uid,m);return ok({match:m,preservedScorecard:true});}
     const matchDelete=path.match(/^\/api\/match\/([^/]+)$/);if(matchDelete&&method==='DELETE'){const {user}=await requireUser();const id=decodeURIComponent(matchDelete[1]);const m=await getOwner(user.uid,'matches',id);if(!m)return fail(404,'Match नहीं मिला।');await deleteDoc(ownerDoc(user.uid,'matches',id));await deleteDoc(publicDoc('publicMatches',id));return ok({deletedId:id});}

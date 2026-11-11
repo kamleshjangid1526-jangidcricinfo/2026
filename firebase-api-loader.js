@@ -5,7 +5,7 @@
   const ready=new Promise((resolve,reject)=>{resolveBridge=resolve;rejectBridge=reject;});
   window.__JC_FIREBASE_BRIDGE_READY__=ready;window.__JC_FIREBASE_BRIDGE_RESOLVE__=resolveBridge;window.__JC_FIREBASE_BRIDGE_REJECT__=rejectBridge;
   window.__JC_FIREBASE_EVENTS__=new Set();window.__JC_LAST_PUBLIC_PAYLOAD__=null;window.__JC_FIREBASE_INIT_ERROR__=null;
-  let cachedState=null,activeUid='',syncing=false,channel=null,syncRetryTimer=null,syncFailureCount=0,syncStatusTimer=null;
+  let cachedState=null,activeUid='',syncing=false,syncRequested=false,cacheWriteSequence=0,channel=null,syncRetryTimer=null,syncFailureCount=0,syncStatusTimer=null;
   const BG_SYNC_TAG='jangid-cricinfo-pending-sync-v1';
   function requestBackgroundSync(){
     if(!('serviceWorker' in navigator))return;
@@ -47,11 +47,39 @@
   async function apiRequest(url,init={}){const bridge=await ready;return bridge.handleApi(url,init);}
   function toResponse(result){return new Response(JSON.stringify(result.body??{}),{status:result.status??200,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});}
   function localFinish(match,body){const finished=clone(match||{}),type=['winner','tie','no-result'].includes(body.resultType)?body.resultType:'winner';if(type==='winner'){if(![String(finished.teamA),String(finished.teamB)].includes(String(body.winnerTeamId)))throw new Error('Winner Team चुनें।');finished.winnerTeamId=String(body.winnerTeamId);finished.resultType='winner';finished.result=(finished.winnerTeamId===String(finished.teamA)?(finished.teamAName||'Team A'):(finished.teamBName||'Team B'))+' won';}else{finished.winnerTeamId=null;finished.resultType=type;finished.result=type==='tie'?'Match tied':'No Result';}finished.status='finished';finished.completedAt=new Date().toISOString();finished.updatedAt=finished.completedAt;return finished;}
-  async function cacheMatch(match){if(!match?.id)throw new Error('Match snapshot में ID नहीं है।');const uid=activeUid||uidOf(cachedState);if(!uid)throw new Error('इस डिवाइस पर पिछला Login डेटा नहीं मिला। एक बार internet पर Login करके Match खोलें।');const stamp=new Date().toISOString(),snapshot=clone({...match,updatedAt:match.updatedAt||stamp,offlineUpdatedAt:stamp}),queueKey=key(uid,'match',snapshot.id);await store?.put(queueKey,{match:snapshot,version:snapshot.offlineUpdatedAt});if(cachedState){cachedState.matches||=[];const ix=cachedState.matches.findIndex(x=>String(x.id)===String(snapshot.id));if(ix>=0)cachedState.matches[ix]=clone(snapshot);else cachedState.matches.push(clone(snapshot));cachedState.activeMatch=snapshot.status==='live'?clone(snapshot):null;cachedState.savedLiveMatches=(cachedState.savedLiveMatches||[]).filter(x=>String(x.id)!==String(snapshot.id));if(snapshot.status==='live')cachedState.savedLiveMatches.push(clone(snapshot));await saveState(cachedState);}emitPublic(publicPayload(snapshot,cachedState?.broadcast));return {uid,queueKey,snapshot};}
+  async function cacheMatch(match){
+    if(!match?.id)throw new Error('Match snapshot में ID नहीं है।');
+    const uid=activeUid||uidOf(cachedState);
+    if(!uid)throw new Error('इस डिवाइस पर पिछला Login डेटा नहीं मिला। एक बार internet पर Login करके Match खोलें।');
+    const stamp=new Date().toISOString(),version=stamp+':'+(++cacheWriteSequence);
+    const snapshot=clone({...match,updatedAt:match.updatedAt||stamp,offlineUpdatedAt:stamp});
+    const queueKey=key(uid,'match',snapshot.id);
+    // The match queue is the durable local source; avoid rewriting the full profile after every ball.
+    await store?.put(queueKey,{match:snapshot,version});
+    if(cachedState){
+      cachedState.matches||=[];
+      const ix=cachedState.matches.findIndex(x=>String(x.id)===String(snapshot.id));
+      if(ix>=0)cachedState.matches[ix]=clone(snapshot);else cachedState.matches.push(clone(snapshot));
+      cachedState.activeMatch=snapshot.status==='live'?clone(snapshot):null;
+      cachedState.savedLiveMatches=(cachedState.savedLiveMatches||[]).filter(x=>String(x.id)!==String(snapshot.id));
+      if(snapshot.status==='live')cachedState.savedLiveMatches.push(clone(snapshot));
+    }
+    emitPublic(publicPayload(snapshot,cachedState?.broadcast));
+    return {uid,queueKey,snapshot};
+  }
   async function cacheBroadcast(payload){const uid=activeUid||uidOf(cachedState);if(!uid)throw new Error('पहले online Login करें, फिर offline graphics सेव हो सकेंगी।');const queueKey=key(uid,'broadcast'),version=String(payload.eventId||Date.now());await store?.put(queueKey,{payload:clone(payload),version});if(cachedState){cachedState.broadcast={...(cachedState.broadcast||{}),...clone(payload)};await saveState(cachedState);}emitPublic(publicPayload(cachedState?.activeMatch,cachedState?.broadcast));return {uid,queueKey,version};}
-  function scheduleSync(delay=120){if(!navigator.onLine)return;if(syncRetryTimer)clearTimeout(syncRetryTimer);syncRetryTimer=setTimeout(()=>{syncRetryTimer=null;if(syncing){scheduleSync(180);return;}void syncNow();},Math.max(50,Number(delay)||120));}
+  function scheduleSync(delay=220){
+    if(!navigator.onLine)return;
+    if(syncing){syncRequested=true;return;}
+    if(syncRetryTimer)clearTimeout(syncRetryTimer);
+    syncRetryTimer=setTimeout(()=>{
+      syncRetryTimer=null;
+      if(syncing){syncRequested=true;return;}
+      void syncNow();
+    },Math.max(50,Number(delay)||220));
+  }
   async function syncNow(){
-    if(syncing||!navigator.onLine)return false;syncing=true;let rerunSync=false;clearTimeout(syncStatusTimer);syncStatusTimer=setTimeout(()=>{if(syncing)localStatus('syncing','स्कोर device पर सुरक्षित है; Firebase में background upload चल रहा है।');},700);
+    if(syncing||!navigator.onLine){if(syncing)syncRequested=true;return false;}syncing=true;syncRequested=false;let rerunSync=false;clearTimeout(syncStatusTimer);syncStatusTimer=setTimeout(()=>{if(syncing)localStatus('syncing','स्कोर device पर सुरक्षित है; Firebase में background upload चल रहा है।');},700);
     try{
       const state=await readState(),uid=activeUid||uidOf(state);if(!uid){localStatus('offline','Login करें; saved offline data इस device पर सुरक्षित है।');return false;}
       const matchRows=await records('queue:'+uid+':match:');
@@ -77,7 +105,7 @@
       if(broadcastRow){const result=await apiRequest(new URL('/api/broadcast',location.href),{method:'POST',body:JSON.stringify(broadcastRow.payload)});if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast save failed');const latest=await store?.get(key(uid,'broadcast'));if(latest?.version===broadcastRow.version)await store?.remove(key(uid,'broadcast'));}
       const pending=(await records('queue:'+uid+':')).length;rerunSync=pending>0;syncFailureCount=0;localStatus(pending?'syncing':'synced',pending?pending+' बदलाव Sync के लिए queue में हैं।':'सभी बदलाव Firebase से Sync हो गए।');return pending===0;
     }catch(error){syncFailureCount=Math.min(6,syncFailureCount+1);const detail=String(error?.message||'Sync अभी पूरा नहीं हुआ; फिर प्रयास होगा।');window.__JC_LAST_SYNC_ERROR__=detail;localStatus('error',detail);console.error('Jangid Firebase background sync failed:',error);return false;}
-    finally{syncing=false;clearTimeout(syncStatusTimer);syncStatusTimer=null;if(rerunSync&&navigator.onLine)scheduleSync(180);}
+    finally{syncing=false;clearTimeout(syncStatusTimer);syncStatusTimer=null;if((rerunSync||syncRequested)&&navigator.onLine){syncRequested=false;scheduleSync(160);}}
   }
   window.JangidOfflineSync={syncNow,getStatus:()=>({online:navigator.onLine,userId:activeUid}),getCachedState:readState};
   window.fetch=async(input,init={})=>{
@@ -103,8 +131,7 @@
       if(url.pathname==='/api/match/state'&&method==='POST'){
         const saved=await cacheMatch(body.match);
         localStatus(navigator.onLine?'saved':'offline',navigator.onLine?'स्कोर device पर सुरक्षित है; Firebase में background upload queue हो गई है।':'स्कोर device पर सुरक्षित है; internet आने पर Sync होगा।');
-        requestBackgroundSync();
-        if(navigator.onLine)scheduleSync(100);
+        if(navigator.onLine)scheduleSync(220);else requestBackgroundSync();
         return toResponse({status:200,body:{ok:true,queued:true,localFirst:true,match:saved.snapshot}});
       }
       if(url.pathname==='/api/match/finish'&&method==='POST'){
@@ -118,8 +145,7 @@
       if(url.pathname==='/api/broadcast'&&method==='POST'){
         await cacheBroadcast(body);
         localStatus(navigator.onLine?'saved':'offline',navigator.onLine?'Broadcast graphics device पर सेव हैं; Firebase background में upload होंगी।':'Broadcast graphics device पर सेव हैं; reconnect पर Sync होंगी।');
-        requestBackgroundSync();
-        if(navigator.onLine)scheduleSync(100);
+        if(navigator.onLine)scheduleSync(220);else requestBackgroundSync();
         return toResponse({status:200,body:{ok:true,queued:true,localFirst:true}});
       }
       if((url.pathname==='/api/login'||url.pathname==='/api/admin/login')&&method==='POST'){
