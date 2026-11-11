@@ -39,7 +39,7 @@
       const tx=db.transaction(STORE,'readonly'),objectStore=tx.objectStore(STORE);
       // The store's primary key is the record key, so a bounded range reads only this queue.
       // This avoids loading cached account and public-match data during every sync check.
-      const range=prefix?IDBKeyRange.bound(String(prefix),String(prefix)+'\\uffff'):null;
+      const range=prefix?IDBKeyRange.bound(String(prefix),String(prefix)+'\uffff'):null;
       const request=range?objectStore.getAll(range):objectStore.getAll();
       request.onsuccess=()=>resolve((request.result||[]).filter(x=>String(x.key).startsWith(prefix)));
       request.onerror=()=>reject(request.error);
