@@ -140,7 +140,7 @@ async function saveMatch(uid,match) {
   const privateData=cleanData(enriched);
   const publicData=cleanData(publicMatchSnapshot(enriched));
   // Commit both documents in one Firestore request so they stay in sync atomically.
-  // Match Start writes the active pointer; don't rewrite it after every ball.
+  // Match Start writes the active pointer transactionally; don't rewrite it after every ball.
   const batch=writeBatch(db);
   batch.set(ownerDoc(uid,'matches',m.id),privateData);
   batch.set(publicDoc('publicMatches',m.id),publicData);
