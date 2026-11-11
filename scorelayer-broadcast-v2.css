@@ -1,226 +1,264 @@
-/* Jangid Cricinfo · ICC World Cup compact broadcast scorebar.
-   One fixed horizontal layout; every field is an independent, colour-coded block.
-   Container-query typography scales with the actual output width, not fixed pixels. */
-#scoreBar.scoreBar.jlWorldCupScorebar{
- position:fixed!important;left:50%!important;right:auto!important;top:auto!important;bottom:clamp(7px,1.5vh,18px)!important;
- width:min(96vw,1660px)!important;max-width:96vw!important;min-width:0!important;
- height:clamp(58px,5.9vw,94px)!important;min-height:0!important;max-height:94px!important;
- display:grid!important;grid-template-columns:minmax(0,1.16fr) minmax(0,1.12fr) minmax(0,.82fr) minmax(0,1.12fr)!important;
- grid-template-areas:"batters score target bowler"!important;gap:clamp(3px,.28vw,6px)!important;
- box-sizing:border-box!important;padding:0!important;margin:0!important;overflow:visible!important;
- transform:translateX(-50%)!important;transform-origin:center bottom!important;
+/* International TV cricket scorebar — rebuilt for OBS 16:9.
+   A single, deeper lower-third with separate batter, score, target and bowler zones. */
+#scoreBar.scoreBar.jlInternationalScorebar{
+ position:fixed!important;left:50%!important;right:auto!important;top:auto!important;bottom:clamp(8px,1.5vh,18px)!important;
+ width:min(97vw,1820px)!important;max-width:97vw!important;min-width:0!important;
+ height:clamp(102px,7.2vw,128px)!important;min-height:102px!important;max-height:128px!important;
+ display:grid!important;grid-template-columns:minmax(0,1.34fr) minmax(0,.83fr) minmax(0,.82fr) minmax(0,1.18fr)!important;
+ grid-template-areas:"batting score target bowling"!important;grid-template-rows:minmax(0,1fr)!important;
+ gap:clamp(3px,.25cqi,6px)!important;padding:0!important;margin:0!important;box-sizing:border-box!important;
+ overflow:visible!important;transform:translateX(-50%)!important;transform-origin:center bottom!important;
  background:transparent!important;background-color:transparent!important;border:0!important;border-radius:0!important;
  box-shadow:none!important;outline:0!important;isolation:isolate!important;container-type:inline-size!important;
- color:#fff!important;font-family:Arial,Helvetica,sans-serif!important;font-synthesis:none!important;
+ font-family:"Arial Narrow","Roboto Condensed",Arial,Helvetica,sans-serif!important;font-synthesis:none!important;color:#fff!important;
+ --intl-line:#ffffff44;--intl-muted:#e7e9f0;--intl-text:#fff;--intl-accent:#ffd45f;
+ --intl-batting:linear-gradient(110deg,#c71e31,#861729);
+ --intl-score:linear-gradient(135deg,#101c34,#1e3f68);
+ --intl-target:linear-gradient(145deg,#ffe27a,#d8a832);
+ --intl-bowling:linear-gradient(110deg,#ec7138,#b93627);
 }
-#scoreBar.scoreBar.jlWorldCupScorebar::before,#scoreBar.scoreBar.jlWorldCupScorebar::after{display:none!important;content:none!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcPanel{
+#scoreBar.scoreBar.jlInternationalScorebar::before,#scoreBar.scoreBar.jlInternationalScorebar::after{content:none!important;display:none!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlPanel{
  position:relative!important;display:flex!important;align-items:stretch!important;justify-content:center!important;
  min-width:0!important;min-height:0!important;height:100%!important;box-sizing:border-box!important;
- overflow:hidden!important;padding:clamp(5px,.48cqi,10px)!important;border:1px solid #ffffff35!important;
- border-radius:2px!important;box-shadow:0 5px 15px #0007,inset 0 1px 0 #ffffff28!important;
- color:#fff!important;isolation:isolate!important;
+ padding:clamp(5px,.42cqi,9px)!important;overflow:hidden!important;
+ border:1px solid var(--intl-line)!important;border-radius:2px!important;
+ box-shadow:0 5px 15px #0008,inset 0 1px 0 #ffffff24!important;color:var(--intl-text)!important;isolation:isolate!important;
 }
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterPanel{grid-area:batters!important;align-items:center!important;gap:clamp(5px,.55cqi,10px)!important;background:linear-gradient(112deg,#c91e31 0%,#891626 100%)!important;border-left:4px solid #ffce51!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScorePanel{grid-area:score!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:clamp(1px,.18cqi,4px)!important;background:linear-gradient(135deg,#101d31 0%,#1e3a60 100%)!important;border-top:3px solid #ff9d38!important;text-align:center!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcTargetPanel{grid-area:target!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:clamp(1px,.14cqi,3px)!important;background:linear-gradient(145deg,#ffe16a 0%,#d7a92f 100%)!important;border:1px solid #fff0a8!important;color:#261d08!important;text-align:center!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBowlerPanel{grid-area:bowler!important;align-items:center!important;gap:clamp(4px,.45cqi,9px)!important;background:linear-gradient(110deg,#ee7137 0%,#c54027 100%)!important;border-right:4px solid #ffd05d!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcLogo{
- position:relative!important;display:grid!important;place-items:center!important;flex:0 0 clamp(23px,2.15cqi,38px)!important;
- width:clamp(23px,2.15cqi,38px)!important;height:clamp(23px,2.15cqi,38px)!important;
- border:1px solid #ffffffa8!important;border-radius:50%!important;background:#f5f7fa!important;
- overflow:hidden!important;box-shadow:0 2px 8px #0005!important;color:#19283b!important;
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBattingPanel{
+ grid-area:batting!important;align-items:center!important;gap:clamp(5px,.4cqi,9px)!important;
+ background:var(--intl-batting)!important;border-left:4px solid var(--intl-accent)!important;
 }
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcLogo img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important;padding:2px!important;background:#fff!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcLogo b{font-size:clamp(8px,.7cqi,13px)!important;font-weight:1000!important;color:#17263b!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterContent,#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBowlerContent{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;justify-content:center!important;min-width:0!important;gap:clamp(1px,.12cqi,3px)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcPanelLabel{
- display:flex!important;align-items:center!important;gap:6px!important;min-width:0!important;
- font-size:clamp(7px,.62cqi,11px)!important;line-height:1.05!important;font-weight:1000!important;
- letter-spacing:.08em!important;color:#fff!important;white-space:nowrap!important;text-transform:uppercase!important;
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScorePanel{
+ grid-area:score!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+ gap:clamp(3px,.24cqi,6px)!important;text-align:center!important;
+ background:var(--intl-score)!important;border-top:4px solid #f8a548!important;
 }
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcPanelLabel span{font-size:.82em!important;font-weight:800!important;opacity:.75!important;letter-spacing:.04em!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterRow{
- display:grid!important;grid-template-columns:clamp(10px,.8cqi,15px) minmax(0,1fr) auto!important;
- align-items:center!important;gap:clamp(3px,.28cqi,6px)!important;min-width:0!important;min-height:0!important;
- padding:clamp(1px,.15cqi,3px) clamp(3px,.35cqi,7px)!important;border-radius:2px!important;
- background:#450d1b4a!important;border-bottom:1px solid #ffffff30!important;line-height:1.05!important;
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetPanel{
+ grid-area:target!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;
+ gap:clamp(2px,.18cqi,5px)!important;text-align:center!important;
+ background:var(--intl-target)!important;border:1px solid #fff1a8!important;color:#251d0b!important;
 }
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcStrike{font-size:clamp(8px,.7cqi,13px)!important;color:#ffdc6b!important;text-align:center!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterName{display:block!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:clamp(8px,.82cqi,15px)!important;font-weight:850!important;color:#fff!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterStats{display:flex!important;align-items:baseline!important;gap:3px!important;white-space:nowrap!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterStats strong{font-size:clamp(10px,1cqi,17px)!important;font-weight:1000!important;color:#fff!important;font-variant-numeric:tabular-nums!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterStats small{font-size:clamp(7px,.64cqi,11px)!important;color:#ffe7df!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterRow.isNonStriker{opacity:.94!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreTop,#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreBottom{
- display:flex!important;align-items:center!important;justify-content:center!important;gap:clamp(4px,.5cqi,9px)!important;
- max-width:100%!important;white-space:nowrap!important;font-size:clamp(7px,.62cqi,11px)!important;
- font-weight:900!important;letter-spacing:.055em!important;color:#d5e2f4!important;line-height:1.05!important;
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlingPanel{
+ grid-area:bowling!important;align-items:center!important;gap:clamp(5px,.4cqi,9px)!important;
+ background:var(--intl-bowling)!important;border-right:4px solid var(--intl-accent)!important;
 }
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreTop{width:100%!important;justify-content:space-between!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreTop span{display:flex!important;align-items:center!important;gap:4px!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreTop span i{display:inline-block!important;width:6px!important;height:6px!important;border-radius:50%!important;background:#ff5366!important;box-shadow:0 0 7px #ff5366!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreTop>b{padding:2px 5px!important;border-radius:2px!important;background:#ffffff1c!important;color:#ffcf75!important;font-size:.9em!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreMain{display:flex!important;align-items:baseline!important;justify-content:center!important;gap:clamp(3px,.35cqi,7px)!important;min-width:0!important;white-space:nowrap!important;line-height:.86!important;font-variant-numeric:tabular-nums!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreMain strong{font-size:clamp(24px,2.65cqi,43px)!important;line-height:.9!important;font-weight:1000!important;letter-spacing:-.055em!important;color:#ff9d42!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreMain span{font-size:clamp(16px,1.5cqi,25px)!important;color:#fff!important;font-weight:700!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreMain b{font-size:clamp(18px,1.95cqi,32px)!important;color:#fff!important;font-weight:950!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreBottom{gap:6px!important;color:#d5e2f4!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreBottom i{width:3px!important;height:3px!important;border-radius:50%!important;background:#ffbf65!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcTargetTeam{
- display:block!important;width:100%!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;
- white-space:nowrap!important;font-size:clamp(7px,.58cqi,10px)!important;font-weight:1000!important;
- letter-spacing:.045em!important;color:#493609!important;line-height:1.05!important;
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTeamLogo{
+ flex:0 0 clamp(24px,2.1cqi,39px)!important;display:grid!important;place-items:center!important;
+ width:clamp(24px,2.1cqi,39px)!important;height:clamp(24px,2.1cqi,39px)!important;position:relative!important;
+ overflow:hidden!important;border:1px solid #ffffffa8!important;border-radius:50%!important;background:#f5f7fb!important;
+ box-shadow:0 2px 8px #0006!important;color:#14243a!important;
 }
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcTargetTeam b{font-size:1.08em!important;color:#1d1a11!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcTargetValue{display:block!important;font-size:clamp(21px,2.25cqi,38px)!important;line-height:.9!important;font-weight:1000!important;letter-spacing:-.045em!important;color:#171b23!important;font-variant-numeric:tabular-nums!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcTargetNeed{
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTeamLogo img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important;padding:2px!important;background:#fff!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTeamLogo b{font-size:clamp(12px,1.15cqi,20px)!important;line-height:1!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBattingContent,#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlingContent{
+ display:flex!important;flex:1 1 auto!important;flex-direction:column!important;justify-content:center!important;
+ min-width:0!important;gap:clamp(2px,.12cqi,4px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlSectionHead{
+ display:flex!important;align-items:center!important;justify-content:space-between!important;gap:7px!important;
+ min-width:0!important;line-height:1!important;white-space:nowrap!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlSectionHead strong{
+ font-size:clamp(9px,.78cqi,14px)!important;font-weight:1000!important;letter-spacing:.09em!important;color:#fff!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlSectionHead span{
+ overflow:hidden!important;text-overflow:ellipsis!important;font-size:clamp(6px,.52cqi,9px)!important;
+ font-weight:850!important;letter-spacing:.055em!important;color:#ffe3d9!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterHead,#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterRow{
+ display:grid!important;grid-template-columns:minmax(0,1fr) clamp(52px,4.1cqi,76px) clamp(16px,1.35cqi,24px) clamp(16px,1.35cqi,24px) clamp(32px,2.65cqi,48px)!important;
+ align-items:center!important;gap:clamp(2px,.18cqi,4px)!important;min-width:0!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterHead{
+ padding:1px 4px!important;font-size:clamp(6px,.5cqi,9px)!important;line-height:1!important;
+ font-weight:950!important;letter-spacing:.055em!important;color:#ffe5dd!important;text-align:center!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterHead span:first-child{text-align:left!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterRow{
+ padding:clamp(2px,.16cqi,4px) 4px!important;min-height:clamp(18px,1.55cqi,28px)!important;
+ border-top:1px solid #ffffff26!important;background:#3b0b1b35!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterName{
+ display:block!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+ font-size:clamp(9px,.92cqi,16px)!important;line-height:1.05!important;font-weight:950!important;color:#fff!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore{display:flex!important;align-items:baseline!important;justify-content:center!important;gap:3px!important;white-space:nowrap!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore b{font-size:clamp(10px,1.08cqi,19px)!important;line-height:1!important;font-weight:1000!important;color:#fff!important;font-variant-numeric:tabular-nums!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore small{font-size:clamp(7px,.65cqi,11px)!important;color:#ffe4dd!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBoundaryStat{text-align:center!important;font-size:clamp(9px,.86cqi,15px)!important;font-weight:950!important;color:#fff!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlStrikeRate{text-align:center!important;font-size:clamp(8px,.77cqi,13px)!important;font-weight:950!important;color:#ffe49a!important;font-variant-numeric:tabular-nums!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlPartnership{
+ display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;
+ padding:2px 4px 0!important;min-width:0!important;line-height:1!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlPartnership span{font-size:clamp(6px,.5cqi,9px)!important;font-weight:950!important;letter-spacing:.06em!important;color:#ffe0d8!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlPartnership>b{font-size:clamp(9px,.85cqi,14px)!important;font-weight:1000!important;color:#fff!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlPartnership small{font-size:.78em!important;font-weight:700!important;color:#ffe0d8!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreHeader{
+ display:flex!important;align-items:center!important;justify-content:space-between!important;gap:5px!important;
+ width:100%!important;min-width:0!important;font-size:clamp(7px,.61cqi,11px)!important;
+ line-height:1!important;font-weight:1000!important;letter-spacing:.055em!important;color:#dbe9fb!important;white-space:nowrap!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreHeader>span{display:flex!important;align-items:center!important;gap:5px!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreHeader>span i{display:inline-block!important;width:6px!important;height:6px!important;border-radius:50%!important;background:#ff4f68!important;box-shadow:0 0 7px #ff4f68!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreHeader>b{
+ max-width:48%!important;overflow:hidden!important;text-overflow:ellipsis!important;padding:3px 5px!important;
+ border-radius:2px!important;background:#ffffff18!important;color:#ffdb77!important;font-size:.92em!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreValue{
+ display:flex!important;align-items:baseline!important;justify-content:center!important;gap:clamp(4px,.42cqi,8px)!important;
+ min-width:0!important;white-space:nowrap!important;line-height:.82!important;font-variant-numeric:tabular-nums!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreValue strong{
+ font-size:clamp(31px,3.2cqi,59px)!important;line-height:.88!important;font-weight:1000!important;
+ letter-spacing:-.055em!important;color:#ffad4d!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreValue span{font-size:clamp(20px,1.8cqi,32px)!important;font-weight:750!important;color:#fff!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreValue b{font-size:clamp(23px,2.35cqi,43px)!important;line-height:.9!important;font-weight:1000!important;color:#fff!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreStats{
+ display:flex!important;align-items:center!important;justify-content:center!important;gap:clamp(7px,.8cqi,15px)!important;
+ min-width:0!important;max-width:100%!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreStats>span{display:flex!important;align-items:baseline!important;gap:3px!important;white-space:nowrap!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreStats b{font-size:clamp(9px,.9cqi,16px)!important;font-weight:1000!important;color:#fff!important;font-variant-numeric:tabular-nums!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlScoreStats small{font-size:clamp(6px,.48cqi,9px)!important;font-weight:900!important;color:#c5d7ed!important;letter-spacing:.05em!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetHeader{
  display:block!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
- font-size:clamp(6px,.53cqi,9px)!important;line-height:1.05!important;font-weight:900!important;letter-spacing:.01em!important;color:#40300d!important;
+ font-size:clamp(7px,.65cqi,11px)!important;line-height:1.1!important;font-weight:1000!important;
+ letter-spacing:.045em!important;color:#4a390c!important;
 }
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcTargetNeed b{font-size:1.08em!important;color:#171b23!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBowlerMain{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:5px!important;min-width:0!important;width:100%!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBowlerName{display:block!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:clamp(9px,.92cqi,16px)!important;line-height:1.05!important;font-weight:950!important;color:#fff!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBowlerMain>strong{flex:0 0 auto!important;font-size:clamp(12px,1.12cqi,19px)!important;line-height:1!important;font-weight:1000!important;color:#fff!important;white-space:nowrap!important;font-variant-numeric:tabular-nums!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBowlerMeta{font-size:clamp(6px,.52cqi,9px)!important;line-height:1!important;color:#ffe8d8!important;font-weight:900!important;white-space:nowrap!important;letter-spacing:.04em!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBowlerMeta span{padding:0 3px!important;color:#ffe16a!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBallRail{display:flex!important;align-items:center!important;gap:clamp(2px,.18cqi,4px)!important;min-width:0!important;max-width:100%!important;overflow:hidden!important;white-space:nowrap!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBallRail>small{flex:0 0 auto!important;margin-right:2px!important;font-size:clamp(6px,.5cqi,9px)!important;font-weight:1000!important;color:#ffe3ce!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBall{display:grid!important;place-items:center!important;flex:0 0 clamp(13px,1.05cqi,18px)!important;width:clamp(13px,1.05cqi,18px)!important;height:clamp(13px,1.05cqi,18px)!important;border:1px solid #ffffff4a!important;border-radius:1px!important;background:#702e22!important;color:#fff!important;font-size:clamp(7px,.58cqi,10px)!important;font-weight:1000!important;line-height:1!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBall.isFour{background:#087d69!important;border-color:#69e3bc!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBall.isSix{background:#9c640c!important;border-color:#ffda70!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBall.isWicket{background:#8d1127!important;border-color:#ff8295!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBall.isWide,#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBall.isNoBall{background:#604091!important;border-color:#d2b6ff!important}
-#scoreBar.scoreBar.jlWorldCupScorebar .jcWcBallEmpty{font-size:8px!important;color:#fff!important}
-
-/* The independent palette selector changes colour only; geometry and positions never move. */
-#scoreBar.scoreBar.jlWorldCupScorebar.color1 .jcWcBatterPanel{background:linear-gradient(112deg,#c91e31,#891626)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color1 .jcWcScorePanel{background:linear-gradient(135deg,#101d31,#1e3a60)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color1 .jcWcTargetPanel{background:linear-gradient(145deg,#ffe16a,#d7a92f)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color1 .jcWcBowlerPanel{background:linear-gradient(110deg,#ee7137,#c54027)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color2 .jcWcBatterPanel{background:linear-gradient(110deg,#0d4976,#092c51)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color2 .jcWcScorePanel{background:linear-gradient(135deg,#061b31,#164b70)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color2 .jcWcTargetPanel{background:linear-gradient(145deg,#f8d66a,#b8882b)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color2 .jcWcBowlerPanel{background:linear-gradient(110deg,#176d78,#0d4b58)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color3 .jcWcBatterPanel{background:linear-gradient(110deg,#176343,#0d3e2b)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color3 .jcWcScorePanel{background:linear-gradient(135deg,#092b26,#135a4c)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color3 .jcWcTargetPanel{background:linear-gradient(145deg,#e6e776,#a7a83c)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color3 .jcWcBowlerPanel{background:linear-gradient(110deg,#386c36,#254c29)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color4 .jcWcBatterPanel{background:linear-gradient(110deg,#7b244c,#441934)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color4 .jcWcScorePanel{background:linear-gradient(135deg,#241833,#55315f)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color4 .jcWcTargetPanel{background:linear-gradient(145deg,#f2c3dc,#c17ca8)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color4 .jcWcBowlerPanel{background:linear-gradient(110deg,#91404e,#652a37)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color5 .jcWcBatterPanel{background:linear-gradient(110deg,#9a4e13,#5b2b0a)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color5 .jcWcScorePanel{background:linear-gradient(135deg,#2b1d10,#6d4216)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color5 .jcWcTargetPanel{background:linear-gradient(145deg,#fff0a1,#dcae3c)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color5 .jcWcBowlerPanel{background:linear-gradient(110deg,#b75c1b,#74320f)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color6 .jcWcBatterPanel{background:linear-gradient(110deg,#414f69,#25334b)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color6 .jcWcScorePanel{background:linear-gradient(135deg,#101827,#293a5a)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color6 .jcWcTargetPanel{background:linear-gradient(145deg,#f1f2f4,#bdc9d9)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color6 .jcWcBowlerPanel{background:linear-gradient(110deg,#4a6f94,#284b72)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color7 .jcWcBatterPanel{background:linear-gradient(110deg,#653d92,#3d245e)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color7 .jcWcScorePanel{background:linear-gradient(135deg,#19162f,#48306a)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color7 .jcWcTargetPanel{background:linear-gradient(145deg,#ecd0ff,#c8a3e3)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color7 .jcWcBowlerPanel{background:linear-gradient(110deg,#8d4f9e,#592b73)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color8 .jcWcBatterPanel{background:linear-gradient(110deg,#0c6665,#084341)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color8 .jcWcScorePanel{background:linear-gradient(135deg,#082d34,#12626b)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color8 .jcWcTargetPanel{background:linear-gradient(145deg,#95ece5,#42b9b1)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color8 .jcWcBowlerPanel{background:linear-gradient(110deg,#167b80,#105056)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color9 .jcWcBatterPanel{background:linear-gradient(110deg,#343c45,#1a232b)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color9 .jcWcScorePanel{background:linear-gradient(135deg,#0c1720,#374756)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color9 .jcWcTargetPanel{background:linear-gradient(145deg,#dce5e8,#9facb5)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color9 .jcWcBowlerPanel{background:linear-gradient(110deg,#596773,#34414c)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color10 .jcWcBatterPanel{background:linear-gradient(110deg,#842d2d,#4c191f)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color10 .jcWcScorePanel{background:linear-gradient(135deg,#151b2a,#374c6d)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color10 .jcWcTargetPanel{background:linear-gradient(145deg,#e9bd72,#b48140)!important}
-#scoreBar.scoreBar.jlWorldCupScorebar.color10 .jcWcBowlerPanel{background:linear-gradient(110deg,#a64b32,#6c2b25)!important}
-
-/* Control Board's miniature is the same composition, scaled to its preview box. */
-#layerPreview.layerPreview.jlWorldCupPreview{
- position:relative!important;display:grid!important;grid-template-columns:minmax(0,1.16fr) minmax(0,1.12fr) minmax(0,.82fr) minmax(0,1.12fr)!important;
- grid-template-areas:"batters score target bowler"!important;grid-template-rows:82px!important;gap:3px!important;
- width:100%!important;height:88px!important;min-height:88px!important;padding:0!important;box-sizing:border-box!important;
- overflow:hidden!important;border:0!important;border-radius:2px!important;background:#101d31!important;container-type:inline-size!important;
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetHeader b{color:#171c26!important;font-size:1.08em!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetValue{
+ display:block!important;max-width:100%!important;font-size:clamp(30px,3cqi,54px)!important;
+ line-height:.85!important;font-weight:1000!important;letter-spacing:-.05em!important;
+ color:#1a1e26!important;font-variant-numeric:tabular-nums!important;
 }
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvPanel{display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:stretch!important;gap:3px!important;min-width:0!important;min-height:0!important;overflow:hidden!important;padding:4px!important;box-sizing:border-box!important;color:#fff!important;font-weight:900!important}
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvBatter{grid-area:batters!important;background:linear-gradient(110deg,#c91e31,#891626)!important}
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvScore{grid-area:score!important;align-items:center!important;text-align:center!important;background:linear-gradient(135deg,#101d31,#1e3a60)!important;border-top:3px solid #ff9d38!important}
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvTarget{grid-area:target!important;align-items:center!important;text-align:center!important;background:linear-gradient(145deg,#ffe16a,#d7a92f)!important;color:#261d08!important}
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvBowler{grid-area:bowler!important;background:linear-gradient(110deg,#ee7137,#c54027)!important}
-#layerPreview.layerPreview.jlWorldCupPreview small{display:block!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:clamp(6px,.7cqi,9px)!important;line-height:1.1!important;color:inherit!important;opacity:.8!important}
-#layerPreview.layerPreview.jlWorldCupPreview b{display:block!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:clamp(7px,1cqi,12px)!important;line-height:1.15!important;color:inherit!important}
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvScore strong{font-size:clamp(19px,3.2cqi,31px)!important;color:#ff9d42!important;line-height:1!important}
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvTarget strong{font-size:clamp(18px,2.4cqi,27px)!important;line-height:1!important;color:#171b23!important}
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvPlayer{display:flex!important;justify-content:space-between!important;gap:3px!important;min-width:0!important;padding:2px 3px!important;background:#450d1b4a!important}
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvBalls{display:flex!important;gap:2px!important;align-items:center!important}
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvBalls i{display:grid!important;place-items:center!important;width:12px!important;height:12px!important;background:#702e22!important;color:#fff!important;font-size:7px!important;font-style:normal!important}
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvBalls i.four{background:#087d69!important}
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvBalls i.six{background:#9c640c!important}
-#layerPreview.layerPreview.jlWorldCupPreview .wcPvBalls i.wicket{background:#8d1127!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetStats{
+ display:flex!important;align-items:center!important;justify-content:center!important;gap:clamp(4px,.45cqi,9px)!important;
+ min-width:0!important;max-width:100%!important;white-space:nowrap!important;
+ font-size:clamp(6px,.53cqi,9px)!important;line-height:1.05!important;font-weight:950!important;color:#3b300e!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetStats>span{display:inline-flex!important;align-items:baseline!important;gap:2px!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetStats b{font-size:1.12em!important;color:#141921!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetPending{font-size:clamp(7px,.65cqi,11px)!important;letter-spacing:.05em!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerName{
+ display:block!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+ font-size:clamp(11px,1.05cqi,19px)!important;line-height:1.05!important;font-weight:1000!important;color:#fff!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats{
+ display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;align-items:center!important;gap:4px!important;
+ min-width:0!important;width:100%!important;padding:2px 0!important;border-top:1px solid #ffffff35!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats>span{display:flex!important;align-items:baseline!important;justify-content:center!important;gap:3px!important;min-width:0!important;white-space:nowrap!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats b{font-size:clamp(9px,.92cqi,16px)!important;font-weight:1000!important;color:#fff!important;font-variant-numeric:tabular-nums!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats small{font-size:clamp(6px,.52cqi,9px)!important;font-weight:950!important;color:#ffe1cf!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlThisOver{display:flex!important;align-items:center!important;gap:clamp(4px,.45cqi,8px)!important;min-width:0!important;width:100%!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlThisOver>small{flex:0 0 auto!important;font-size:clamp(6px,.49cqi,9px)!important;line-height:1!important;font-weight:1000!important;color:#ffe1d2!important;letter-spacing:.05em!important;white-space:nowrap!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBallRail{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:clamp(2px,.2cqi,4px)!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBall{
+ display:grid!important;place-items:center!important;flex:0 0 clamp(15px,1.12cqi,21px)!important;
+ width:clamp(15px,1.12cqi,21px)!important;height:clamp(15px,1.12cqi,21px)!important;
+ border:1px solid #ffffff62!important;border-radius:2px!important;background:#71301f!important;color:#fff!important;
+ font-size:clamp(7px,.62cqi,11px)!important;font-weight:1000!important;line-height:1!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBall.isFour{background:#087d69!important;border-color:#6ae4bd!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBall.isSix{background:#a66b0c!important;border-color:#ffdc78!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBall.isWicket{background:#a81734!important;border-color:#ff899d!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBall.isWide,#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBall.isNoBall{background:#654392!important;border-color:#d2b8ff!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBall.isLegBye,#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBall.isBye{background:#185a91!important;border-color:#87cbff!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBallEmpty{font-size:9px!important;color:#fff!important}
+
+/* Ten selectable colour combinations; only colours change, never the field positions. */
+#scoreBar.scoreBar.jlInternationalScorebar.color1{--intl-batting:linear-gradient(110deg,#c71e31,#861729);--intl-score:linear-gradient(135deg,#101c34,#1e3f68);--intl-target:linear-gradient(145deg,#ffe27a,#d8a832);--intl-bowling:linear-gradient(110deg,#ec7138,#b93627);--intl-accent:#ffd45f}
+#scoreBar.scoreBar.jlInternationalScorebar.color2{--intl-batting:linear-gradient(110deg,#0d4e82,#082b54);--intl-score:linear-gradient(135deg,#071c36,#164d7c);--intl-target:linear-gradient(145deg,#f8df75,#c59831);--intl-bowling:linear-gradient(110deg,#176d78,#0d4657);--intl-accent:#ffe06b}
+#scoreBar.scoreBar.jlInternationalScorebar.color3{--intl-batting:linear-gradient(110deg,#176344,#0d3c2b);--intl-score:linear-gradient(135deg,#092b26,#135a4c);--intl-target:linear-gradient(145deg,#e6e776,#a7a83c);--intl-bowling:linear-gradient(110deg,#386c36,#254c29);--intl-accent:#d9ed72}
+#scoreBar.scoreBar.jlInternationalScorebar.color4{--intl-batting:linear-gradient(110deg,#7b244c,#441934);--intl-score:linear-gradient(135deg,#241833,#55315f);--intl-target:linear-gradient(145deg,#f2c3dc,#c17ca8);--intl-bowling:linear-gradient(110deg,#91404e,#652a37);--intl-accent:#ffc2e2}
+#scoreBar.scoreBar.jlInternationalScorebar.color5{--intl-batting:linear-gradient(110deg,#9a4e13,#5b2b0a);--intl-score:linear-gradient(135deg,#2b1d10,#6d4216);--intl-target:linear-gradient(145deg,#fff0a1,#dcae3c);--intl-bowling:linear-gradient(110deg,#b75c1b,#74320f);--intl-accent:#ffe17d}
+#scoreBar.scoreBar.jlInternationalScorebar.color6{--intl-batting:linear-gradient(110deg,#414f69,#25334b);--intl-score:linear-gradient(135deg,#101827,#293a5a);--intl-target:linear-gradient(145deg,#f1f2f4,#bdc9d9);--intl-bowling:linear-gradient(110deg,#4a6f94,#284b72);--intl-accent:#b8dcff}
+#scoreBar.scoreBar.jlInternationalScorebar.color7{--intl-batting:linear-gradient(110deg,#653d92,#3d245e);--intl-score:linear-gradient(135deg,#19162f,#48306a);--intl-target:linear-gradient(145deg,#ecd0ff,#c8a3e3);--intl-bowling:linear-gradient(110deg,#8d4f9e,#592b73);--intl-accent:#f1c9ff}
+#scoreBar.scoreBar.jlInternationalScorebar.color8{--intl-batting:linear-gradient(110deg,#0c6665,#084341);--intl-score:linear-gradient(135deg,#082d34,#12626b);--intl-target:linear-gradient(145deg,#95ece5,#42b9b1);--intl-bowling:linear-gradient(110deg,#167b80,#105056);--intl-accent:#6cf5e8}
+#scoreBar.scoreBar.jlInternationalScorebar.color9{--intl-batting:linear-gradient(110deg,#343c45,#1a232b);--intl-score:linear-gradient(135deg,#0c1720,#374756);--intl-target:linear-gradient(145deg,#dce5e8,#9facb5);--intl-bowling:linear-gradient(110deg,#596773,#34414c);--intl-accent:#c5f07b}
+#scoreBar.scoreBar.jlInternationalScorebar.color10{--intl-batting:linear-gradient(110deg,#842d2d,#4c191f);--intl-score:linear-gradient(135deg,#151b2a,#374c6d);--intl-target:linear-gradient(145deg,#e9bd72,#b48140);--intl-bowling:linear-gradient(110deg,#a64b32,#6c2b25);--intl-accent:#ffd18b}
+
+/* Director preview mirrors the live OBS order and includes the restored match detail rows. */
+#layerPreview.layerPreview.jlInternationalPreview{
+ position:relative!important;display:grid!important;grid-template-columns:minmax(0,1.34fr) minmax(0,.83fr) minmax(0,.82fr) minmax(0,1.18fr)!important;
+ grid-template-areas:"batting score target bowling"!important;grid-template-rows:minmax(0,1fr)!important;
+ gap:3px!important;width:100%!important;height:122px!important;min-height:122px!important;padding:0!important;
+ overflow:hidden!important;border:0!important;border-radius:2px!important;background:transparent!important;
+ box-sizing:border-box!important;container-type:inline-size!important;
+}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvPanel{display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:stretch!important;gap:4px!important;min-width:0!important;min-height:0!important;overflow:hidden!important;padding:5px!important;box-sizing:border-box!important;border:1px solid #ffffff40!important;border-radius:2px!important;color:#fff!important;font-weight:900!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvBatting{grid-area:batting!important;background:linear-gradient(110deg,#c71e31,#861729)!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvScore{grid-area:score!important;align-items:center!important;text-align:center!important;background:linear-gradient(135deg,#101c34,#1e3f68)!important;border-top:3px solid #f8a548!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvTarget{grid-area:target!important;align-items:center!important;text-align:center!important;background:linear-gradient(145deg,#ffe27a,#d8a832)!important;color:#251d0b!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvBowling{grid-area:bowling!important;background:linear-gradient(110deg,#ec7138,#b93627)!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvPanel small{display:block!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:clamp(6px,.56cqi,9px)!important;line-height:1.08!important;color:inherit!important;opacity:.86!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvPanel b{display:block!important;max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:clamp(7px,.78cqi,12px)!important;line-height:1.1!important;color:inherit!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvPanel strong{display:block!important;font-size:clamp(18px,2.5cqi,36px)!important;line-height:.95!important;color:#ffad4d!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvScore strong{font-size:clamp(24px,3.1cqi,46px)!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvTarget strong{color:#171c26!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvPlayer{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:3px!important;min-width:0!important;padding:2px 3px!important;background:#3b0b1b35!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvStats{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:3px!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvBalls{display:flex!important;align-items:center!important;gap:2px!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvBalls i{display:grid!important;place-items:center!important;width:12px!important;height:12px!important;background:#71301f!important;color:#fff!important;font-size:7px!important;font-style:normal!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvBalls i.four{background:#087d69!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvBalls i.six{background:#a66b0c!important}
+#layerPreview.layerPreview.jlInternationalPreview .jcPvBalls i.wicket{background:#a81734!important}
+#layerPreview.layerPreview.jlInternationalPreview.color2 .jcPvBatting{background:linear-gradient(110deg,#0d4e82,#082b54)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color2 .jcPvScore{background:linear-gradient(135deg,#071c36,#164d7c)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color2 .jcPvTarget{background:linear-gradient(145deg,#f8df75,#c59831)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color2 .jcPvBowling{background:linear-gradient(110deg,#176d78,#0d4657)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color3 .jcPvBatting{background:linear-gradient(110deg,#176344,#0d3c2b)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color3 .jcPvScore{background:linear-gradient(135deg,#092b26,#135a4c)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color3 .jcPvTarget{background:linear-gradient(145deg,#e6e776,#a7a83c)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color3 .jcPvBowling{background:linear-gradient(110deg,#386c36,#254c29)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color4 .jcPvBatting{background:linear-gradient(110deg,#7b244c,#441934)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color4 .jcPvScore{background:linear-gradient(135deg,#241833,#55315f)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color4 .jcPvTarget{background:linear-gradient(145deg,#f2c3dc,#c17ca8)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color4 .jcPvBowling{background:linear-gradient(110deg,#91404e,#652a37)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color5 .jcPvBatting{background:linear-gradient(110deg,#9a4e13,#5b2b0a)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color5 .jcPvScore{background:linear-gradient(135deg,#2b1d10,#6d4216)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color5 .jcPvTarget{background:linear-gradient(145deg,#fff0a1,#dcae3c)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color5 .jcPvBowling{background:linear-gradient(110deg,#b75c1b,#74320f)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color6 .jcPvBatting{background:linear-gradient(110deg,#414f69,#25334b)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color6 .jcPvScore{background:linear-gradient(135deg,#101827,#293a5a)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color6 .jcPvTarget{background:linear-gradient(145deg,#f1f2f4,#bdc9d9)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color6 .jcPvBowling{background:linear-gradient(110deg,#4a6f94,#284b72)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color7 .jcPvBatting{background:linear-gradient(110deg,#653d92,#3d245e)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color7 .jcPvScore{background:linear-gradient(135deg,#19162f,#48306a)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color7 .jcPvTarget{background:linear-gradient(145deg,#ecd0ff,#c8a3e3)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color7 .jcPvBowling{background:linear-gradient(110deg,#8d4f9e,#592b73)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color8 .jcPvBatting{background:linear-gradient(110deg,#0c6665,#084341)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color8 .jcPvScore{background:linear-gradient(135deg,#082d34,#12626b)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color8 .jcPvTarget{background:linear-gradient(145deg,#95ece5,#42b9b1)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color8 .jcPvBowling{background:linear-gradient(110deg,#167b80,#105056)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color9 .jcPvBatting{background:linear-gradient(110deg,#343c45,#1a232b)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color9 .jcPvScore{background:linear-gradient(135deg,#0c1720,#374756)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color9 .jcPvTarget{background:linear-gradient(145deg,#dce5e8,#9facb5)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color9 .jcPvBowling{background:linear-gradient(110deg,#596773,#34414c)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color10 .jcPvBatting{background:linear-gradient(110deg,#842d2d,#4c191f)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color10 .jcPvScore{background:linear-gradient(135deg,#151b2a,#374c6d)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color10 .jcPvTarget{background:linear-gradient(145deg,#e9bd72,#b48140)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color10 .jcPvBowling{background:linear-gradient(110deg,#a64b32,#6c2b25)!important}
 @media(max-width:900px){
- #scoreBar.scoreBar.jlWorldCupScorebar{width:98vw!important;height:clamp(54px,7.4vw,72px)!important;bottom:6px!important;gap:2px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcPanel{padding:3px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcLogo{display:none!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcPanelLabel{font-size:clamp(6px,.68cqi,9px)!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterName{font-size:clamp(7px,.8cqi,11px)!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterStats strong{font-size:clamp(8px,.9cqi,13px)!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBowlerName{font-size:clamp(8px,.9cqi,12px)!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBallRail>small{display:none!important}
+ #scoreBar.scoreBar.jlInternationalScorebar{width:98vw!important;height:clamp(102px,8vw,118px)!important;gap:2px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlPanel{padding:4px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlTeamLogo{flex-basis:24px!important;width:24px!important;height:24px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterHead,#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterRow{grid-template-columns:minmax(0,1fr) 46px 15px 15px 30px!important;gap:2px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlSectionHead span{font-size:6px!important}
 }
-@media(max-width:520px){
- #scoreBar.scoreBar.jlWorldCupScorebar{width:99vw!important;height:54px!important;bottom:4px!important;grid-template-columns:minmax(0,1.12fr) minmax(0,1.05fr) minmax(0,.82fr) minmax(0,1.05fr)!important;gap:2px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcPanel{padding:2px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcPanelLabel{font-size:6px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcPanelLabel span{display:none!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterRow{grid-template-columns:7px minmax(0,1fr) auto!important;gap:1px!important;padding:1px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterName{font-size:7px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterStats strong{font-size:8px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBatterStats small{font-size:6px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreMain strong{font-size:clamp(18px,4.7vw,25px)!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreMain b{font-size:16px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreTop,#scoreBar.scoreBar.jlWorldCupScorebar .jcWcScoreBottom{font-size:6px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcTargetTeam,#scoreBar.scoreBar.jlWorldCupScorebar .jcWcTargetNeed{font-size:5px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcTargetValue{font-size:19px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBowlerName{font-size:7px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBowlerMain>strong{font-size:9px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBowlerMeta{font-size:5px!important}
- #scoreBar.scoreBar.jlWorldCupScorebar .jcWcBall{width:10px!important;height:10px!important;flex-basis:10px!important;font-size:6px!important}
+@media(max-width:580px){
+ #scoreBar.scoreBar.jlInternationalScorebar{width:99vw!important;height:100px!important;bottom:4px!important;grid-template-columns:minmax(0,1.2fr) minmax(0,.85fr) minmax(0,.82fr) minmax(0,1.1fr)!important;gap:2px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlTeamLogo{display:none!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlPanel{padding:3px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterHead,#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterRow{grid-template-columns:minmax(0,1fr) 37px 12px 12px 25px!important;gap:1px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterName{font-size:7px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore b{font-size:8px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBoundaryStat,#scoreBar.scoreBar.jlInternationalScorebar .jcIntlStrikeRate{font-size:7px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetHeader,#scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetStats{font-size:5px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlTargetValue{font-size:20px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats b{font-size:8px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBall{width:12px!important;height:12px!important;flex-basis:12px!important;font-size:6px!important}
 }
-
-/* Keep the Control Board preview colour in sync with the selected OBS palette. */
-#layerPreview.layerPreview.jlWorldCupPreview.color2 .wcPvBatter{background:linear-gradient(110deg,#0d4976,#092c51)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color2 .wcPvScore{background:linear-gradient(135deg,#061b31,#164b70)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color2 .wcPvTarget{background:linear-gradient(145deg,#f8d66a,#b8882b)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color2 .wcPvBowler{background:linear-gradient(110deg,#176d78,#0d4b58)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color3 .wcPvBatter{background:linear-gradient(110deg,#176343,#0d3e2b)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color3 .wcPvScore{background:linear-gradient(135deg,#092b26,#135a4c)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color3 .wcPvTarget{background:linear-gradient(145deg,#e6e776,#a7a83c)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color3 .wcPvBowler{background:linear-gradient(110deg,#386c36,#254c29)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color4 .wcPvBatter{background:linear-gradient(110deg,#7b244c,#441934)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color4 .wcPvScore{background:linear-gradient(135deg,#241833,#55315f)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color4 .wcPvTarget{background:linear-gradient(145deg,#f2c3dc,#c17ca8)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color4 .wcPvBowler{background:linear-gradient(110deg,#91404e,#652a37)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color5 .wcPvBatter{background:linear-gradient(110deg,#9a4e13,#5b2b0a)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color5 .wcPvScore{background:linear-gradient(135deg,#2b1d10,#6d4216)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color5 .wcPvTarget{background:linear-gradient(145deg,#fff0a1,#dcae3c)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color5 .wcPvBowler{background:linear-gradient(110deg,#b75c1b,#74320f)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color6 .wcPvBatter{background:linear-gradient(110deg,#414f69,#25334b)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color6 .wcPvScore{background:linear-gradient(135deg,#101827,#293a5a)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color6 .wcPvTarget{background:linear-gradient(145deg,#f1f2f4,#bdc9d9)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color6 .wcPvBowler{background:linear-gradient(110deg,#4a6f94,#284b72)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color7 .wcPvBatter{background:linear-gradient(110deg,#653d92,#3d245e)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color7 .wcPvScore{background:linear-gradient(135deg,#19162f,#48306a)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color7 .wcPvTarget{background:linear-gradient(145deg,#ecd0ff,#c8a3e3)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color7 .wcPvBowler{background:linear-gradient(110deg,#8d4f9e,#592b73)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color8 .wcPvBatter{background:linear-gradient(110deg,#0c6665,#084341)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color8 .wcPvScore{background:linear-gradient(135deg,#082d34,#12626b)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color8 .wcPvTarget{background:linear-gradient(145deg,#95ece5,#42b9b1)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color8 .wcPvBowler{background:linear-gradient(110deg,#167b80,#105056)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color9 .wcPvBatter{background:linear-gradient(110deg,#343c45,#1a232b)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color9 .wcPvScore{background:linear-gradient(135deg,#0c1720,#374756)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color9 .wcPvTarget{background:linear-gradient(145deg,#dce5e8,#9facb5)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color9 .wcPvBowler{background:linear-gradient(110deg,#596773,#34414c)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color10 .wcPvBatter{background:linear-gradient(110deg,#842d2d,#4c191f)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color10 .wcPvScore{background:linear-gradient(135deg,#151b2a,#374c6d)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color10 .wcPvTarget{background:linear-gradient(145deg,#e9bd72,#b48140)!important}
-#layerPreview.layerPreview.jlWorldCupPreview.color10 .wcPvBowler{background:linear-gradient(110deg,#a64b32,#6c2b25)!important}

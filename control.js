@@ -5,7 +5,7 @@ let authBootSequence=0, loginSubmitting=false;
 const DESIGN_DEFAULTS={enabled:false,width:92,scale:100,scoreFont:56,metaFont:11,logoSize:36,opacity:94,radius:15,border:1,shape:'rounded',fontFamily:'system',position:'bottom-center',bg:'#071626',accent:'#58c8ff',text:'#f4f9ff'};
 let SCORE_DESIGN={...DESIGN_DEFAULTS}, designSaveTimer=null, designControlsInitialized=false;
 const $=id=>document.getElementById(id);
-const LAYERS=['World Cup Compact Broadcast · Batter | Score | Target | Bowler'];
+const LAYERS=['International TV Lower Third · Full Match Details'];
 const COLORS=['World Cup Red / Gold / Orange','India Blue / Gold','Stadium Green / Gold','Royal Purple / Pink','Desert Orange / Gold','Blue / Silver','Violet / Gold','Teal / Aqua','Graphite / Lime','Crimson / Steel'];
 const EVENT_THEME_NAMES=["boundary-ripple","orbital-rays","stadium-surge","impact-ribbons","lightning-grid","halo-pulse","starburst-field","radial-bloom","shard-break","spotlight-ring","laser-sweep","velocity-trails","split-impact","pulse-tunnel","chromatic-wave","stadium-flash","ribbon-burst","glass-shatter","orbit-launch","impact-digital"];
 const ANIMS=['slideUp','slideDown','slideLeft','slideRight','fade','zoom','pop','bounce','flip','rotate','wipe','flash','glitch','blur','fireworks','spark','slam','shatter','orbit','spotlight','none'];
@@ -377,10 +377,12 @@ $('sponsorControlInterval')?.addEventListener('change',async()=>{const prev=STAT
 function updateLayerPreview(){
  const p=$('layerPreview');if(!p)return;
  const color=+$('colorSelect').value||1;
- p.className=`layerPreview jlWorldCupPreview color${color}`;p.dataset.layout='world-cup';
- $('colorSelect').disabled=false;$('colorSelect').title='Colour changes independently; the World Cup layout and block positions stay fixed.';
- const hint=$('colorStyleHint');if(hint)hint.textContent='एक fixed compact layout · Batter left · Score centre · Target + team · Bowler right · Fonts auto-fit to output size.';
- p.innerHTML=`<div class="wcPvPanel wcPvBatter"><small>BATTERS</small><span class="wcPvPlayer"><b>Batter 58*</b><small>(31)</small></span><span class="wcPvPlayer"><b>Player 17</b><small>(12)</small></span></div><div class="wcPvPanel wcPvScore"><small>LIVE · INNINGS 2</small><strong>189–2</strong><small>17.3 OV · CRR 10.80</small></div><div class="wcPvPanel wcPvTarget"><small>TARGET FOR SRH</small><strong>206</strong><small>NEED 17 · 39 BALLS</small></div><div class="wcPvPanel wcPvBowler"><small>CURRENT BOWLER</small><b>Natarajan · 0–56</b><small>OVER 18</small><span class="wcPvBalls"><i>1</i><i class="four">4</i><i>0</i><i class="six">6</i><i class="wicket">W</i><i>1</i></span></div>`;
+ p.className=`layerPreview jlInternationalPreview color${color}`;p.dataset.layout='international';
+ $('colorSelect').disabled=false;
+ $('colorSelect').title='Colour changes independently; the international lower-third layout stays fixed.';
+ const hint=$('colorStyleHint');
+ if(hint)hint.textContent='International TV layout · Batter left · Full batting figures · Centre score · Target team · Full bowler figures and this-over balls · 1080p/720p responsive height.';
+ p.innerHTML=`<div class="jcPvPanel jcPvBatting"><small>BATTERS · R (B) · 4s · 6s · SR</small><span class="jcPvPlayer"><b>MAXWELL</b><b>116 (87) · 8 · 4 · 133.3</b></span><span class="jcPvPlayer"><b>CUMMINS</b><b>10 (40) · 0 · 0 · 25.0</b></span><small>PARTNERSHIP 27 (18)</small></div><div class="jcPvPanel jcPvScore"><small>LIVE · INNINGS 2</small><strong>204/7</strong><div class="jcPvStats"><b>35.2 OV</b><b>CRR 5.77</b></div><small>EXTRAS 11 · P2</small></div><div class="jcPvPanel jcPvTarget"><small>TARGET FOR AFG</small><strong>293</strong><small>NEED 89 · 88 BALLS · RRR 6.07</small></div><div class="jcPvPanel jcPvBowling"><small>BOWLER · NABI</small><b>1.2 O · 0 M · 13 R · 1 W · 6.5 ECON</b><small>THIS OVER</small><span class="jcPvBalls"><i>0</i><i class="four">4</i><i>1</i><i>0</i><i class="wicket">W</i><i>1</i></span></div>`;
 }
 let EVENT_ANIM_MAP={FOUR:'boundary-ripple',SIX:'stadium-surge',WICKET:'shard-break','FREE HIT':'spotlight',FIFTY:'orbit',CENTURY:'fireworks','NO BALL':'spotlight',WIDE:'fade','LEG BYE':'fade',BYE:'fade','NEW BATSMAN':'bounce','NEW BOWLER':'flip',RESULT:'fireworks','INNINGS BREAK':'shatter',POWERPLAY:'glitch',PARTNERSHIP:'rotate','50 PARTNERSHIP':'spark'};
 async function saveBroadcast(extra={}){
