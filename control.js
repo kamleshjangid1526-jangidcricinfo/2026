@@ -5,8 +5,8 @@ let authBootSequence=0, loginSubmitting=false;
 const DESIGN_DEFAULTS={enabled:false,width:92,scale:100,scoreFont:56,metaFont:11,logoSize:36,opacity:94,radius:15,border:1,shape:'rounded',fontFamily:'system',position:'bottom-center',bg:'#071626',accent:'#58c8ff',text:'#f4f9ff'};
 let SCORE_DESIGN={...DESIGN_DEFAULTS}, designSaveTimer=null, designControlsInitialized=false;
 const $=id=>document.getElementById(id);
-const LAYERS=['International TV Lower Third · Full Match Details'];
-const COLORS=['World Cup Red / Gold / Orange','India Blue / Gold','Stadium Green / Gold','Royal Purple / Pink','Desert Orange / Gold','Blue / Silver','Violet / Gold','Teal / Aqua','Graphite / Lime','Crimson / Steel'];
+const LAYERS=['01 · Classic TV Blocks','02 · Championship Frame','03 · Angular Stadium','04 · Rounded Arena','05 · Split Edge Broadcast','06 · Hexagon Score Rail','07 · Twin Shield Panels','08 · Slanted Match Bar','09 · Triple Border Display','10 · Pill Side Panels','11 · Score Crown','12 · Corner Cut Classic','13 · Stadium Curve','14 · Digital Night Board','15 · Gold Championship','16 · Diagonal Edge','17 · Minimal TV Rail','18 · Heavy Score Focus','19 · Side Wing Panels','20 · Final Over Spotlight'];
+const COLORS=['World Cup Red / Gold','India Blue / Gold','Stadium Green / Lime','Royal Purple / Pink','Desert Orange / Gold','Blue / Silver','Violet / Gold','Teal / Aqua','Graphite / Lime','Crimson / Steel','Ocean Blue / Ice','Emerald / Champagne','Black / Electric Blue','Magenta / Silver','Maroon / Gold','Turquoise / Navy','Sunset Orange / Purple','White / Royal Blue','Forest / Amber','Midnight / Neon'];
 const EVENT_THEME_NAMES=["boundary-ripple","orbital-rays","stadium-surge","impact-ribbons","lightning-grid","halo-pulse","starburst-field","radial-bloom","shard-break","spotlight-ring","laser-sweep","velocity-trails","split-impact","pulse-tunnel","chromatic-wave","stadium-flash","ribbon-burst","glass-shatter","orbit-launch","impact-digital"];
 const ANIMS=['slideUp','slideDown','slideLeft','slideRight','fade','zoom','pop','bounce','flip','rotate','wipe','flash','glitch','blur','fireworks','spark','slam','shatter','orbit','spotlight','none'];
 const CARD_TYPES=[['batter','Individual Batter'],['bowler','Individual Bowler'],['player','Player Spotlight'],['partnership','Partnership'],['teamBatting','Full Team Batting'],['teamBowling','Full Team Bowling'],['nextBatter','Next Batsman'],['newBatter','New Batter'],['newBowler','New Bowler'],['inningsBreak','Innings Break'],['result','Match Result'],['chase','Runs Needed / Balls Remaining']];
@@ -290,7 +290,7 @@ function renderGraphics(){
  fillGraphics();
  const allowedLayers=serviceLimit('scoreLayouts');
  $('layerSelect').value=String(allowedLayers?Math.min(allowedLayers,Math.max(1,Number(b.layer)||1)):0);
- $('colorSelect').value=String(Math.min(10,Math.max(1,Number(b.color)||1)));
+ $('colorSelect').value=String(Math.min(20,Math.max(1,Number(b.color)||1)));
  const allowedEventAnimations=availableAnimations('event');$('animationSelect').value=allowedEventAnimations.includes(b.animation)?b.animation:(allowedEventAnimations.includes('zoom')?'zoom':allowedEventAnimations[0]);
  if(b.duration)$('animationDuration').value=b.duration;
  const allowedCardAnimations=availableAnimations('card');$('cardAnimationSelect').value=allowedCardAnimations.includes(b.cardAnimation)?b.cardAnimation:(allowedCardAnimations.includes('zoom')?'zoom':allowedCardAnimations[0]);
@@ -376,13 +376,14 @@ $('sponsorControlInterval')?.addEventListener('change',async()=>{const prev=STAT
 
 function updateLayerPreview(){
  const p=$('layerPreview');if(!p)return;
- const color=+$('colorSelect').value||1;
- p.className=`layerPreview jlInternationalPreview color${color}`;p.dataset.layout='international';
+ const layout=Math.max(1,Math.min(20,+$('layerSelect').value||1));
+ const color=Math.max(1,Math.min(20,+$('colorSelect').value||1));
+ p.className=`layerPreview jlInternationalPreview layout${layout} color${color}`;p.dataset.layout=String(layout);
  $('colorSelect').disabled=false;
- $('colorSelect').title='Colour changes independently; the international lower-third layout stays fixed.';
+ $('colorSelect').title='Colour changes independently from the selected shape layout.';
  const hint=$('colorStyleHint');
- if(hint)hint.textContent='International TV layout · Batter left · Full batting figures · Centre score · Target team · Full bowler figures and this-over balls · 1080p/720p responsive height.';
- p.innerHTML=`<div class="jcPvPanel jcPvBatting"><small>BATTERS · R (B) · 4s · 6s · SR</small><span class="jcPvPlayer"><b>MAXWELL</b><b>116 (87) · 8 · 4 · 133.3</b></span><span class="jcPvPlayer"><b>CUMMINS</b><b>10 (40) · 0 · 0 · 25.0</b></span><small>PARTNERSHIP 27 (18)</small></div><div class="jcPvPanel jcPvScore"><small>LIVE · INNINGS 2</small><strong>204/7</strong><div class="jcPvStats"><b>35.2 OV</b><b>CRR 5.77</b></div><small>EXTRAS 11 · P2</small></div><div class="jcPvPanel jcPvTarget"><small>TARGET FOR AFG</small><strong>293</strong><small>NEED 89 · 88 BALLS · RRR 6.07</small></div><div class="jcPvPanel jcPvBowling"><small>BOWLER · NABI</small><b>1.2 O · 0 M · 13 R · 1 W · 6.5 ECON</b><small>THIS OVER</small><span class="jcPvBalls"><i>0</i><i class="four">4</i><i>1</i><i>0</i><i class="wicket">W</i><i>1</i></span></div>`;
+ if(hint)hint.textContent='20 international layouts with different shapes · 20 independent colour combinations · full batting, score, target, partnership, bowler and over details.';
+ p.innerHTML=\`<div class="jcPvPanel jcPvBatting"><small>INDIA · AT THE CREASE</small><span class="jcPvPlayer"><b>ROHIT</b><b>58 (31) · 5 · 3 · 187.1</b></span><span class="jcPvPlayer"><b>VIRAT</b><b>42 (28) · 4 · 1 · 150.0</b></span></div><div class="jcPvPanel jcPvScore"><small>LIVE · INNINGS 2</small><strong>189/2</strong><div class="jcPvStats"><b>17.3 OV</b><b>CRR 10.80</b></div><small>EXTRAS 8 · P2</small></div><div class="jcPvPanel jcPvTarget"><div class="jcPvTargetMain"><small>TARGET FOR AUSTRALIA</small><strong>206</strong><small>NEED 17 · 39 BALLS · RRR 2.62</small></div><div class="jcPvPartnership"><small>PARTNERSHIP</small><b>101 (62)</b></div></div><div class="jcPvPanel jcPvBowling"><small>BOWLER · ELLIS</small><b>2.3 O · 0 M · 24 R · 1 W · 9.60 ECON</b><small>THIS OVER</small><span class="jcPvBalls"><i>1</i><i class="four">4</i><i>0</i><i class="six">6</i><i class="wicket">W</i><i>1</i></span></div>\`;
 }
 let EVENT_ANIM_MAP={FOUR:'boundary-ripple',SIX:'stadium-surge',WICKET:'shard-break','FREE HIT':'spotlight',FIFTY:'orbit',CENTURY:'fireworks','NO BALL':'spotlight',WIDE:'fade','LEG BYE':'fade',BYE:'fade','NEW BATSMAN':'bounce','NEW BOWLER':'flip',RESULT:'fireworks','INNINGS BREAK':'shatter',POWERPLAY:'glitch',PARTNERSHIP:'rotate','50 PARTNERSHIP':'spark'};
 async function saveBroadcast(extra={}){

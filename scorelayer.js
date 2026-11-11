@@ -201,8 +201,8 @@ function renderBar(m,b){
  const savedStudio=studioTemplate(b?.studioDesign);
  if(savedStudio){renderStudioBar(layer,m,b,savedStudio);return;}
  layer.dataset.studio='false';
- const color=Math.max(1,Math.min(10,Number(b?.color)||1));
- const layout=Math.max(1,Math.min(1,Number(b?.layer)||1));
+ const color=Math.max(1,Math.min(20,Number(b?.color)||1));
+ const layout=Math.max(1,Math.min(20,Number(b?.layer)||1));
  layer.className=`scoreBar jlInternationalScorebar layer${layout} color${color}`;
  layer.dataset.layout='international';layer.dataset.family='international-lower-third';layer.dataset.color=String(color);
  layer.removeAttribute('style');
@@ -250,11 +250,10 @@ function renderBar(m,b){
   <section class="jcIntlPanel jcIntlBattingPanel" aria-label="Batting statistics">
    ${logo(batting,'left')}
    <div class="jcIntlBattingContent">
-    <div class="jcIntlSectionHead"><strong>BATTERS</strong><span>AT THE CREASE</span></div>
+    <div class="jcIntlSectionHead"><strong class="jcIntlTeamName" title="${esc(batting.name)}">${esc(batting.name||'TEAM')}</strong><span>AT THE CREASE</span></div>
     <div class="jcIntlBatterHead"><span>BATSMAN</span><span>R (B)</span><span>4s</span><span>6s</span><span>SR</span></div>
     ${batterLine(striker,'striker')}
     ${batterLine(nonStriker,'nonStriker')}
-    <div class="jcIntlPartnership"><span>PARTNERSHIP</span><b>${partnershipRuns} <small>(${partnershipBalls})</small></b></div>
    </div>
   </section>
   <section class="jcIntlPanel jcIntlScorePanel" aria-label="Live match score">
@@ -266,12 +265,15 @@ function renderBar(m,b){
     <span><b>${extrasTotal}</b><small>EXTRAS</small></span>
    </div>
   </section>
-  <section class="jcIntlPanel jcIntlTargetPanel" aria-label="Target and chase details">
-   <div class="jcIntlTargetHeader">TARGET FOR <b>${esc(targetTeam.name||'OPPOSITION')}</b></div>
-   <div class="jcIntlTargetValue">${target>0?target:'—'}</div>
-   <div class="jcIntlTargetStats">
-    ${target>0?`<span>NEED <b>${runsNeeded}</b></span><span>${ballsLeft} BALLS</span><span>RRR <b>${rrr}</b></span>`:'<span class="jcIntlTargetPending">TARGET TO BE SET</span>'}
+  <section class="jcIntlPanel jcIntlTargetPanel" aria-label="Target, chase and partnership details">
+   <div class="jcIntlTargetMain">
+    <div class="jcIntlTargetHeader">TARGET FOR <b>${esc(targetTeam.name||'OPPOSITION')}</b></div>
+    <div class="jcIntlTargetValue">${target>0?target:'—'}</div>
+    <div class="jcIntlTargetStats">
+     ${target>0?`<span>NEED <b>${runsNeeded}</b></span><span>${ballsLeft} BALLS</span><span>RRR <b>${rrr}</b></span>`:'<span class="jcIntlTargetPending">TARGET TO BE SET</span>'}
+    </div>
    </div>
+   <div class="jcIntlTargetPartnership"><span>PARTNERSHIP</span><b>${partnershipRuns} <small>(${partnershipBalls})</small></b></div>
   </section>
   <section class="jcIntlPanel jcIntlBowlingPanel" aria-label="Bowler statistics and current over">
    <div class="jcIntlBowlingContent">

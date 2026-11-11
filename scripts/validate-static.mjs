@@ -76,7 +76,9 @@ const animEnd = control.indexOf('];', animStart);
 const animationNames = animStart >= 0 && animEnd > animStart
   ? [...control.slice(animStart, animEnd).matchAll(/'([^']+)'/g)].map(match => match[1]).filter(name => name !== 'none') : [];
 const checks = [
-  ['One World Cup reference Score Layer layout is available', layerCount === 1],
+  ['20 International Score Layer shape layouts are available', layerCount === 20],
+  ['All 20 Score Layer layouts have dedicated shape treatments', Array.from({length:20},(_,i)=>freshScoreCss.includes('.jlInternationalScorebar.layer'+(i+1)+' .jcIntlPanel')).every(Boolean)],
+  ['20 independent colour palettes are available', ((control.match(/const COLORS=\[/)?.[0]||'').length>0 && [...control.slice(control.indexOf('const COLORS=['),control.indexOf('];',control.indexOf('const COLORS=['))).matchAll(/'[^']+'/g)].length===20)],
   ['All 20 event animation names have matching Score Layer styles', animationNames.length === 20 && animationNames.every(name => scoreLayerCss.toLowerCase().includes(name.toLowerCase()))],
   ['Layout and colour are independent', control.includes('changing a layout must never overwrite') && control.includes("$('colorSelect').addEventListener('change'")],
   ['Single-screen scoring layout prevents vertical page scrolling', workflowCss.includes('overflow:hidden;overscroll-behavior:none')],
@@ -86,6 +88,8 @@ const checks = [
   ['Tournament scheduling stays in dedicated Schedule Match view', tournament.includes('data-tm-tab="schedule"') && tournament.includes('function renderSchedule(t)')],
   ['Matches tab only renders live matches', tournament.includes("const live=list.filter(m=>m.status==='live')")],
   ['International Score Layer keeps both batter lines, score, target team and bowler separate', scoreLayer.includes('jcIntlBattingPanel') && scoreLayer.includes('jcIntlScorePanel') && scoreLayer.includes('jcIntlTargetPanel') && scoreLayer.includes('jcIntlBowlingPanel') && scoreLayer.includes('targetTeam.name')],
+  ['Batting team name replaces the generic batting label', scoreLayer.includes('jcIntlTeamName') && scoreLayer.includes('esc(batting.name') && !scoreLayer.includes('<strong>BATTERS</strong>')],
+  ['Partnership is separated into the lower half of the target panel', scoreLayer.includes('jcIntlTargetPartnership') && scoreLayer.includes('jcIntlTargetMain') && !scoreLayer.includes('class="jcIntlPartnership"')],
   ['Batter R-B, 4s, 6s and strike rate are visible', scoreLayer.includes('player?.fours') && scoreLayer.includes('player?.sixes') && scoreLayer.includes('strikeRate') && scoreLayer.includes('jcIntlBatterHead')],
   ['Bowler O-M-R-W, economy and this-over balls are visible', scoreLayer.includes('bowlerMaidens') && scoreLayer.includes('economy') && scoreLayer.includes('jcIntlBallRail') && scoreLayer.includes('jcIntlThisOver')],
   ['Partnership, extras and powerplay or free-hit state are visible', scoreLayer.includes('partnershipRuns') && scoreLayer.includes('extrasTotal') && scoreLayer.includes('i.freeHit') && scoreLayer.includes('activePowerplay')],
@@ -97,7 +101,7 @@ const checks = [
   ['Public match pages can show a cached match snapshot offline', offlineLoader.includes("const matchCacheKey='public:match:'") && offlineLoader.includes("await store?.put(matchCacheKey,result.body||{})") && offlineLoader.includes('इस Scoreboard का पिछला Match snapshot')],
   ['Static assets use a scoped service worker cache', serviceWorker.includes("addEventListener('fetch'") && serviceWorker.includes('skipWaiting') && offlineUi.includes("navigator.serviceWorker.register")],
   ['Mobile scoring layout is loaded and selected only on scoring page', html.includes('mobile-scoring-v2.css') && control.includes("body.classList.toggle('jc-scoring-view',id==='scoring')") && mobileCss.includes('overflow:hidden;overscroll-behavior:none')],
-  ['International lower-third has a readable responsive 102-128px 1080p/720p height', freshScoreCss.includes('.jlInternationalScorebar') && freshScoreCss.includes('height:clamp(102px,7.2vw,128px)') && freshScoreCss.includes('container-type:inline-size') && freshScoreCss.includes('cqi')],
+  ['International lower-third height is slightly reduced but remains responsive', freshScoreCss.includes('height:clamp(96px,6.85vw,122px)') && freshScoreCss.includes('container-type:inline-size') && freshScoreCss.includes('cqi')],
   ['International Control Board preview contains full player and bowler details', control.includes('MAXWELL') && control.includes('116 (87)') && control.includes('THIS OVER') && freshScoreCss.includes('.jlInternationalPreview')],
   ['Independent FOUR, SIX and WICKET motion themes are connected', control.includes('eventThemeFour') && control.includes('eventThemeSix') && control.includes('eventThemeWicket') && eventCss.includes('jcRipple') && eventCss.includes('jcSurge') && eventCss.includes('jcShards')],
   ['Broadcast cards include an explicit close action', scoreLayer.includes('broadcastCardClose') && scoreLayer.includes("setAttribute('aria-label','Close card')")],
