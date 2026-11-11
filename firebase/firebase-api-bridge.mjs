@@ -254,6 +254,13 @@ async function savePublicBroadcast(uid, broadcast) {
     card: broadcast.card !== undefined ? broadcast.card : previous.card || null,
     cardId: broadcast.cardId !== undefined ? broadcast.cardId : previous.cardId || null,
     animation: broadcast.animation !== undefined ? broadcast.animation : previous.animation || null,
+    eventStyle: broadcast.eventStyle !== undefined ? broadcast.eventStyle : previous.eventStyle || null,
+    eventAnimations: broadcast.eventAnimations !== undefined ? broadcast.eventAnimations : previous.eventAnimations || {},
+    eventDurations: broadcast.eventDurations !== undefined ? broadcast.eventDurations : previous.eventDurations || {},
+    duration: broadcast.duration !== undefined ? Number(broadcast.duration)||null : previous.duration || null,
+    eventAt: broadcast.eventAt !== undefined ? Number(broadcast.eventAt)||null : previous.eventAt || null,
+    wicketDetails: broadcast.event==='WICKET' ? (broadcast.wicketDetails||null) : broadcast.event===null ? null : (previous.wicketDetails||null),
+    eventPlayer: broadcast.eventPlayer !== undefined ? broadcast.eventPlayer : previous.eventPlayer || null,
     eventId: broadcast.eventId !== undefined ? broadcast.eventId : previous.eventId || null,
     matchId: broadcast.matchId !== undefined ? broadcast.matchId : previous.matchId || null,
     selectedLayout: broadcast.selectedLayout || previous.selectedLayout || null };
