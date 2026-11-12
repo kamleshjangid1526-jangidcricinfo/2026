@@ -101,3 +101,46 @@
     font-size:clamp(9px,1.8vw,12px)!important;
   }
 }
+
+
+/* Larger live figures after removing the unused batter and bowler columns. */
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterHead,
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterRow{
+  grid-template-columns:minmax(0,1fr) clamp(60px,5.6cqi,96px)!important;
+  gap:clamp(4px,.35cqi,7px)!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterHead{
+  font-size:clamp(8px,.68cqi,12px)!important;
+  text-align:left!important;
+}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterHead span:last-child{text-align:center!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterName{font-size:clamp(11px,1.12cqi,20px)!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore b{font-size:clamp(13px,1.28cqi,23px)!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore small{font-size:clamp(9px,.84cqi,14px)!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:clamp(4px,.34cqi,7px)!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats b{font-size:clamp(12px,1.12cqi,20px)!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats small{font-size:clamp(8px,.66cqi,12px)!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerName{font-size:clamp(12px,1.2cqi,21px)!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlThisOver>small{font-size:clamp(8px,.65cqi,11px)!important}
+#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBall{font-size:clamp(9px,.76cqi,13px)!important}
+@media(max-width:720px){
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterHead,
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterRow{grid-template-columns:minmax(0,1fr) clamp(44px,13vw,58px)!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterName{font-size:clamp(9px,2.2vw,12px)!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore b{font-size:clamp(10px,2.4vw,13px)!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+
+/* A broadcast Card has one entrance animation: the selected animation on its outer card only.
+   Disable the decorative overlay and element-level Studio motion that used to stack on top. */
+#cardLayer.cardLayer::before,#cardLayer.cardLayer::after{
+  content:none!important;display:none!important;animation:none!important;opacity:0!important;
+}
+#cardLayer.cardLayer .broadcastCardStage *,
+#cardLayer.cardLayer .broadcastCardStage *::before,
+#cardLayer.cardLayer .broadcastCardStage *::after{
+  animation:none!important;transition:none!important;
+}
+#cardLayer.cardLayer .broadcastCardStage.cardEntering{
+  transform-origin:center center;backface-visibility:hidden;will-change:transform,opacity;
+}
