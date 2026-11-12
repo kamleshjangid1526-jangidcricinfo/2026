@@ -381,7 +381,7 @@ async function handleApi(url,init={}) {
   const path=url.pathname, method=String(init.method||'GET').toUpperCase(), body=readBody(init);
   try {
     await authPersistenceReady;
-    if(path==='/api/health' && method==='GET') return ok({app:'Jangid Cricinfo',version:'4.5.0',mode:'github-pages-firebase',storage:'cloud-firestore',firebaseConnected:true});
+    if(path==='/api/health' && method==='GET') return ok({app:'Jangid Cricinfo',version:'4.6.3',mode:'github-pages-firebase',storage:'cloud-firestore',firebaseConnected:true});
     if(path==='/api/register' && method==='POST') {
       const email=cleanText(body.email,160).toLowerCase(), password=String(body.password||'');
       const fullName=cleanText(body.fullName,100),mobile=mobileDigits(body.mobile),address=cleanText(body.address,220);
