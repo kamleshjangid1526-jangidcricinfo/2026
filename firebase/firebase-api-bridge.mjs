@@ -339,7 +339,8 @@ async function saveGlobalLibrary(key,value) {
   if(items.length>60) throw new Error('Library में अधिकतम 60 items रखे जा सकते हैं।');
   const batch=writeBatch(db); const old=await getDocs(publicCol(collectionName)); old.docs.forEach(d=>batch.delete(d.ref));
   items.forEach(item=>{if(item?.id)batch.set(publicDoc(collectionName,String(item.id)),cleanData(item));});
-  batch.set(publicDoc('globalLibraries',key),{meta:{...value,[arrayName]:undefined},updatedAt:nowIso()},{merge:true}); await batch.commit();
+  const metadata={...value};delete metadata[arrayName];
+  batch.set(publicDoc('globalLibraries',key),{meta:cleanData(metadata),updatedAt:nowIso()},{merge:true}); await batch.commit();
 }
 async function getGlobalLibrary(key) {
   const map={studio:['globalStudioTemplates','templates'],card:['globalCardTemplates','cardTemplates'],animation:['globalAnimationTemplates','animationTemplates'],sponsors:['globalSponsors','sponsors']};
