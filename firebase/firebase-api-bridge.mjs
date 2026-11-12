@@ -179,6 +179,7 @@ function emitPublicCache(changedCollection = 'initial') {
     if(!uid||!event.eventId||!event.event||!dateMs(event.createdAt)||age>30000||age< -60000||broadcastEvents[uid])continue;
     broadcastEvents[uid]={...event};
   }
+  for(const [uid,event] of Object.entries(broadcastEvents))broadcastMap[uid]={...(broadcastMap[uid]||{}),...event};
   window.__JC_EMIT_PUBLIC__?.({activeMatches:visible.filter(x=>x.status==='live'),matches:visible,tournaments,broadcasts:broadcastMap,broadcastCards,broadcastEvents,changedCollection});
 }
 let publicUnsubs=[];
