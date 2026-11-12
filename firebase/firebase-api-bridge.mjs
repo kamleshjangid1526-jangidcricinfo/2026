@@ -227,14 +227,54 @@ async function loadPublicBroadcast(uid) {
   const snap = await getDoc(publicDoc('publicBroadcasts', uid));
   if (!snap.exists()) return {};
   const base = snap.data() || {};
-  const [studio, card, animation] = await Promise.all([
-    getDoc(publicDoc('publicBroadcastDesigns', `${uid}_studio`)),
-    getDoc(publicDoc('publicBroadcastDesigns', `${uid}_card`)),
-    getDoc(publicDoc('publicBroadcastDesigns', `${uid}_animation`))
+  const [studio, card, animation, designRows] = await Promise.all([
+    getDoc(publicDoc('publicBroadcastDesigns', uid + '_studio')),
+    getDoc(publicDoc('publicBroadcastDesigns', uid + '_card')),
+    getDoc(publicDoc('publicBroadcastDesigns', uid + '_animation')),
+    getDocs(query(publicCol('publicBroadcastDesigns'), where('uid','==',uid)))
   ]);
-  return { ...base, studioDesign: studio.exists() ? studio.data().value : null,
+  let studioDesign = studio.exists() ? (studio.data().value || {}) : null;
+  if (studioDesign) {
+    const rows = toList(designRows);
+    const restore = (field, kind) => {
+      const combined = new Map();
+      (Array.isArray(studioDesign[field]) ? studioDesign[field] : []).forEach(item => {
+        if (item?.id) combined.set(String(item.id), item);
+      });
+      rows.filter(row => row.kind === kind + '-template')
+        .sort((a,b) => Number(a.order||0)-Number(b.order||0))
+        .forEach(row => { if (row.value?.id) combined.set(String(row.value.id), row.value); });
+      return [...combined.values()];
+    };
+    studioDesign.templates = restore('templates','score');
+    studioDesign.cardTemplates = restore('cardTemplates','card');
+    studioDesign.animationTemplates = restore('animationTemplates','animation');
+  }
+  return { ...base, studioDesign,
     cardDesign: card.exists() ? card.data().value : null,
     animationDesign: animation.exists() ? animation.data().value : null };
+}
+async function savePublicStudioDesign(uid, design) {
+  const oldRows = await getDocs(query(publicCol('publicBroadcastDesigns'), where('uid','==',uid)));
+  const batch = writeBatch(db);
+  oldRows.docs.forEach(row => {
+    if (['score-template','card-template','animation-template'].includes(String(row.data().kind||''))) batch.delete(row.ref);
+  });
+  const summary = {...(design||{})};
+  delete summary.templates; delete summary.cardTemplates; delete summary.animationTemplates;
+  batch.set(publicDoc('publicBroadcastDesigns', uid + '_studio'),
+    {ownerUid:uid,uid,kind:'studio',value:cleanData(summary),updatedAt:nowIso()});
+  const groups = [['score','templates'],['card','cardTemplates'],['animation','animationTemplates']];
+  for (const [kind,field] of groups) {
+    const templates = Array.isArray(design?.[field]) ? design[field] : [];
+    templates.forEach((template,index) => {
+      if (!template?.id) return;
+      const safeId = encodeURIComponent(String(template.id)).slice(0,120);
+      batch.set(publicDoc('publicBroadcastDesigns', uid + '_studio_' + kind + '_' + safeId),
+        {ownerUid:uid,uid,kind:kind+'-template',templateId:String(template.id),order:index,value:cleanData(template),updatedAt:nowIso()});
+    });
+  }
+  await batch.commit();
 }
 async function savePublicBroadcast(uid, broadcast) {
   const previousSnap = await getDoc(publicDoc('publicBroadcasts', uid));
@@ -242,7 +282,8 @@ async function savePublicBroadcast(uid, broadcast) {
   const keys = ['studioDesign','cardDesign','animationDesign'];
   for (const key of keys) if (broadcast[key] !== undefined) {
     const category = key.replace('Design','').toLowerCase();
-    await setDoc(publicDoc('publicBroadcastDesigns', `${uid}_${category}`),
+    if (key === 'studioDesign') await savePublicStudioDesign(uid, broadcast[key] || {});
+    else await setDoc(publicDoc('publicBroadcastDesigns', uid + '_' + category),
       { ownerUid: uid, uid, kind: category, value: cleanData(broadcast[key]), updatedAt: nowIso() }, { merge: true });
   }
   const has = key => broadcast[key] !== undefined ? !!broadcast[key] : !!previous[`has${key[0].toUpperCase()}${key.slice(1)}`];
@@ -397,9 +438,9 @@ async function handleApi(url,init={}) {
       await requireAdmin();
       const design=body.studioDesign||{};
       if(!Array.isArray(design.templates)||!design.templates.length)return fail(400,'कम से कम एक Score Layer design सेव रखें।');
-      for(const [key,label] of [['templates','Score Layer'],['cardTemplates','Card'],['animationTemplates','Animation']]){
+      for(const [key,label,max] of [['templates','Score Layer',40],['cardTemplates','Card',20],['animationTemplates','Animation',20]]){
         const rows=design[key]===undefined?[]:design[key];
-        if(!Array.isArray(rows)||rows.length>20)return fail(400,`${label} Library में अधिकतम 20 designs रख सकते हैं।`);
+        if(!Array.isArray(rows)||rows.length>max)return fail(400,`${label} Library में अधिकतम ${max} designs रख सकते हैं।`);
         if(rows.some(item=>!item||!item.id||!Array.isArray(item.elements)||item.elements.length>100))return fail(400,`${label} design का data सही नहीं है।`);
       }
       await saveGlobalLibrary('studio',design);
