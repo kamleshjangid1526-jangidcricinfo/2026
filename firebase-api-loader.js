@@ -43,7 +43,7 @@
   function emitPublic(payload){window.__JC_LAST_PUBLIC_PAYLOAD__=payload;const event={data:JSON.stringify(payload)};for(const source of window.__JC_FIREBASE_EVENTS__){try{source.onmessage?.(event);}catch(error){console.error(error);}try{source.dispatchEvent?.(new MessageEvent('message',{data:event.data}));}catch{}}try{channel?.postMessage({publicPayload:payload});}catch{}}
   if(channel)channel.addEventListener('message',event=>{const p=event.data;if(p?.type==='status'){window.dispatchEvent(new CustomEvent('jc-offline-status',{detail:{state:p.state,detail:p.detail,online:navigator.onLine}}));return;}if(p?.publicPayload){window.__JC_LAST_PUBLIC_PAYLOAD__=p.publicPayload;const e={data:JSON.stringify(p.publicPayload)};for(const source of window.__JC_FIREBASE_EVENTS__){try{source.onmessage?.(e);}catch{}try{source.dispatchEvent?.(new MessageEvent('message',{data:e.data}));}catch{}}}});
   window.__JC_EMIT_PUBLIC__=emitPublic;
-  function publicPayload(match,broadcast){const state=cachedState||{},matches=[...(state.matches||[])];if(match){const ix=matches.findIndex(x=>String(x.id)===String(match.id));if(ix>=0)matches[ix]=clone(match);else matches.push(clone(match));}const broadcasts={...(state.broadcasts||{})};if(broadcast&&activeUid)broadcasts[activeUid]=clone(broadcast);return {activeMatches:matches.filter(x=>x.status==='live'),matches,tournaments:state.tournaments||[],broadcasts,changedCollection:'local-offline'};}
+  function publicPayload(match,broadcast,broadcastEvent){const state=cachedState||{},matches=[...(state.matches||[])];if(match){const ix=matches.findIndex(x=>String(x.id)===String(match.id));if(ix>=0)matches[ix]=clone(match);else matches.push(clone(match));}const broadcasts={...(state.broadcasts||{})};if(broadcast&&activeUid)broadcasts[activeUid]=clone(broadcast);const broadcastCards={...(state.broadcastCards||{})};if(broadcast&&activeUid)broadcastCards[activeUid]={uid:activeUid,ownerUid:activeUid,card:broadcast.card??null,cardId:broadcast.cardId??null,cardAnimation:broadcast.cardAnimation||null,cardAnimations:broadcast.cardAnimations||{},cardDurations:broadcast.cardDurations||{}};const broadcastEvents={...(state.broadcastEvents||{})};if(broadcastEvent&&activeUid)broadcastEvents[activeUid]=clone(broadcastEvent);return {activeMatches:matches.filter(x=>x.status==='live'),matches,tournaments:state.tournaments||[],broadcasts,broadcastCards,broadcastEvents,changedCollection:'local-offline'};}
   async function apiRequest(url,init={}){const bridge=await ready;return bridge.handleApi(url,init);}
   function toResponse(result){return new Response(JSON.stringify(result.body??{}),{status:result.status??200,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});}
   function localFinish(match,body){const finished=clone(match||{}),type=['winner','tie','no-result'].includes(body.resultType)?body.resultType:'winner';if(type==='winner'){if(![String(finished.teamA),String(finished.teamB)].includes(String(body.winnerTeamId)))throw new Error('Winner Team चुनें।');finished.winnerTeamId=String(body.winnerTeamId);finished.resultType='winner';finished.result=String(body.resultText||'').trim().slice(0,140)||(finished.winnerTeamId===String(finished.teamA)?(finished.teamAName||'Team A'):(finished.teamBName||'Team B'))+' won';}else{finished.winnerTeamId=null;finished.resultType=type;finished.result=type==='tie'?'Match tied':'No Result';}finished.status='finished';finished.completedAt=new Date().toISOString();finished.updatedAt=finished.completedAt;return finished;}
@@ -86,6 +86,22 @@
     emitPublic(publicPayload(cachedState?.activeMatch,cachedState?.broadcast));
     return {uid,queueKey,version};
   }
+  async function cacheBroadcastEvent(payload){
+    const uid=activeUid||uidOf(cachedState);
+    if(!uid)throw new Error('पहले online Login करें, फिर Broadcast Event सेव हो सकेगा।');
+    const eventId=String(payload?.eventId||'').trim();
+    if(!eventId||!payload?.event||!payload?.matchId)throw new Error('Broadcast Event अधूरा है; event ID, event और match ID जरूरी हैं।');
+    const eventPayload={...clone(payload),uid,ownerUid:uid,createdAt:new Date().toISOString()};
+    const queueKey=key(uid,'broadcast-event',eventId);
+    const version=String(Date.now())+':'+String(++cacheWriteSequence);
+    const durable=await store?.put(queueKey,{payload:eventPayload,version});
+    if(durable!==true)throw new Error('इस डिवाइस की IndexedDB storage उपलब्ध नहीं है। Broadcast Event queue सुरक्षित नहीं बन पाई।');
+    const lastSaved=await store?.put('broadcast-event:last:'+uid,eventPayload);
+    if(lastSaved!==true)throw new Error('Broadcast Event सेव हुआ, लेकिन local recovery copy नहीं बन पाई।');
+    if(cachedState){cachedState.broadcastEvents||={};cachedState.broadcastEvents[uid]=clone(eventPayload);}
+    emitPublic(publicPayload(cachedState?.activeMatch,cachedState?.broadcast,eventPayload));
+    return {uid,queueKey,version};
+  }
   function scheduleSync(delay=220){
     if(!navigator.onLine)return;
     if(syncing){syncRequested=true;return;}
@@ -106,8 +122,9 @@
       if(verifiedUid!==uid){const queued=(await records('queue:'+uid+':')).length;if(queued)localStatus('pending','Login सत्यापित होने के बाद pending बदलाव Firebase से Sync होंगे।');return false;}
       const matchRows=await records('queue:'+uid+':match:');
       const finishRows=await records('queue:'+uid+':finish:');
+      const eventRows=await records('queue:'+uid+':broadcast-event:');
       const broadcastRow=await store?.get(key(uid,'broadcast'));
-      if(!matchRows.length&&!finishRows.length&&!broadcastRow){localStatus('synced','कोई pending बदलाव नहीं है।');return true;}
+      if(!matchRows.length&&!finishRows.length&&!eventRows.length&&!broadcastRow){localStatus('synced','कोई pending बदलाव नहीं है।');return true;}
       for(const row of matchRows){
         const queued=await store?.get(row.key);
         if(!queued)continue;
@@ -118,6 +135,15 @@
         const latest=await store?.get(row.key);
         if(latest?.version===queued.version)await store?.remove(row.key);
         else rerunSync=true;
+      }
+      for(const row of eventRows){
+        const queued=await store?.get(row.key);
+        if(!queued)continue;
+        if(queued.version!==row.value?.version){rerunSync=true;continue;}
+        const result=await apiRequest(new URL('/api/broadcast/event',location.href),{method:'POST',body:JSON.stringify(queued.payload||{})});
+        if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast Event sync failed');
+        const latest=await store?.get(row.key);
+        if(latest?.version===queued.version)await store?.remove(row.key);else rerunSync=true;
       }
       for(const row of finishRows){
         const result=await apiRequest(new URL('/api/match/finish',location.href),{method:'POST',body:JSON.stringify(row.value.body||{})});
@@ -172,6 +198,12 @@
         try{const result=await apiRequest(url,init);if((result.status||200)>=400)throw Object.assign(new Error(result.body?.error||'Finish failed'),{status:result.status,code:result.body?.code});await store?.remove(key(uid,'finish',finished.id));await store?.remove(key(uid,'match',finished.id));localStatus('synced','Match result Firebase में सेव हुआ।');return toResponse(result);}
         catch(error){if(!isNetworkError(error))throw error;requestBackgroundSync();localStatus('pending','Match result offline सेव है; internet आने पर Sync होगा।');return toResponse({status:200,body:{ok:true,offline:true,queued:true,match:finished}});}
       }
+      if(url.pathname==='/api/broadcast/event'&&method==='POST'){
+        await cacheBroadcastEvent(body);
+        localStatus(navigator.onLine?'saved':'offline',navigator.onLine?'Broadcast Event अलग queue में सुरक्षित है; Firebase realtime पर upload होगा।':'Broadcast Event device पर सुरक्षित है; internet आने पर Firebase sync होगा।');
+        if(navigator.onLine)scheduleSync(120);else requestBackgroundSync();
+        return toResponse({status:200,body:{ok:true,queued:true,localFirst:true,eventId:body.eventId}});
+      }
       if(url.pathname==='/api/broadcast'&&method==='POST'){
         await cacheBroadcast(body);
         localStatus(navigator.onLine?'saved':'offline',navigator.onLine?'Broadcast graphics device पर सेव हैं; Firebase background में upload होंगी।':'Broadcast graphics device पर सेव हैं; reconnect पर Sync होंगी।');
@@ -212,13 +244,20 @@
       const pending=await records('queue:'+uid+':match:');
       for(const row of pending){const match=row.value?.match;if(!match?.id)continue;const ix=matches.findIndex(x=>String(x.id)===String(match.id));if(ix>=0)matches[ix]=clone(match);else matches.push(clone(match));}
       const broadcasts={...(saved.broadcasts||{})};if(saved.broadcast)broadcasts[uid]=clone(saved.broadcast);
+      const broadcastCards={...(saved.broadcastCards||{})};
+      if(saved.broadcast)broadcastCards[uid]={uid,ownerUid:uid,card:saved.broadcast.card??null,cardId:saved.broadcast.cardId??null,cardAnimation:saved.broadcast.cardAnimation||null,cardAnimations:saved.broadcast.cardAnimations||{},cardDurations:saved.broadcast.cardDurations||{}};
+      const broadcastEvents={...(saved.broadcastEvents||{})};
+      const savedEvent=await store.get('broadcast-event:last:'+uid);
+      if(savedEvent)broadcastEvents[uid]=clone(savedEvent);
+      const pendingEvents=await records('queue:'+uid+':broadcast-event:');
+      if(pendingEvents.length){const latestEvent=pendingEvents.map(row=>row.value?.payload).filter(Boolean).sort((a,b)=>(Date.parse(b.createdAt||'')||0)-(Date.parse(a.createdAt||'')||0))[0];if(latestEvent)broadcastEvents[uid]=clone(latestEvent);}
       // Restore the latest local graphics snapshot even when its Firebase queue was already cleared.
       const savedBroadcast=await store.get('broadcast:last:'+uid);
       if(savedBroadcast)broadcasts[uid]={...(broadcasts[uid]||{}),...clone(savedBroadcast)};
       // A still-pending upload is newer than the last-known local snapshot.
       const pendingBroadcast=await store.get(key(uid,'broadcast'));
       if(pendingBroadcast?.payload)broadcasts[uid]={...(broadcasts[uid]||{}),...clone(pendingBroadcast.payload)};
-      emitPublic({activeMatches:matches.filter(x=>x.status==='live'),matches,tournaments:saved.tournaments||[],broadcasts,changedCollection:'offline-cache'});
+      emitPublic({activeMatches:matches.filter(x=>x.status==='live'),matches,tournaments:saved.tournaments||[],broadcasts,broadcastCards,broadcastEvents,changedCollection:'offline-cache'});
     }catch(error){console.warn('Cached match snapshot could not be emitted:',error);}
   }
   class LocalFirebaseEventSource{
