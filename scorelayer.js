@@ -464,7 +464,7 @@ function renderEvent(b,matchId){
   if(batterName){const name=document.createElement('div');name.className='eventPlayerName jcEventPlayerNameOverlay';name.textContent=batterName;el.appendChild(name);}
  }
  el.dataset.eventType=eventName.toLowerCase().replace(/\s+/g,'-');el.style.animationDuration=`${b.duration||2200}ms`;el.style.display='grid';const inner=el.querySelector('.eventInner,.jlStudioOverlayRoot,.incomingPlayerToast');if(inner)inner.style.animationDuration=`${b.duration||2200}ms`;
- el._hide=setTimeout(()=>clearEventVisual(el,cardEl),Math.max(900,Number(b.duration||2200)-50));
+ el._hide=setTimeout(()=>clearEventVisual(el,cardEl,true),Math.max(900,Number(b.duration||2200)-50));
 }
 function renderCard(b,m){
  const el=document.getElementById('cardLayer'),card=b.card;
