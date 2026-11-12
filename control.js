@@ -415,6 +415,7 @@ async function publishEventNow(event,meta={}){
   clearTimeout(broadcastEventClearTimer);
   await saveBroadcast({card:null,cardId:Date.now(),event,eventStyle:eventStyle(event),animation:EVENT_ANIM_MAP[event]||$('animationSelect').value,duration,...meta,matchId:MATCH?.id||meta.matchId||null,eventAt:Date.now()});
   const publishedEventId=STATE?.broadcast?.eventId;
+  await api('/api/broadcast/event',{method:'POST',body:JSON.stringify({eventId:String(publishedEventId||Date.now()),event,matchId:String(MATCH?.id||meta.matchId||''),eventAt:Date.now(),eventStyle:eventStyle(event),animation:EVENT_ANIM_MAP[event]||$('animationSelect').value,duration,eventAnimations:EVENT_ANIM_MAP,eventDurations:EVENT_DURATION_MAP,...meta})});
   broadcastEventClearTimer=setTimeout(()=>{
    if(String(STATE?.broadcast?.eventId??'')!==String(publishedEventId??''))return;
    void saveBroadcast({event:null,eventId:publishedEventId,eventAt:null,matchId:null}).catch(error=>console.warn('Broadcast event cleanup could not sync:',error));

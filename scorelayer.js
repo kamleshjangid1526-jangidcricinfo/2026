@@ -534,6 +534,10 @@ function boot(){
    if(!m){const bar=document.getElementById('scoreBar');if(requested)bar.innerHTML='';return;}
    latestMatch=m;
    const incoming={...(d.broadcasts?.[m.userId]||{})};
+   const cardState=d.broadcastCards?.[m.userId];
+   if(cardState){incoming.card=cardState.card??null;incoming.cardId=cardState.cardId??incoming.cardId;incoming.cardAnimation=cardState.cardAnimation||incoming.cardAnimation;incoming.cardAnimations=cardState.cardAnimations||incoming.cardAnimations;incoming.cardDurations=cardState.cardDurations||incoming.cardDurations;}
+   const durableEvent=d.broadcastEvents?.[m.userId];
+   if(durableEvent&&String(durableEvent.matchId||'')===String(m.id))Object.assign(incoming,durableEvent);
    latestSSEBroadcast=incoming;
    const version=[incoming.studioDesignUpdatedAt,incoming.cardDesignUpdatedAt,incoming.animationDesignUpdatedAt].join('|');
    const sponsorVersion=String(incoming.sponsorLibraryUpdatedAt||incoming.sponsorDisplayUpdatedAt||'');if(sponsorVersion!==sponsorLibraryVersion&&!sponsorLibraryRequested)loadSponsorLibrary(sponsorVersion);
