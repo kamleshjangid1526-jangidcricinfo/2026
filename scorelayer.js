@@ -1,7 +1,7 @@
 'use strict';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const q=new URLSearchParams(location.search);const owner=q.get('owner');const scoreLayerLoadedAt=Date.now();
-let lastEventId=null,lastEventAt=0,lastEventStorageKey='',eventScopeInitialized=false,lastCardId=null,lastRenderMatchId=null,eventVisible=false,latestBroadcast={},latestSSEBroadcast={},latestMatch=null,ownerBroadcast={},ownerBroadcastVersion='',ownerBroadcastRequestedVersion='',ownerBroadcastUserId='';
+const q=new URLSearchParams(location.search);const owner=q.get('owner');
+let lastEventId=null,lastEventAt=0,lastEventStorageKey='',lastCardId=null,lastRenderMatchId=null,eventVisible=false,latestBroadcast={},latestSSEBroadcast={},latestMatch=null,ownerBroadcast={},ownerBroadcastVersion='',ownerBroadcastRequestedVersion='',ownerBroadcastUserId='';
 let sponsorLibrary=[],sponsorLibraryVersion='',sponsorLibraryRequested=false,lastSponsorManualToken='',lastSponsorTimeoutToken='',sponsorAutoState={matchId:'',innings:0,over:0,status:''},pendingSponsor=null,sponsorVisible=false,sponsorHideTimer=null,sponsorRotationIndex=0,sponsorRotationBase='',dismissedCardId=null;
 const accentByColor={1:'#58c8ff',2:'#43e09b',3:'#ff6074',4:'#ffae4d',5:'#c59bff',6:'#f5d06c',7:'#ffffff',8:'#44e1d5',9:'#ef8493',10:'#dce5ef'};
 function currentTeamName(id,m){return id===m.teamA?m.teamAName:id===m.teamB?m.teamBName:id}
@@ -71,20 +71,26 @@ function applyScoreDesign(d){
  const position=['bottom-center','bottom-left','bottom-right','top-center','top-left','top-right'].includes(d.position)?d.position:'bottom-center';
  const top=position.startsWith('top'),center=position.endsWith('center'),left=position.endsWith('left'),right=position.endsWith('right');
  const adjustedWidth=center?width:Math.min(width,94),l=center?'50%':left?'3vw':'auto',r=right?'3vw':'auto';
+ const designCqi=value=>`${(Math.max(0,Number(value)||0)/(19.2*adjustedWidth/100)).toFixed(4)}cqi`;
+ const scoreSize=designCqi(score),wicketSize=designCqi(Math.max(16,Math.round(score*.72)));
+ const metaSize=designCqi(meta),statSize=designCqi(Math.round(meta*1.45));
+ const smallSize=designCqi(Math.max(7,Math.round(meta*.78)));
+ const logoSize=designCqi(logo),compactLogoSize=designCqi(Math.max(14,Math.round(logo*.48)));
+ const borderSize=designCqi(border);
  const xform=`${center?'translateX(-50%) ':''}scale(${scale/100})`,origin=`${center?'center':left?'left':'right'} ${top?'top':'bottom'}`;
- let outerRadius=`${radius}px`,clip='none';
- if(d.shape==='square'){outerRadius='0px'}else if(d.shape==='pill'){outerRadius='999px'}else if(d.shape==='angled'){outerRadius='0px';clip='polygon(1.2% 0,98.8% 0,100% 50%,98.8% 100%,1.2% 100%,0 50%)'}else if(d.shape==='chamfer'){outerRadius='0px';clip='polygon(2% 0,100% 0,98% 100%,0 100%)'}else if(d.shape==='hex'){outerRadius='0px';clip='polygon(3% 0,97% 0,100% 50%,97% 100%,3% 100%,0 50%)'}
- const innerRadius=d.shape==='square'||['angled','chamfer','hex'].includes(d.shape)?'0px':d.shape==='pill'?'18px':`${Math.max(3,Math.round(radius*.6))}px`;
+ let outerRadius=designCqi(radius),clip='none';
+ if(d.shape==='square'){outerRadius='0cqi'}else if(d.shape==='pill'){outerRadius='999cqi'}else if(d.shape==='angled'){outerRadius='0px';clip='polygon(1.2% 0,98.8% 0,100% 50%,98.8% 100%,1.2% 100%,0 50%)'}else if(d.shape==='chamfer'){outerRadius='0px';clip='polygon(2% 0,100% 0,98% 100%,0 100%)'}else if(d.shape==='hex'){outerRadius='0px';clip='polygon(3% 0,97% 0,100% 50%,97% 100%,3% 100%,0 50%)'}
+ const innerRadius=d.shape==='square'||['angled','chamfer','hex'].includes(d.shape)?'0cqi':d.shape==='pill'?'18cqi':designCqi(Math.max(3,Math.round(radius*.6)));
  const muted=designRgba(text,.72),line=designRgba(accent,.7),panel=designRgba(bg,Math.min(.98,opacity*.9)),scorePanel=designRgba(accent,.15);
  style.textContent=`
-#scoreBar.scoreBar[data-custom="true"]{left:${l}!important;right:${r}!important;top:${top?'3vh':'auto'}!important;bottom:${top?'auto':'2.25vh'}!important;width:${adjustedWidth}vw!important;max-width:${adjustedWidth}vw!important;min-width:0!important;transform:${xform}!important;transform-origin:${origin}!important;border-radius:${outerRadius}!important;clip-path:${clip}!important;border:${border}px solid ${accent}!important;background:${designRgba(bg,opacity)}!important;color:${text}!important;font-family:${font}!important;--accent:${accent};--jl-surface:${designRgba(bg,opacity)};--jl-panel:${panel};--jl-line:${line};--jl-ink:${text};--jl-muted:${muted};--jl-score-panel:${scorePanel};--jl-fresh-field:${panel};--jl-fresh-team:${designRgba(bg,Math.min(.98,opacity*.96))};--jl-fresh-score:${scorePanel};--jl-fresh-balls:${designRgba(bg,Math.min(.98,opacity*.84))};--jl-fresh-chase:${panel};--jl-fresh-row:${designRgba(bg,Math.min(.98,opacity*.78))};--jl-fresh-line:${line};--jl-fresh-ink:${text};--jl-fresh-muted:${muted};--jl-fresh-accent:${accent};--jl-logo-bg:${panel};--jl-score-font:${score}px;--jl-wicket-font:${Math.max(16,Math.round(score*.72))}px;--jl-meta-font:${meta}px;--jl-stat-font:${Math.round(meta*1.45)}px;--jl-small-font:${Math.max(7,Math.round(meta*.78))}px;--jl-logo-size:${logo}px;--jl-inner-radius:${innerRadius};--jl-ball-radius:${d.shape==='square'?'0px':d.shape==='pill'?'999px':innerRadius};--jl-logo-radius:${d.shape==='square'||['angled','chamfer','hex'].includes(d.shape)?'4px':'50%'}}
-#scoreBar.scoreBar[data-custom="true"] .jlRuns{font-size:${score}px!important;line-height:.95!important;color:${text}!important}
-#scoreBar.scoreBar[data-custom="true"] .jlWickets{font-size:${Math.max(16,Math.round(score*.72))}px!important;line-height:.95!important;color:${accent}!important}
-#scoreBar.scoreBar[data-custom="true"] .jlTeamName,#scoreBar.scoreBar[data-custom="true"] .jlScoreTeamName,#scoreBar.scoreBar[data-custom="true"] .jlBatterName,#scoreBar.scoreBar[data-custom="true"] .jlBowlerName{font-size:${meta}px!important;font-family:${font}!important;color:${text}!important}
-#scoreBar.scoreBar[data-custom="true"] .jlBatterRuns,#scoreBar.scoreBar[data-custom="true"] .jlBowlerFigures{font-size:${Math.round(meta*1.45)}px!important;color:${text}!important}
-#scoreBar.scoreBar[data-custom="true"] .jlScoreMeta,#scoreBar.scoreBar[data-custom="true"] .jlBatterBalls,#scoreBar.scoreBar[data-custom="true"] .jlBatterBoundaries,#scoreBar.scoreBar[data-custom="true"] .jlBowlerMeta,#scoreBar.scoreBar[data-custom="true"] .jlSectionLabel,#scoreBar.scoreBar[data-custom="true"] .jlNeedTag,#scoreBar.scoreBar[data-custom="true"] .jlBallsLeft,#scoreBar.scoreBar[data-custom="true"] .jlChaseTag{font-size:${Math.max(7,Math.round(meta*.78))}px!important;font-family:${font}!important;color:${muted}!important}
-#scoreBar.scoreBar[data-custom="true"] .jlTeamLogo{width:${logo}px!important;height:${logo}px!important;flex-basis:${logo}px!important;border-color:${accent}!important;border-radius:${d.shape==='square'||['angled','chamfer','hex'].includes(d.shape)?'4px':'50%'}!important}
-#scoreBar.scoreBar[data-custom="true"] .jlScoreLogo{width:${Math.max(14,Math.round(logo*.48))}px!important;height:${Math.max(14,Math.round(logo*.48))}px!important;flex-basis:${Math.max(14,Math.round(logo*.48))}px!important}
+#scoreBar.scoreBar[data-custom="true"]{left:${l}!important;right:${r}!important;top:${top?'3vh':'auto'}!important;bottom:${top?'auto':'2.25vh'}!important;width:${adjustedWidth}vw!important;max-width:${adjustedWidth}vw!important;min-width:0!important;transform:${xform}!important;transform-origin:${origin}!important;border-radius:${outerRadius}!important;clip-path:${clip}!important;border:${borderSize} solid ${accent}!important;background:${designRgba(bg,opacity)}!important;color:${text}!important;font-family:${font}!important;--accent:${accent};--jl-surface:${designRgba(bg,opacity)};--jl-panel:${panel};--jl-line:${line};--jl-ink:${text};--jl-muted:${muted};--jl-score-panel:${scorePanel};--jl-fresh-field:${panel};--jl-fresh-team:${designRgba(bg,Math.min(.98,opacity*.96))};--jl-fresh-score:${scorePanel};--jl-fresh-balls:${designRgba(bg,Math.min(.98,opacity*.84))};--jl-fresh-chase:${panel};--jl-fresh-row:${designRgba(bg,Math.min(.98,opacity*.78))};--jl-fresh-line:${line};--jl-fresh-ink:${text};--jl-fresh-muted:${muted};--jl-fresh-accent:${accent};--jl-logo-bg:${panel};--jl-score-font:${scoreSize};--jl-wicket-font:${wicketSize};--jl-meta-font:${metaSize};--jl-stat-font:${statSize};--jl-small-font:${smallSize};--jl-logo-size:${logoSize};--jl-inner-radius:${innerRadius};--jl-ball-radius:${d.shape==='square'?'0px':d.shape==='pill'?'999px':innerRadius};--jl-logo-radius:${d.shape==='square'||['angled','chamfer','hex'].includes(d.shape)?'4px':'50%'}}
+#scoreBar.scoreBar[data-custom="true"] .jlRuns{font-size:${scoreSize}!important;line-height:.95!important;color:${text}!important}
+#scoreBar.scoreBar[data-custom="true"] .jlWickets{font-size:${wicketSize}!important;line-height:.95!important;color:${accent}!important}
+#scoreBar.scoreBar[data-custom="true"] .jlTeamName,#scoreBar.scoreBar[data-custom="true"] .jlScoreTeamName,#scoreBar.scoreBar[data-custom="true"] .jlBatterName,#scoreBar.scoreBar[data-custom="true"] .jlBowlerName{font-size:${metaSize}!important;font-family:${font}!important;color:${text}!important}
+#scoreBar.scoreBar[data-custom="true"] .jlBatterRuns,#scoreBar.scoreBar[data-custom="true"] .jlBowlerFigures{font-size:${statSize}!important;color:${text}!important}
+#scoreBar.scoreBar[data-custom="true"] .jlScoreMeta,#scoreBar.scoreBar[data-custom="true"] .jlBatterBalls,#scoreBar.scoreBar[data-custom="true"] .jlBatterBoundaries,#scoreBar.scoreBar[data-custom="true"] .jlBowlerMeta,#scoreBar.scoreBar[data-custom="true"] .jlSectionLabel,#scoreBar.scoreBar[data-custom="true"] .jlNeedTag,#scoreBar.scoreBar[data-custom="true"] .jlBallsLeft,#scoreBar.scoreBar[data-custom="true"] .jlChaseTag{font-size:${smallSize}!important;font-family:${font}!important;color:${muted}!important}
+#scoreBar.scoreBar[data-custom="true"] .jlTeamLogo{width:${logoSize}!important;height:${logoSize}!important;flex-basis:${logoSize}!important;border-color:${accent}!important;border-radius:${d.shape==='square'||['angled','chamfer','hex'].includes(d.shape)?'4px':'50%'}!important}
+#scoreBar.scoreBar[data-custom="true"] .jlScoreLogo{width:${compactLogoSize}!important;height:${compactLogoSize}!important;flex-basis:${compactLogoSize}!important}
 #scoreBar.scoreBar[data-custom="true"] .jlBallChip{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;font-family:${font}!important}
 #cardLayer.cardLayer[data-custom="true"] .broadcastCardStage{font-family:${font}!important;color:${text}!important;border-color:${accent}!important;border-radius:${innerRadius}!important;--accent:${accent}}
 #cardLayer.cardLayer[data-custom="true"] .broadcastCardStage :is(h1,h2,h3,.playerBigStat,.broadcastCardTitle strong){font-family:${font}!important;color:${text}!important}
@@ -423,20 +429,12 @@ function renderEvent(b,matchId){
  if(scope!==lastEventStorageKey){
   lastEventStorageKey=scope;
   try{lastEventId=localStorage.getItem(scope)||null;lastEventAt=Number(localStorage.getItem(scope+':at'))||0;}catch{lastEventId=null;lastEventAt=0;}
-  eventScopeInitialized=false;
  }
  const incomingId=String(b.eventId??''),eventAt=Number(b.eventAt)||0;
  // Ignore an event that belongs to a previous match, even if Firestore delivers its snapshot late.
  if(b.matchId&&String(b.matchId)!==String(matchId)){clearEventVisual(el,cardEl);return;}
- if(!eventScopeInitialized){
-  eventScopeInitialized=true;
-  // On refresh, skip only an event that was already active before this Score Layer opened.
-  // A newly received event must still play even when it is the first message for this match.
-  const isOldSnapshot=!!eventAt&&(eventAt<scoreLayerLoadedAt||(lastEventAt>0&&eventAt<=lastEventAt));
-  if(b.event&&incomingId&&(isOldSnapshot||(!eventAt&&!lastEventId))){
-   rememberEventId(incomingId,eventAt);clearEventVisual(el,cardEl);return;
-  }
- }
+ // Do not compare timestamps from different computers: their clocks may be out of sync.
+ // The unique event ID is the reliable de-duplication key across OBS devices.
  if(!b.event){
   clearEventVisual(el,cardEl);
   if(incomingId)rememberEventId(incomingId,eventAt);
@@ -444,7 +442,6 @@ function renderEvent(b,matchId){
  }
  // Delayed/out-of-order broadcast snapshots must not replay an older event under a different ID.
  if(!incomingId||incomingId===String(lastEventId??''))return;
- if(eventAt>0&&lastEventAt>0&&eventAt<=lastEventAt)return;
  resetEventAnimation(el);clearTimeout(el._hide);rememberEventId(incomingId,eventAt);eventVisible=true;hideSponsorLayer();
  if(cardEl.classList.contains('isVisible')){dismissedCardId=String(latestBroadcast?.cardId??'');cardEl.classList.remove('isVisible');cardEl.style.display='none';cardEl.innerHTML='';cardEl.dataset.cardMarkup='';cardEl.dataset.cardId='';document.body.classList.remove('cardActive')}
  const eventName=String(b.event||'').toUpperCase();const corner=['NEW BATSMAN','NEW BOWLER'].includes(eventName);
