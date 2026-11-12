@@ -456,3 +456,191 @@
   border:0!important;
   box-shadow:none!important;
 }
+
+
+/* Twenty genuinely different layouts for the live jcIntl Score Layer panels. */
+/* 01 · Classic TV Blocks */
+#scoreBar.scoreBar.jlInternationalScorebar.layer1{grid-template-columns:1.30fr .83fr .98fr 1.19fr!important;grid-template-rows:1fr!important;grid-template-areas:"batting score target bowling"!important;gap:4px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer1 .jcIntlPanel{border-radius:3px!important;clip-path:none!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout1{grid-template-columns:1.30fr .83fr .98fr 1.19fr!important;grid-template-rows:1fr!important;grid-template-areas:"batting score target bowling"!important;gap:4px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout1 .jcPvPanel{border-radius:3px!important;clip-path:none!important;}
+/* 02 · Championship Frame */
+#scoreBar.scoreBar.jlInternationalScorebar.layer2{grid-template-columns:1.24fr .88fr .86fr 1.14fr!important;grid-template-rows:1fr!important;grid-template-areas:"batting target score bowling"!important;gap:5px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer2 .jcIntlPanel{border-radius:22px!important;clip-path:none!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout2{grid-template-columns:1.24fr .88fr .86fr 1.14fr!important;grid-template-rows:1fr!important;grid-template-areas:"batting target score bowling"!important;gap:5px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout2 .jcPvPanel{border-radius:22px!important;clip-path:none!important;}
+/* 03 · Angular Stadium */
+#scoreBar.scoreBar.jlInternationalScorebar.layer3{grid-template-columns:1.15fr .92fr .92fr 1.15fr!important;grid-template-rows:1fr!important;grid-template-areas:"bowling target score batting"!important;gap:3px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer3 .jcIntlPanel{border-radius:0!important;clip-path:polygon(3% 0,100% 0,97% 100%,0 100%)!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout3{grid-template-columns:1.15fr .92fr .92fr 1.15fr!important;grid-template-rows:1fr!important;grid-template-areas:"bowling target score batting"!important;gap:3px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout3 .jcPvPanel{border-radius:0!important;clip-path:polygon(3% 0,100% 0,97% 100%,0 100%)!important;}
+/* 04 · Rounded Arena */
+#scoreBar.scoreBar.jlInternationalScorebar.layer4{grid-template-columns:1.15fr .95fr .95fr 1.15fr!important;grid-template-rows:1.05fr .88fr!important;grid-template-areas:"batting score score bowling" "batting target target bowling"!important;gap:5px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer4 .jcIntlPanel{border-radius:18px 5px 18px 5px!important;clip-path:none!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout4{grid-template-columns:1.15fr .95fr .95fr 1.15fr!important;grid-template-rows:1.05fr .88fr!important;grid-template-areas:"batting score score bowling" "batting target target bowling"!important;gap:5px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout4 .jcPvPanel{border-radius:18px 5px 18px 5px!important;clip-path:none!important;}
+/* 05 · Split Edge Broadcast */
+#scoreBar.scoreBar.jlInternationalScorebar.layer5{grid-template-columns:1.12fr 1fr 1.12fr!important;grid-template-rows:1fr .86fr!important;grid-template-areas:"batting score bowling" "target score bowling"!important;gap:4px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer5 .jcIntlPanel{border-radius:12px!important;clip-path:none!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout5{grid-template-columns:1.12fr 1fr 1.12fr!important;grid-template-rows:1fr .86fr!important;grid-template-areas:"batting score bowling" "target score bowling"!important;gap:4px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout5 .jcPvPanel{border-radius:12px!important;clip-path:none!important;}
+/* 06 · Hexagon Score Rail */
+#scoreBar.scoreBar.jlInternationalScorebar.layer6{grid-template-columns:.90fr 1.20fr .95fr 1.05fr!important;grid-template-rows:1fr!important;grid-template-areas:"score batting target bowling"!important;gap:4px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer6 .jcIntlPanel{border-radius:0!important;clip-path:polygon(4% 0,96% 0,100% 50%,96% 100%,4% 100%,0 50%)!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout6{grid-template-columns:.90fr 1.20fr .95fr 1.05fr!important;grid-template-rows:1fr!important;grid-template-areas:"score batting target bowling"!important;gap:4px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout6 .jcPvPanel{border-radius:0!important;clip-path:polygon(4% 0,96% 0,100% 50%,96% 100%,4% 100%,0 50%)!important;}
+/* 07 · Twin Shield Panels */
+#scoreBar.scoreBar.jlInternationalScorebar.layer7{grid-template-columns:1.08fr 1.08fr .82fr 1.04fr!important;grid-template-rows:1fr!important;grid-template-areas:"batting bowling score target"!important;gap:5px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer7 .jcIntlPanel{border-radius:0!important;clip-path:polygon(0 0,94% 0,100% 50%,94% 100%,0 100%,6% 50%)!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout7{grid-template-columns:1.08fr 1.08fr .82fr 1.04fr!important;grid-template-rows:1fr!important;grid-template-areas:"batting bowling score target"!important;gap:5px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout7 .jcPvPanel{border-radius:0!important;clip-path:polygon(0 0,94% 0,100% 50%,94% 100%,0 100%,6% 50%)!important;}
+/* 08 · Slanted Match Bar */
+#scoreBar.scoreBar.jlInternationalScorebar.layer8{grid-template-columns:.86fr .94fr 1.10fr 1.20fr!important;grid-template-rows:1fr!important;grid-template-areas:"target score bowling batting"!important;gap:4px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer8 .jcIntlPanel{border-radius:12px 26px 12px 26px!important;clip-path:none!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout8{grid-template-columns:.86fr .94fr 1.10fr 1.20fr!important;grid-template-rows:1fr!important;grid-template-areas:"target score bowling batting"!important;gap:4px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout8 .jcPvPanel{border-radius:12px 26px 12px 26px!important;clip-path:none!important;}
+/* 09 · Triple Border Display */
+#scoreBar.scoreBar.jlInternationalScorebar.layer9{grid-template-columns:1.12fr 1.15fr .88fr .95fr!important;grid-template-rows:1fr!important;grid-template-areas:"bowling batting target score"!important;gap:3px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer9 .jcIntlPanel{border-radius:0 18px 0 18px!important;clip-path:none!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout9{grid-template-columns:1.12fr 1.15fr .88fr .95fr!important;grid-template-rows:1fr!important;grid-template-areas:"bowling batting target score"!important;gap:3px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout9 .jcPvPanel{border-radius:0 18px 0 18px!important;clip-path:none!important;}
+/* 10 · Pill Side Panels */
+#scoreBar.scoreBar.jlInternationalScorebar.layer10{grid-template-columns:1fr .90fr .90fr 1fr!important;grid-template-rows:1fr .86fr!important;grid-template-areas:"batting score score bowling" "target target target bowling"!important;gap:4px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer10 .jcIntlPanel{border-radius:999px!important;clip-path:none!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout10{grid-template-columns:1fr .90fr .90fr 1fr!important;grid-template-rows:1fr .86fr!important;grid-template-areas:"batting score score bowling" "target target target bowling"!important;gap:4px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout10 .jcPvPanel{border-radius:999px!important;clip-path:none!important;}
+/* 11 · Score Crown */
+#scoreBar.scoreBar.jlInternationalScorebar.layer11{grid-template-columns:.90fr 1.10fr .95fr 1.05fr!important;grid-template-rows:1fr!important;grid-template-areas:"score batting target bowling"!important;gap:4px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer11 .jcIntlPanel{border-radius:0!important;clip-path:polygon(8% 0,92% 0,100% 50%,92% 100%,8% 100%,0 50%)!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout11{grid-template-columns:.90fr 1.10fr .95fr 1.05fr!important;grid-template-rows:1fr!important;grid-template-areas:"score batting target bowling"!important;gap:4px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout11 .jcPvPanel{border-radius:0!important;clip-path:polygon(8% 0,92% 0,100% 50%,92% 100%,8% 100%,0 50%)!important;}
+/* 12 · Corner Cut Classic */
+#scoreBar.scoreBar.jlInternationalScorebar.layer12{grid-template-columns:1fr .96fr 1.10fr!important;grid-template-rows:.92fr .86fr!important;grid-template-areas:"score target bowling" "batting target bowling"!important;gap:4px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer12 .jcIntlPanel{border-radius:2px!important;clip-path:none!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout12{grid-template-columns:1fr .96fr 1.10fr!important;grid-template-rows:.92fr .86fr!important;grid-template-areas:"score target bowling" "batting target bowling"!important;gap:4px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout12 .jcPvPanel{border-radius:2px!important;clip-path:none!important;}
+/* 13 · Stadium Curve */
+#scoreBar.scoreBar.jlInternationalScorebar.layer13{grid-template-columns:1.10fr .85fr 1fr 1.15fr!important;grid-template-rows:1fr!important;grid-template-areas:"bowling score target batting"!important;gap:5px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer13 .jcIntlPanel{border-radius:28px 6px 28px 6px!important;clip-path:none!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout13{grid-template-columns:1.10fr .85fr 1fr 1.15fr!important;grid-template-rows:1fr!important;grid-template-areas:"bowling score target batting"!important;gap:5px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout13 .jcPvPanel{border-radius:28px 6px 28px 6px!important;clip-path:none!important;}
+/* 14 · Digital Night Board */
+#scoreBar.scoreBar.jlInternationalScorebar.layer14{grid-template-columns:1.15fr 1.05fr 1.15fr!important;grid-template-rows:.88fr 1fr!important;grid-template-areas:"batting score bowling" "batting target bowling"!important;gap:3px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer14 .jcIntlPanel{border-radius:5px!important;clip-path:polygon(5% 0,95% 0,100% 100%,0 100%)!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout14{grid-template-columns:1.15fr 1.05fr 1.15fr!important;grid-template-rows:.88fr 1fr!important;grid-template-areas:"batting score bowling" "batting target bowling"!important;gap:3px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout14 .jcPvPanel{border-radius:5px!important;clip-path:polygon(5% 0,95% 0,100% 100%,0 100%)!important;}
+/* 15 · Gold Championship */
+#scoreBar.scoreBar.jlInternationalScorebar.layer15{grid-template-columns:1.20fr .85fr 1fr 1.10fr!important;grid-template-rows:1fr!important;grid-template-areas:"batting target score bowling"!important;gap:6px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer15 .jcIntlPanel{border-radius:18px 4px 18px 4px!important;clip-path:none!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout15{grid-template-columns:1.20fr .85fr 1fr 1.10fr!important;grid-template-rows:1fr!important;grid-template-areas:"batting target score bowling"!important;gap:6px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout15 .jcPvPanel{border-radius:18px 4px 18px 4px!important;clip-path:none!important;}
+/* 16 · Diagonal Edge */
+#scoreBar.scoreBar.jlInternationalScorebar.layer16{grid-template-columns:1.10fr .85fr 1fr 1.20fr!important;grid-template-rows:1fr!important;grid-template-areas:"bowling target score batting"!important;gap:4px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer16 .jcIntlPanel{border-radius:0!important;clip-path:polygon(0 0,96% 0,100% 100%,4% 100%)!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout16{grid-template-columns:1.10fr .85fr 1fr 1.20fr!important;grid-template-rows:1fr!important;grid-template-areas:"bowling target score batting"!important;gap:4px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout16 .jcPvPanel{border-radius:0!important;clip-path:polygon(0 0,96% 0,100% 100%,4% 100%)!important;}
+/* 17 · Minimal TV Rail */
+#scoreBar.scoreBar.jlInternationalScorebar.layer17{grid-template-columns:.90fr 1.05fr 1.05fr!important;grid-template-rows:1fr .84fr!important;grid-template-areas:"score batting bowling" "score target target"!important;gap:3px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer17 .jcIntlPanel{border-radius:0!important;clip-path:none!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout17{grid-template-columns:.90fr 1.05fr 1.05fr!important;grid-template-rows:1fr .84fr!important;grid-template-areas:"score batting bowling" "score target target"!important;gap:3px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout17 .jcPvPanel{border-radius:0!important;clip-path:none!important;}
+/* 18 · Heavy Score Focus */
+#scoreBar.scoreBar.jlInternationalScorebar.layer18{grid-template-columns:1.32fr .72fr 1.15fr 1.00fr!important;grid-template-rows:1fr!important;grid-template-areas:"batting score target bowling"!important;gap:4px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer18 .jcIntlPanel{border-radius:999px!important;clip-path:none!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout18{grid-template-columns:1.32fr .72fr 1.15fr 1.00fr!important;grid-template-rows:1fr!important;grid-template-areas:"batting score target bowling"!important;gap:4px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout18 .jcPvPanel{border-radius:999px!important;clip-path:none!important;}
+/* 19 · Side Wing Panels */
+#scoreBar.scoreBar.jlInternationalScorebar.layer19{grid-template-columns:.90fr 1.25fr .85fr 1.10fr!important;grid-template-rows:1fr!important;grid-template-areas:"target batting score bowling"!important;gap:5px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer19 .jcIntlPanel{border-radius:0 15px 0 15px!important;clip-path:polygon(0 10%,90% 0,100% 90%,10% 100%)!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout19{grid-template-columns:.90fr 1.25fr .85fr 1.10fr!important;grid-template-rows:1fr!important;grid-template-areas:"target batting score bowling"!important;gap:5px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout19 .jcPvPanel{border-radius:0 15px 0 15px!important;clip-path:polygon(0 10%,90% 0,100% 90%,10% 100%)!important;}
+/* 20 · Final Over Spotlight */
+#scoreBar.scoreBar.jlInternationalScorebar.layer20{grid-template-columns:1fr 1fr 1fr 1fr!important;grid-template-rows:1fr!important;grid-template-areas:"batting score target bowling"!important;gap:5px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer20 .jcIntlPanel{border-radius:0!important;clip-path:polygon(0 0,93% 0,100% 50%,93% 100%,0 100%,7% 50%)!important;}
+#layerPreview.layerPreview.jlInternationalPreview.layout20{grid-template-columns:1fr 1fr 1fr 1fr!important;grid-template-rows:1fr!important;grid-template-areas:"batting score target bowling"!important;gap:5px!important}
+#layerPreview.layerPreview.jlInternationalPreview.layout20 .jcPvPanel{border-radius:0!important;clip-path:polygon(0 0,93% 0,100% 50%,93% 100%,0 100%,7% 50%)!important;}
+
+#scoreBar.scoreBar.jlInternationalScorebar.layer4 .jcIntlScorePanel{border:2px solid var(--intl-accent)!important;border-radius:16px!important;box-shadow:0 0 16px #0008,inset 0 0 18px #ffffff12!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer5 .jcIntlScorePanel{border:2px solid var(--intl-accent)!important;border-radius:18px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer6 .jcIntlScorePanel{border:2px solid var(--intl-accent)!important;clip-path:polygon(50% 0,100% 18%,100% 82%,50% 100%,0 82%,0 18%)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer11 .jcIntlScorePanel{border:2px double var(--intl-accent)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer12 .jcIntlScorePanel{border:3px double var(--intl-accent)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer17 .jcIntlScorePanel{border-right:3px solid var(--intl-accent)!important;border-radius:0!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer18 .jcIntlScorePanel{border:2px solid var(--intl-accent)!important;box-shadow:0 0 0 3px #ffffff12,0 0 20px color-mix(in srgb,var(--intl-accent) 35%,transparent)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer20 .jcIntlScorePanel{border:2px solid var(--intl-accent)!important;box-shadow:0 0 24px color-mix(in srgb,var(--intl-accent) 40%,transparent)!important}
+@media(max-width:720px){
+ #scoreBar.scoreBar.jlInternationalScorebar.layer1,#scoreBar.scoreBar.jlInternationalScorebar.layer2,#scoreBar.scoreBar.jlInternationalScorebar.layer3,#scoreBar.scoreBar.jlInternationalScorebar.layer4,#scoreBar.scoreBar.jlInternationalScorebar.layer5,#scoreBar.scoreBar.jlInternationalScorebar.layer6,#scoreBar.scoreBar.jlInternationalScorebar.layer7,#scoreBar.scoreBar.jlInternationalScorebar.layer8,#scoreBar.scoreBar.jlInternationalScorebar.layer9,#scoreBar.scoreBar.jlInternationalScorebar.layer10,#scoreBar.scoreBar.jlInternationalScorebar.layer11,#scoreBar.scoreBar.jlInternationalScorebar.layer12,#scoreBar.scoreBar.jlInternationalScorebar.layer13,#scoreBar.scoreBar.jlInternationalScorebar.layer14,#scoreBar.scoreBar.jlInternationalScorebar.layer15,#scoreBar.scoreBar.jlInternationalScorebar.layer16,#scoreBar.scoreBar.jlInternationalScorebar.layer17,#scoreBar.scoreBar.jlInternationalScorebar.layer18,#scoreBar.scoreBar.jlInternationalScorebar.layer19,#scoreBar.scoreBar.jlInternationalScorebar.layer20{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-areas:"batting score" "target bowling"!important;gap:2px!important;
+ }
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlPanel{padding:4px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlTeamLogo{flex-basis:clamp(18px,4vw,24px)!important;width:clamp(18px,4vw,24px)!important;height:clamp(18px,4vw,24px)!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlSectionHead{gap:3px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlSectionHead strong{font-size:9px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlSectionHead span{font-size:6px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterHead,#scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterRow{grid-template-columns:minmax(0,1fr) clamp(44px,13vw,58px)!important;gap:2px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterName{font-size:clamp(9px,2.2vw,12px)!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore b{font-size:clamp(10px,2.4vw,13px)!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore small{font-size:8px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerName{font-size:clamp(10px,2.3vw,13px)!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:1px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats b{font-size:clamp(9px,2.15vw,12px)!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats small{font-size:7px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlThisOver{gap:3px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlThisOver>small{font-size:6px!important}
+ #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBall{width:clamp(13px,3vw,17px)!important;height:clamp(13px,3vw,17px)!important;flex-basis:clamp(13px,3vw,17px)!important;font-size:7px!important}
+ #layerPreview.layerPreview.jlInternationalPreview{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:1fr 1fr!important;grid-template-areas:"batting score" "target bowling"!important}
+}
+
+
+/* Palettes 11–20 complete the independent 20-colour selector. */
+#scoreBar.scoreBar.jlInternationalScorebar.color11{--intl-batting:linear-gradient(110deg,#155184,#092943);--intl-score:linear-gradient(135deg,#071c32,#145078);--intl-target:linear-gradient(145deg,#e0f4ff,#85c4e6);--intl-bowling:linear-gradient(110deg,#176d85,#0b405a);--intl-accent:#8be3ff}
+#layerPreview.layerPreview.jlInternationalPreview.color11 .jcPvBatting{background:linear-gradient(110deg,#155184,#092943)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color11 .jcPvScore{background:linear-gradient(135deg,#071c32,#145078)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color11 .jcPvTarget{background:linear-gradient(145deg,#e0f4ff,#85c4e6)!important;color:#182233!important}
+#layerPreview.layerPreview.jlInternationalPreview.color11 .jcPvBowling{background:linear-gradient(110deg,#176d85,#0b405a)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.color12{--intl-batting:linear-gradient(110deg,#14634e,#07382e);--intl-score:linear-gradient(135deg,#0c2a27,#1b5d50);--intl-target:linear-gradient(145deg,#f6e9c2,#d4b96e);--intl-bowling:linear-gradient(110deg,#80662d,#4d3c1b);--intl-accent:#ffe6a0}
+#layerPreview.layerPreview.jlInternationalPreview.color12 .jcPvBatting{background:linear-gradient(110deg,#14634e,#07382e)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color12 .jcPvScore{background:linear-gradient(135deg,#0c2a27,#1b5d50)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color12 .jcPvTarget{background:linear-gradient(145deg,#f6e9c2,#d4b96e)!important;color:#182233!important}
+#layerPreview.layerPreview.jlInternationalPreview.color12 .jcPvBowling{background:linear-gradient(110deg,#80662d,#4d3c1b)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.color13{--intl-batting:linear-gradient(110deg,#1c2b49,#0b1325);--intl-score:linear-gradient(135deg,#050b18,#143b73);--intl-target:linear-gradient(145deg,#75b4ff,#3678d2);--intl-bowling:linear-gradient(110deg,#164f8f,#0b2c57);--intl-accent:#58d8ff}
+#layerPreview.layerPreview.jlInternationalPreview.color13 .jcPvBatting{background:linear-gradient(110deg,#1c2b49,#0b1325)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color13 .jcPvScore{background:linear-gradient(135deg,#050b18,#143b73)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color13 .jcPvTarget{background:linear-gradient(145deg,#75b4ff,#3678d2)!important;color:#182233!important}
+#layerPreview.layerPreview.jlInternationalPreview.color13 .jcPvBowling{background:linear-gradient(110deg,#164f8f,#0b2c57)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.color14{--intl-batting:linear-gradient(110deg,#76265f,#351539);--intl-score:linear-gradient(135deg,#21122d,#562a55);--intl-target:linear-gradient(145deg,#ebd9ee,#bca4ca);--intl-bowling:linear-gradient(110deg,#873a7e,#4e2058);--intl-accent:#ff91d8}
+#layerPreview.layerPreview.jlInternationalPreview.color14 .jcPvBatting{background:linear-gradient(110deg,#76265f,#351539)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color14 .jcPvScore{background:linear-gradient(135deg,#21122d,#562a55)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color14 .jcPvTarget{background:linear-gradient(145deg,#ebd9ee,#bca4ca)!important;color:#182233!important}
+#layerPreview.layerPreview.jlInternationalPreview.color14 .jcPvBowling{background:linear-gradient(110deg,#873a7e,#4e2058)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.color15{--intl-batting:linear-gradient(110deg,#742334,#37121f);--intl-score:linear-gradient(135deg,#201624,#64303e);--intl-target:linear-gradient(145deg,#f3d58a,#bb863d);--intl-bowling:linear-gradient(110deg,#8c3a31,#491c25);--intl-accent:#ffd56d}
+#layerPreview.layerPreview.jlInternationalPreview.color15 .jcPvBatting{background:linear-gradient(110deg,#742334,#37121f)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color15 .jcPvScore{background:linear-gradient(135deg,#201624,#64303e)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color15 .jcPvTarget{background:linear-gradient(145deg,#f3d58a,#bb863d)!important;color:#182233!important}
+#layerPreview.layerPreview.jlInternationalPreview.color15 .jcPvBowling{background:linear-gradient(110deg,#8c3a31,#491c25)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.color16{--intl-batting:linear-gradient(110deg,#087b78,#064246);--intl-score:linear-gradient(135deg,#071f39,#124b66);--intl-target:linear-gradient(145deg,#8cebe0,#36b9ad);--intl-bowling:linear-gradient(110deg,#105d7c,#073a55);--intl-accent:#8bfff0}
+#layerPreview.layerPreview.jlInternationalPreview.color16 .jcPvBatting{background:linear-gradient(110deg,#087b78,#064246)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color16 .jcPvScore{background:linear-gradient(135deg,#071f39,#124b66)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color16 .jcPvTarget{background:linear-gradient(145deg,#8cebe0,#36b9ad)!important;color:#182233!important}
+#layerPreview.layerPreview.jlInternationalPreview.color16 .jcPvBowling{background:linear-gradient(110deg,#105d7c,#073a55)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.color17{--intl-batting:linear-gradient(110deg,#a34c2a,#5c2438);--intl-score:linear-gradient(135deg,#23163c,#56316d);--intl-target:linear-gradient(145deg,#ffd89b,#d28c53);--intl-bowling:linear-gradient(110deg,#6a337e,#35194a);--intl-accent:#ffc582}
+#layerPreview.layerPreview.jlInternationalPreview.color17 .jcPvBatting{background:linear-gradient(110deg,#a34c2a,#5c2438)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color17 .jcPvScore{background:linear-gradient(135deg,#23163c,#56316d)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color17 .jcPvTarget{background:linear-gradient(145deg,#ffd89b,#d28c53)!important;color:#182233!important}
+#layerPreview.layerPreview.jlInternationalPreview.color17 .jcPvBowling{background:linear-gradient(110deg,#6a337e,#35194a)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.color18{--intl-batting:linear-gradient(110deg,#315f91,#17385e);--intl-score:linear-gradient(135deg,#101d36,#2c4e81);--intl-target:linear-gradient(145deg,#f2f5f8,#b8c8da);--intl-bowling:linear-gradient(110deg,#2b5c8b,#17395f);--intl-accent:#d6e9ff}
+#layerPreview.layerPreview.jlInternationalPreview.color18 .jcPvBatting{background:linear-gradient(110deg,#315f91,#17385e)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color18 .jcPvScore{background:linear-gradient(135deg,#101d36,#2c4e81)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color18 .jcPvTarget{background:linear-gradient(145deg,#f2f5f8,#b8c8da)!important;color:#182233!important}
+#layerPreview.layerPreview.jlInternationalPreview.color18 .jcPvBowling{background:linear-gradient(110deg,#2b5c8b,#17395f)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.color19{--intl-batting:linear-gradient(110deg,#1b583e,#0d3025);--intl-score:linear-gradient(135deg,#122c24,#31593a);--intl-target:linear-gradient(145deg,#edda83,#b39136);--intl-bowling:linear-gradient(110deg,#4c6c36,#293f22);--intl-accent:#f1d97a}
+#layerPreview.layerPreview.jlInternationalPreview.color19 .jcPvBatting{background:linear-gradient(110deg,#1b583e,#0d3025)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color19 .jcPvScore{background:linear-gradient(135deg,#122c24,#31593a)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color19 .jcPvTarget{background:linear-gradient(145deg,#edda83,#b39136)!important;color:#182233!important}
+#layerPreview.layerPreview.jlInternationalPreview.color19 .jcPvBowling{background:linear-gradient(110deg,#4c6c36,#293f22)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.color20{--intl-batting:linear-gradient(110deg,#1a2444,#090f25);--intl-score:linear-gradient(135deg,#081121,#233c70);--intl-target:linear-gradient(145deg,#e8f36a,#a2b43a);--intl-bowling:linear-gradient(110deg,#502c7c,#21143f);--intl-accent:#68f6ff}
+#layerPreview.layerPreview.jlInternationalPreview.color20 .jcPvBatting{background:linear-gradient(110deg,#1a2444,#090f25)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color20 .jcPvScore{background:linear-gradient(135deg,#081121,#233c70)!important}
+#layerPreview.layerPreview.jlInternationalPreview.color20 .jcPvTarget{background:linear-gradient(145deg,#e8f36a,#a2b43a)!important;color:#182233!important}
+#layerPreview.layerPreview.jlInternationalPreview.color20 .jcPvBowling{background:linear-gradient(110deg,#502c7c,#21143f)!important}
