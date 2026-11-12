@@ -230,20 +230,14 @@ function renderBar(m,b){
  const bowlerRuns=Number(bw?.runs)||0;
  const bowlerWickets=Number(bw?.wickets)||0;
  const bowlerMaidens=Number(bw?.maidens)||0;
- const economy=bowlerBalls>0?(bowlerRuns/(bowlerBalls/6)).toFixed(2):'0.00';
  const recentOver=balls>0?Math.floor((balls-1)/6)+1:Math.max(1,Number(i.currentOver)||1);
  const deliveries=overEvents(i.events||[]).map(event=>{const item=deliveryInfo(event);return `<span class="jcIntlBall ${item.cls}" title="${esc(item.title)}">${item.label}</span>`}).join('');
  const logo=(team,side)=>`<span class="jcIntlTeamLogo ${side}" aria-label="${side==='left'?'Batting team logo':'Bowling team logo'}">${team.logo?`<img src="${esc(team.logo)}" alt="" onerror="this.remove();this.parentElement.classList.add('isFallback')">`:'<b>🏏</b>'}</span>`;
  const batterLine=(player,kind)=>{
   const playerRuns=Number(player?.runs)||0,playerBalls=Number(player?.balls)||0;
-  const fours=Number(player?.fours)||0,sixes=Number(player?.sixes)||0;
-  const strikeRate=playerBalls>0?((playerRuns/playerBalls)*100).toFixed(1):'0.0';
   return `<div class="jcIntlBatterRow ${kind==='striker'?'isStriker':'isNonStriker'}">
    <span class="jcIntlBatterName" title="${esc(player?.name||'—')}">${esc(player?.name||'—')}</span>
    <span class="jcIntlBatScore"><b>${playerRuns}${kind==='striker'?'*':''}</b><small>(${playerBalls})</small></span>
-   <span class="jcIntlBoundaryStat"><b>${fours}</b></span>
-   <span class="jcIntlBoundaryStat"><b>${sixes}</b></span>
-   <span class="jcIntlStrikeRate"><b>${strikeRate}</b></span>
   </div>`;
  };
  layer.innerHTML=`
@@ -251,7 +245,7 @@ function renderBar(m,b){
    ${logo(batting,'left')}
    <div class="jcIntlBattingContent">
     <div class="jcIntlSectionHead"><strong class="jcIntlTeamName" title="${esc(batting.name)}">${esc(batting.name||'TEAM')}</strong><span>AT THE CREASE</span></div>
-    <div class="jcIntlBatterHead"><span>BATSMAN</span><span>R (B)</span><span>4s</span><span>6s</span><span>SR</span></div>
+    <div class="jcIntlBatterHead"><span>BATSMAN</span><span>R (B)</span></div>
     ${batterLine(striker,'striker')}
     ${batterLine(nonStriker,'nonStriker')}
    </div>
@@ -277,14 +271,13 @@ function renderBar(m,b){
   </section>
   <section class="jcIntlPanel jcIntlBowlingPanel" aria-label="Bowler statistics and current over">
    <div class="jcIntlBowlingContent">
-    <div class="jcIntlSectionHead"><strong>BOWLER</strong><span>O · M · R · W · ECON</span></div>
+    <div class="jcIntlSectionHead"><strong>BOWLER</strong><span>CURRENT SPELL</span></div>
     <div class="jcIntlBowlerName" title="${esc(bw?.name||'—')}">${esc(bw?.name||'—')}</div>
     <div class="jcIntlBowlerStats">
      <span><b>${bowlerOvers}</b><small>O</small></span>
      <span><b>${bowlerMaidens}</b><small>M</small></span>
      <span><b>${bowlerRuns}</b><small>R</small></span>
      <span><b>${bowlerWickets}</b><small>W</small></span>
-     <span><b>${economy}</b><small>ECON</small></span>
     </div>
     <div class="jcIntlThisOver"><small>THIS OVER · ${recentOver}</small><div class="jcIntlBallRail">${deliveries||'<span class="jcIntlBallEmpty">—</span>'}</div></div>
    </div>
@@ -407,8 +400,16 @@ function rememberEventId(id){
 }
 function clearEventVisual(el,cardEl){
  clearTimeout(el._hide);eventVisible=false;el.style.display='none';el.innerHTML='';
- el.classList.remove('incomingCornerLayer');
+ el.className='eventLayer';el.removeAttribute('data-anim');el.removeAttribute('data-event-type');
+ el.style.removeProperty('animation-duration');
  if(!cardEl.classList.contains('isVisible'))flushPendingSponsor();
+}
+function resetEventAnimation(el){
+ // Remove old event selectors and force a style boundary, including repeated FOUR/ZOOM events.
+ el.style.display='none';el.className='eventLayer';
+ el.removeAttribute('data-anim');el.removeAttribute('data-event-type');
+ el.style.removeProperty('animation-duration');
+ void el.offsetWidth;
 }
 function renderEvent(b,matchId){
  const el=document.getElementById('eventLayer'),cardEl=document.getElementById('cardLayer');
@@ -438,7 +439,7 @@ function renderEvent(b,matchId){
  }
  // Each event ID can animate only once for this match, even after SSE re-renders.
  if(!incomingId||incomingId===String(lastEventId??''))return;
- clearTimeout(el._hide);rememberEventId(incomingId);eventVisible=true;hideSponsorLayer();
+ resetEventAnimation(el);clearTimeout(el._hide);rememberEventId(incomingId);eventVisible=true;hideSponsorLayer();
  if(cardEl.classList.contains('isVisible')){dismissedCardId=String(latestBroadcast?.cardId??'');cardEl.classList.remove('isVisible');cardEl.style.display='none';cardEl.innerHTML='';cardEl.dataset.cardMarkup='';cardEl.dataset.cardId='';document.body.classList.remove('cardActive')}
  const eventName=String(b.event||'').toUpperCase();const corner=['NEW BATSMAN','NEW BOWLER'].includes(eventName);
  const animationTemplate=!corner?selectedStudioOverlay(b.animationDesign):null;
@@ -450,7 +451,7 @@ function renderEvent(b,matchId){
   if(batterName){const name=document.createElement('div');name.className='eventPlayerName jcEventPlayerNameOverlay';name.textContent=batterName;el.appendChild(name);}
  }
  el.dataset.eventType=eventName.toLowerCase().replace(/\s+/g,'-');el.style.animationDuration=`${b.duration||2200}ms`;el.style.display='grid';const inner=el.querySelector('.eventInner,.jlStudioOverlayRoot,.incomingPlayerToast');if(inner)inner.style.animationDuration=`${b.duration||2200}ms`;
- el._hide=setTimeout(()=>{eventVisible=false;el.style.display='none';el.innerHTML='';el.classList.remove('incomingCornerLayer');if(!cardEl.classList.contains('isVisible'))flushPendingSponsor()},Math.max(900,Number(b.duration||2200)-50));
+ el._hide=setTimeout(()=>clearEventVisual(el,cardEl),Math.max(900,Number(b.duration||2200)-50));
 }
 function renderCard(b,m){
  const el=document.getElementById('cardLayer'),card=b.card;
