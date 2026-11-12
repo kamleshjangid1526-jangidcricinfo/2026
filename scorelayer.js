@@ -19,7 +19,8 @@ function eventMarkup(ev,meta={}){
  if(e==='WICKET')return '<div class="eventInner wicketEventInner"><img class="eventSticker batterSticker walkingSticker" src="assets/stickers/batter-sticker.png" alt="Departing batter illustration"><img class="eventSticker umpireSticker" src="assets/stickers/umpire-out-sticker.png" alt="Umpire OUT signal illustration"><div class="eventTitle">OUT</div><div class="eventSub">WICKET</div></div>  ';
  if(e==='FOUR')return '<div class="eventInner eventFour"><img class="eventSticker batBallSticker" src="assets/stickers/bat-ball-sticker.png" alt="Bat and ball motion illustration"><div class="celebrateIcon">4</div><div class="eventTitle">FOUR</div><div class="eventSub">BOUNDARY</div><div class="fireworks">✦ ✦ ✦ ✦ ✦</div></div>';
  if(e==='SIX')return '<div class="eventInner eventSix"><img class="eventSticker batBallSticker sixSticker" src="assets/stickers/bat-ball-sticker.png" alt="Bat and ball power-hit illustration"><div class="celebrateIcon bigSix">6</div><div class="eventTitle">SIX</div><div class="eventSub">MAXIMUM</div><div class="fireworks">✹ ✦ ✹ ✦ ✹</div><img class="eventSticker confettiSticker" src="assets/stickers/celebration-sticker.png" alt="Celebration illustration"></div>';
- if(e==='FIFTY')return '<div class="eventInner"><img class="eventSticker batterSticker" src="assets/stickers/batter-sticker.png" alt="Batter celebration illustration"><div class="eventTitle">FIFTY</div><div class="eventSub">HALF-CENTURY</div></div>';
+  if(e==='FIFTY'||e==='CENTURY'){const p=meta.eventPlayer||{};const century=e==='CENTURY';return `<div class="eventInner"><img class="eventSticker batterSticker" src="assets/stickers/batter-sticker.png" alt="Batter milestone celebration"><div class="eventTitle">${century?'CENTURY':'FIFTY'}</div><div class="eventSub">${esc(p.name||'BATTER')} · ${esc(p.teamName||'')}</div><strong class="milestoneRuns">${Number(p.runs|| (century?100:50))} RUNS</strong>${century?'<img class="eventSticker confettiSticker" src="assets/stickers/celebration-sticker.png" alt="Celebration illustration">':''}</div>`;}
+  if(e==='TEAM 50'||e==='TEAM 100'){const d=meta.teamMilestone||{};const century=e==='TEAM 100';return `<div class="eventInner"><div class="badgeIcon ${century?'trophy':'free'}">${century?'100':'50'}</div><div class="eventTitle">${century?'TEAM 100':'TEAM 50'}</div><div class="eventSub">${esc(d.teamName||'BATTING TEAM')} · ${Number(d.score|| (century?100:50))} RUNS</div></div>`;}
  if(e==='CENTURY')return '<div class="eventInner"><img class="eventSticker batterSticker" src="assets/stickers/batter-sticker.png" alt="Batter century celebration illustration"><div class="eventTitle">CENTURY</div><div class="eventSub">100 RUNS</div><img class="eventSticker confettiSticker" src="assets/stickers/celebration-sticker.png" alt="Celebration illustration"></div>';
  if(e==='NEW BATSMAN')return '<div class="eventInner"><img class="eventSticker batterSticker" src="assets/stickers/batter-sticker.png" alt="Incoming batter illustration"><div class="eventTitle">NEW BATSMAN</div><div class="eventSub">WALKING TO THE CREASE</div></div>';
  if(e==='NEW BOWLER')return '<div class="eventInner"><img class="eventSticker bowlerSticker" src="assets/stickers/bowler-sticker.png" alt="Bowler action illustration"><div class="eventTitle">NEW BOWLER</div><div class="eventSub">OVER CHANGE</div></div>';
@@ -516,9 +517,13 @@ function boot(){
  es.onmessage=e=>{
   try{
    const d=JSON.parse(e.data);
-   const candidates=(d.activeMatches||[]).filter(x=>(x.status==='live'||(x.status==='finished'&&owner&&x.userId===owner))&&(!owner||x.userId===owner));
    const requested=q.get('match');
-   const m=requested?candidates.find(x=>x.id===requested):candidates[0];
+   const allMatches=[...(d.activeMatches||[]),...(d.matches||[])];
+   const matchPool=[...new Map(allMatches.filter(Boolean).map(x=>[String(x.id),x])).values()];
+   const m=requested
+     ?matchPool.find(x=>String(x.id)===String(requested)&&['live','finished'].includes(x.status)&&(!owner||x.userId===owner))
+     :matchPool.find(x=>x.status==='live'&&(!owner||x.userId===owner))
+      ||matchPool.find(x=>x.status==='finished'&&(!owner||x.userId===owner)&&d.broadcasts?.[x.userId]?.event==='RESULT'&&String(d.broadcasts?.[x.userId]?.matchId||'')===String(x.id));
    if(!m){const bar=document.getElementById('scoreBar');if(requested)bar.innerHTML='';return;}
    latestMatch=m;
    const incoming={...(d.broadcasts?.[m.userId]||{})};
