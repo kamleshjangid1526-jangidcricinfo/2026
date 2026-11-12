@@ -1,5 +1,5 @@
 let STATE=null, MATCH=null, selectedTeamId=null, matchStep=1, modalCloseHook=null, PUBLIC_LIVE=[], activeCardType=null, draftSaveTimer=null, restoringMatchDraft=false, secondSetupModalOpen=false, secondSetupDismissed=false, secondSetupOpenScheduled=false, nextInningsModalOpen=false, nextInningsPromptDismissed=false, nextInningsPromptScheduled=false, newBatterModalOpen=false, newBatterDismissed=false, newBatterOpenScheduled=false;
-let broadcastSequence=Date.now(),eventBroadcastQueue=Promise.resolve(),eventPublishGeneration=0;
+let broadcastSequence=Date.now(),eventBroadcastQueue=Promise.resolve(),eventPublishGeneration=0,eventSequenceResolve=null;
 const eventSequenceTimers=new Set();
 // Auth bootstrap guard: an initial unauthenticated /api/state request must never undo a later successful login.
 let authBootSequence=0, loginSubmitting=false;
@@ -13,9 +13,9 @@ const ANIMS=['slideUp','slideDown','slideLeft','slideRight','fade','zoom','pop',
 const CARD_TYPES=[['batter','Individual Batter'],['bowler','Individual Bowler'],['player','Player Spotlight'],['partnership','Partnership'],['teamBatting','Full Team Batting'],['teamBowling','Full Team Bowling'],['nextBatter','Next Batsman'],['newBatter','New Batter'],['newBowler','New Bowler'],['inningsBreak','Innings Break'],['result','Match Result'],['chase','Runs Needed / Balls Remaining']];
 let CARD_ANIM_MAP={batter:'spark',bowler:'spotlight',player:'fireworks',partnership:'orbit',teamBatting:'slideUp',teamBowling:'slideDown',nextBatter:'bounce',newBatter:'slideRight',newBowler:'slideLeft',inningsBreak:'shatter',result:'fireworks',chase:'slam'};
 let CARD_DURATION_MAP={batter:1800,bowler:1800,player:1900,partnership:1800,teamBatting:2600,teamBowling:2600,nextBatter:1700,newBatter:1800,newBowler:1800,inningsBreak:2600,result:3000,chase:2400};
-const EVENT_STYLES={FOUR:'four',SIX:'six',WICKET:'wicket','NO BALL':'noball',WIDE:'wide','LEG BYE':'legbye',BYE:'bye','FREE HIT':'freehit',FIFTY:'fifty',CENTURY:'century','NEW BATSMAN':'newbatsman','NEW BOWLER':'newbowler',RESULT:'result','INNINGS BREAK':'inningsbreak',POWERPLAY:'powerplay',PARTNERSHIP:'partnership','50 PARTNERSHIP':'partnership'};
-const EVENTS=['FOUR','SIX','WICKET','FREE HIT','FIFTY','CENTURY','NO BALL','WIDE','LEG BYE','BYE','NEW BATSMAN','NEW BOWLER','RESULT','INNINGS BREAK','POWERPLAY','PARTNERSHIP','50 PARTNERSHIP'];
-let EVENT_DURATION_MAP={FOUR:2200,SIX:2600,WICKET:2700,'FREE HIT':1600,FIFTY:2400,CENTURY:3000,'NO BALL':1900,WIDE:1700,'LEG BYE':1700,BYE:1500,'NEW BATSMAN':1800,'NEW BOWLER':1800,RESULT:3000,'INNINGS BREAK':2500,POWERPLAY:2000,PARTNERSHIP:2000,'50 PARTNERSHIP':2300};
+const EVENT_STYLES={FOUR:'four',SIX:'six',WICKET:'wicket','NO BALL':'noball',WIDE:'wide','LEG BYE':'legbye',BYE:'bye','FREE HIT':'freehit',FIFTY:'fifty',CENTURY:'century','TEAM 50':'fifty','TEAM 100':'century','NEW BATSMAN':'newbatsman','NEW BOWLER':'newbowler',RESULT:'result','INNINGS BREAK':'inningsbreak',POWERPLAY:'powerplay',PARTNERSHIP:'partnership','50 PARTNERSHIP':'partnership'};
+const EVENTS=['FOUR','SIX','WICKET','FREE HIT','FIFTY','CENTURY','TEAM 50','TEAM 100','NO BALL','WIDE','LEG BYE','BYE','NEW BATSMAN','NEW BOWLER','RESULT','INNINGS BREAK','POWERPLAY','PARTNERSHIP','50 PARTNERSHIP'];
+let EVENT_DURATION_MAP={FOUR:2200,SIX:2600,WICKET:2700,'FREE HIT':1600,FIFTY:2400,CENTURY:3000,'TEAM 50':2300,'TEAM 100':2800,'NO BALL':1900,WIDE:1700,'LEG BYE':1700,BYE:1500,'NEW BATSMAN':1800,'NEW BOWLER':1800,RESULT:3200,'INNINGS BREAK':2500,POWERPLAY:2000,PARTNERSHIP:2000,'50 PARTNERSHIP':2300};
 const api=(u,o={})=>fetch(u,{credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},...o}).then(async r=>{const j=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(j.error||'Request failed');e.code=j.code||'';e.details=j;e.status=r.status;throw e;}return j});
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function activePlan(){if(STATE?.localTestMode)return true;const s=STATE?.user?.subscription;return !!(s&&s.status==='active'&&new Date(s.expiresAt)>new Date())}
@@ -386,7 +386,7 @@ function updateLayerPreview(){
  if(hint)hint.textContent='20 international layouts with different shapes · 20 independent colour combinations · full batting, score, target, partnership, bowler and over details.';
  p.innerHTML=`<div class="jcPvPanel jcPvBatting"><small>INDIA · AT THE CREASE</small><span class="jcPvPlayer"><b>ROHIT</b><b>58 (31)</b></span><span class="jcPvPlayer"><b>VIRAT</b><b>42 (28)</b></span></div><div class="jcPvPanel jcPvScore"><small>LIVE · INNINGS 2</small><strong>189/2</strong><div class="jcPvStats"><b>17.3 OV</b><b>CRR 10.80</b></div><small>EXTRAS 8 · P2</small></div><div class="jcPvPanel jcPvTarget"><div class="jcPvTargetMain"><small>TARGET FOR AUSTRALIA</small><strong>206</strong><small>NEED 17 · 39 BALLS · RRR 2.62</small></div><div class="jcPvPartnership"><small>PARTNERSHIP</small><b>101 (62)</b></div></div><div class="jcPvPanel jcPvBowling"><small>BOWLER · ELLIS</small><b>2.3 O · 0 M · 24 R · 1 W</b><small>THIS OVER</small><span class="jcPvBalls"><i>1</i><i class="four">4</i><i>0</i><i class="six">6</i><i class="wicket">W</i><i>1</i></span></div>`;
 }
-let EVENT_ANIM_MAP={FOUR:'boundary-ripple',SIX:'stadium-surge',WICKET:'shard-break','FREE HIT':'spotlight',FIFTY:'orbit',CENTURY:'fireworks','NO BALL':'spotlight',WIDE:'fade','LEG BYE':'fade',BYE:'fade','NEW BATSMAN':'bounce','NEW BOWLER':'flip',RESULT:'fireworks','INNINGS BREAK':'shatter',POWERPLAY:'glitch',PARTNERSHIP:'rotate','50 PARTNERSHIP':'spark'};
+let EVENT_ANIM_MAP={FOUR:'boundary-ripple',SIX:'stadium-surge',WICKET:'shard-break','FREE HIT':'spotlight',FIFTY:'orbit',CENTURY:'fireworks','TEAM 50':'spark','TEAM 100':'fireworks','NO BALL':'spotlight',WIDE:'fade','LEG BYE':'fade',BYE:'fade','NEW BATSMAN':'bounce','NEW BOWLER':'flip',RESULT:'fireworks','INNINGS BREAK':'shatter',POWERPLAY:'glitch',PARTNERSHIP:'rotate','50 PARTNERSHIP':'spark'};
 async function saveBroadcast(extra={}){
   const hasEventUpdate=Object.prototype.hasOwnProperty.call(extra,'event');
   const hasEventIdOverride=Object.prototype.hasOwnProperty.call(extra,'eventId');
@@ -421,39 +421,44 @@ async function publishEventNow(event,meta={}){
  }
 }
 function cancelEventSequenceTimers(){
- for(const timer of eventSequenceTimers)clearTimeout(timer);
- eventSequenceTimers.clear();
+  for(const timer of eventSequenceTimers)clearTimeout(timer);
+  eventSequenceTimers.clear();
+  if(eventSequenceResolve){const resolve=eventSequenceResolve;eventSequenceResolve=null;resolve(false);}
 }
 function enqueueCurrentEvent(event,meta,generation){
- const task=eventBroadcastQueue.catch(()=>({ok:false})).then(()=>{
-  // A newer ball/event arrived while this save was waiting; discard the stale one.
-  if(generation!==eventPublishGeneration)return {ok:false,skipped:true};
-  return publishEventNow(event,meta);
- });
- eventBroadcastQueue=task.catch(error=>{console.warn('Broadcast event save failed:',error);return {ok:false,error:error?.message||'Broadcast unavailable'};});
- return task;
+  const task=eventBroadcastQueue.catch(()=>({ok:false})).then(()=>{
+   if(generation!==eventPublishGeneration)return {ok:false,skipped:true};
+   return publishEventNow(event,meta);
+  });
+  eventBroadcastQueue=task.catch(error=>{console.warn('Broadcast event save failed:',error);return {ok:false,error:error?.message||'Broadcast unavailable'};});
+  return task;
 }
 function fireEvent(event,meta={}){
- cancelEventSequenceTimers();
- const generation=++eventPublishGeneration;
- // Do not wait for the previous animation's display duration. The newest event wins.
- return enqueueCurrentEvent(event,meta,generation);
+  cancelEventSequenceTimers();
+  const generation=++eventPublishGeneration;
+  return enqueueCurrentEvent(event,meta,generation);
 }
 function fireEventSequence(events){
- cancelEventSequenceTimers();
- const generation=++eventPublishGeneration;
- const sequence=events.filter(Boolean);
- let index=0;
- const showNext=async()=>{
-  if(generation!==eventPublishGeneration||index>=sequence.length)return;
-  const event=sequence[index++];
-  const result=await enqueueCurrentEvent(event,{},generation);
-  if(!result?.ok||generation!==eventPublishGeneration||index>=sequence.length)return;
-  const duration=Math.max(900,Number(EVENT_DURATION_MAP[event]||$('animationDuration')?.value||2200));
-  const timer=setTimeout(()=>{eventSequenceTimers.delete(timer);void showNext();},duration+100);
-  eventSequenceTimers.add(timer);
- };
- return showNext();
+  cancelEventSequenceTimers();
+  const generation=++eventPublishGeneration;
+  const sequence=events.filter(Boolean).map(item=>typeof item==='string'?{event:item,meta:{}}:{event:String(item.event||''),meta:item.meta||{}}).filter(item=>item.event);
+  let index=0;
+  return new Promise(resolve=>{
+   let settled=false;
+   const done=value=>{if(settled)return;settled=true;if(eventSequenceResolve===done)eventSequenceResolve=null;resolve(!!value);};
+   eventSequenceResolve=done;
+   const showNext=async()=>{
+    if(generation!==eventPublishGeneration){done(false);return;}
+    if(index>=sequence.length){done(true);return;}
+    const item=sequence[index++],event=item.event;
+    const result=await enqueueCurrentEvent(event,item.meta,generation);
+    if(!result?.ok||generation!==eventPublishGeneration){done(false);return;}
+    const duration=Math.max(900,Number(EVENT_DURATION_MAP[event]||$('animationDuration')?.value||2200));
+    const timer=setTimeout(()=>{eventSequenceTimers.delete(timer);if(index>=sequence.length)done(true);else void showNext();},duration+100);
+    eventSequenceTimers.add(timer);
+   };
+   void showNext();
+  });
 }
 function cardDataFor(type){
  const i=currentInnings();if(!i)return null;
