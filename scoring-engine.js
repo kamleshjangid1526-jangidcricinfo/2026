@@ -203,6 +203,7 @@
     return true;
   }
   let deliveryQueue=Promise.resolve();
+  let autoFinalizeInProgressId='';
   function recordDelivery(options={}) {
     const task=deliveryQueue.then(()=>recordDeliveryNow(options));
     deliveryQueue=task.catch(error=>{console.error('Queued scoring action failed:',error);return false;});
@@ -234,8 +235,9 @@
     const strikerId=String(i.striker), nonId=String(i.nonStriker), bowlerId=String(i.currentBowler);
     const batterName=batter.name||playerLabel(i.battingId,strikerId), bowlerName=bowler.name||playerLabel(i.bowlingId,bowlerId);
     const ballIndex=Number(i.balls||0), ballLabel=`${Math.floor(ballIndex/6)}.${ballIndex%6+1}`;
-    i.score=Number(i.score||0)+teamRuns;
-    if(batRuns) { batter.runs=Number(batter.runs||0)+batRuns; }
+    const previousTeamScore=Number(i.score||0),previousBatterRuns=Number(batter.runs||0);
+    i.score=previousTeamScore+teamRuns;
+    if(batRuns) { batter.runs=previousBatterRuns+batRuns; }
     if(legal) {
       i.balls=Number(i.balls||0)+1;
       batter.balls=Number(batter.balls||0)+1;
@@ -266,14 +268,24 @@
     statusAfterDelivery(i);
     try { const saveTask=saveMatch(false); renderScoring(); await saveTask; }
     catch(err) { MATCH=old; if(STATE)STATE.activeMatch=clone(old); renderScoring(); alert(`स्कोर device पर सेव नहीं हुआ: ${err.message}`); return; }
-    if(extraName==='wide') void fireEvent('WIDE');
-    else if(extraName==='noball') void fireEvent('NO BALL');
-    else if(extraName==='legbye') void fireEvent('LEG BYE');
-    else if(extraName==='bye') void fireEvent('BYE');
-    else if(batRuns===4) void fireEvent('FOUR');
-    else if(batRuns===6) void fireEvent('SIX');
-    if(MATCH?.awaitingNextInnings){setTimeout(()=>{if(MATCH?.awaitingNextInnings)startSecondInnings()},180)}
-    else if(i.awaitingBowler && !MATCH?.awaitingMatchFinish){setTimeout(()=>{if(MATCH?.status==='live' && MATCH?.activeInnings?.awaitingBowler)promptBowler()},350)}
+    const eventSequence=[];
+    const eventPlayer={name:batterName,teamName:getTeam(i.battingId)?.name||'',runs:Number(batter.runs||0),balls:Number(batter.balls||0)};
+    const eventMeta={eventPlayer,matchId:MATCH?.id||null};
+    if(extraName==='wide')eventSequence.push({event:'WIDE',meta:{matchId:MATCH?.id||null}});
+    else if(extraName==='noball')eventSequence.push({event:'NO BALL',meta:{matchId:MATCH?.id||null}});
+    else if(extraName==='legbye')eventSequence.push({event:'LEG BYE',meta:{matchId:MATCH?.id||null}});
+    else if(extraName==='bye')eventSequence.push({event:'BYE',meta:{matchId:MATCH?.id||null}});
+    else if(batRuns===4)eventSequence.push({event:'FOUR',meta:eventMeta});
+    else if(batRuns===6)eventSequence.push({event:'SIX',meta:eventMeta});
+    if(previousTeamScore<100&&Number(i.score||0)>=100)eventSequence.push({event:'TEAM 100',meta:{teamMilestone:{teamName:getTeam(i.battingId)?.name||'Batting Team',score:Number(i.score||0),inningsNo:Number(MATCH?.inningsNo||1)},matchId:MATCH?.id||null}});
+    else if(previousTeamScore<50&&Number(i.score||0)>=50)eventSequence.push({event:'TEAM 50',meta:{teamMilestone:{teamName:getTeam(i.battingId)?.name||'Batting Team',score:Number(i.score||0),inningsNo:Number(MATCH?.inningsNo||1)},matchId:MATCH?.id||null}});
+    const currentBatterRuns=Number(batter.runs||0);
+    if(previousBatterRuns<100&&currentBatterRuns>=100)eventSequence.push({event:'CENTURY',meta:{eventPlayer,matchId:MATCH?.id||null}});
+    else if(previousBatterRuns<50&&currentBatterRuns>=50)eventSequence.push({event:'FIFTY',meta:{eventPlayer,matchId:MATCH?.id||null}});
+    const animationPlayback=eventSequence.length?fireEventSequence(eventSequence):Promise.resolve(true);
+    if(MATCH?.awaitingNextInnings)void animationPlayback.then(()=>{if(MATCH?.awaitingNextInnings)startSecondInnings()});
+    else if(MATCH?.awaitingMatchFinish)void animationPlayback.then(()=>finishCompletedMatchAutomatically());
+    else if(i.awaitingBowler)setTimeout(()=>{if(MATCH?.status==='live'&&MATCH?.activeInnings?.awaitingBowler)promptBowler()},350);
     return true;
   }
   function promptExtra(extra) {
@@ -344,7 +356,14 @@
         i[slotName]=null;i._replaceSlot=slotName;i.awaitingNewBatter=true;
         statusAfterDelivery(i);
         if(MATCH.awaitingNextInnings||MATCH.awaitingMatchFinish){i._replaceSlot=null;i.awaitingNewBatter=false;i.awaitingBowler=false;}
-        closeModal();try{await saveMatch(false);renderScoring();void fireEvent('WICKET',{wicketDetails:{batter:batter.name||playerLabel(i.battingId,dismissedId),teamName:getTeam(i.battingId)?.name||'',dismissal:type,bowler:bowler?.name||playerLabel(i.bowlingId,i.currentBowler),fielder:fielderId?playerLabel(i.bowlingId,fielderId):''}});if(MATCH?.awaitingNextInnings){setTimeout(()=>{if(MATCH?.awaitingNextInnings)startSecondInnings()},180)}else if(i._replaceSlot)promptReplacement(i._replaceSlot);else if(i.awaitingBowler){setTimeout(()=>{if(MATCH?.status==='live' && MATCH?.activeInnings?.awaitingBowler)promptBowler()},350)}}catch(e){MATCH=old;if(STATE)STATE.activeMatch=clone(old);renderScoring();alert(`Wicket save नहीं हुआ: ${e.message}`)}
+         closeModal();try{
+           await saveMatch(false);renderScoring();
+           const wicketPlayback=fireEventSequence([{event:'WICKET',meta:{wicketDetails:{batter:batter.name||playerLabel(i.battingId,dismissedId),teamName:getTeam(i.battingId)?.name||'',dismissal:type,bowler:bowler?.name||playerLabel(i.bowlingId,i.currentBowler),fielder:fielderId?playerLabel(i.bowlingId,fielderId):''},matchId:MATCH?.id||null}}]);
+           if(MATCH?.awaitingNextInnings)void wicketPlayback.then(()=>{if(MATCH?.awaitingNextInnings)startSecondInnings()});
+           else if(MATCH?.awaitingMatchFinish)void wicketPlayback.then(()=>finishCompletedMatchAutomatically());
+           else if(i._replaceSlot)promptReplacement(i._replaceSlot);
+           else if(i.awaitingBowler)setTimeout(()=>{if(MATCH?.status==='live'&&MATCH?.activeInnings?.awaitingBowler)promptBowler()},350);
+         }catch(e){MATCH=old;if(STATE)STATE.activeMatch=clone(old);renderScoring();alert(`Wicket save नहीं हुआ: ${e.message}`)}
       };
     });
   }
@@ -491,11 +510,44 @@
       };
     });
   }
-  async function finalizeMatch(resultType,winnerTeamId='') {
+  function completedMatchOutcome(match=MATCH) {
+    const first=(match?.inningsHistory||[]).find(x=>Number(x?.number)===1)||(match?.inningsHistory||[])[0];
+    const second=Number(match?.inningsNo||0)===2?match?.activeInnings:null;
+    if(!first||!second)throw new Error('दोनों पारियों का पूरा स्कोर नहीं मिला; automatic result calculate नहीं हो सका।');
+    const firstScore=Number(first.score||0),secondScore=Number(second.score||0);
+    if(firstScore===secondScore)return {resultType:'tie',winnerTeamId:'',resultText:'Match tied'};
+    if(secondScore>firstScore){
+      const winnerId=String(second.battingId||'');
+      const name=getTeam(winnerId)?.name||(winnerId===String(match.teamA)?match.teamAName:match.teamBName)||'Team';
+      const wicketsLeft=Math.max(0,allOutWicketLimit(second)-Number(second.wickets||0));
+      return {resultType:'winner',winnerTeamId:winnerId,resultText:`${name} won by ${wicketsLeft} wicket${wicketsLeft===1?'':'s'}`};
+    }
+    const winnerId=String(first.battingId||'');
+    const name=getTeam(winnerId)?.name||(winnerId===String(match.teamA)?match.teamAName:match.teamBName)||'Team';
+    const runs=firstScore-secondScore;
+    return {resultType:'winner',winnerTeamId:winnerId,resultText:`${name} won by ${runs} run${runs===1?'':'s'}`};
+  }
+  async function finishCompletedMatchAutomatically() {
+    const match=MATCH;
+    if(!match?.id||match.status!=='live'||!match.awaitingMatchFinish||Number(match.inningsNo||0)!==2)return false;
+    const matchId=String(match.id);
+    if(autoFinalizeInProgressId===matchId)return false;
+    autoFinalizeInProgressId=matchId;
+    try{
+      const outcome=completedMatchOutcome(match);
+      await finalizeMatch(outcome.resultType,outcome.winnerTeamId,{automatic:true,resultText:outcome.resultText});
+      return true;
+    }catch(error){
+      if(autoFinalizeInProgressId===matchId)autoFinalizeInProgressId='';
+      console.error('Automatic match result could not be saved:',error);
+      return false;
+    }
+  }
+  async function finalizeMatch(resultType,winnerTeamId='',options={}) {
     if(!MATCH?.id)throw new Error('Match record नहीं मिला।');
     const old=clone(MATCH);
     try {
-      const res=await api('/api/match/finish',{method:'POST',body:JSON.stringify({matchId:MATCH.id,resultType,winnerTeamId})});
+      const res=await api('/api/match/finish',{method:'POST',body:JSON.stringify({matchId:MATCH.id,resultType,winnerTeamId,resultText:options.resultText||''})});
       if(STATE){STATE.activeMatch=null;STATE.matches||=[];const ix=STATE.matches.findIndex(x=>x.id===res.match.id);if(ix>=0)STATE.matches[ix]=res.match;else STATE.matches.push(res.match);}
       const finished=res.match||{};
       const inningsForResult=[...(finished.inningsHistory||[])];
@@ -503,8 +555,8 @@
       const scoreForTeam=teamId=>{const inn=inningsForResult.find(x=>String(x?.battingId)===String(teamId));return inn?`${Number(inn.score||0)}/${Number(inn.wickets||0)} (${fmtOvers(inn.balls||0)})`:''};
       const winnerName=finished.resultType==='winner'?(String(finished.winnerTeamId)===String(finished.teamA)?(finished.teamAName||'Team A'):(finished.teamBName||'Team B')):'';
       const resultDetails={winnerName,result:finished.result||'Match complete',resultType:finished.resultType||resultType,teamAName:finished.teamAName||'Team A',teamBName:finished.teamBName||'Team B',teamAScore:scoreForTeam(finished.teamA),teamBScore:scoreForTeam(finished.teamB)};
-      MATCH=null;await saveBroadcast({event:'RESULT',eventStyle:'result',resultDetails,card:null,cardId:Date.now()}).catch(()=>{});
-      await refresh();showPage('dashboard');alert('मैच सफलतापूर्वक समाप्त हुआ। परिणाम और स्कोरकार्ड सेव हो गए हैं।');
+       MATCH=null;await fireEvent('RESULT',{eventStyle:'result',resultDetails,card:null,cardId:Date.now(),matchId:finished.id}).catch(()=>{});
+       await refresh();showPage('dashboard');if(!options.automatic)alert('मैच सफलतापूर्वक समाप्त हुआ। परिणाम और स्कोरकार्ड सेव हो गए हैं।');
       return res;
     } catch(err) { MATCH=old;if(STATE)STATE.activeMatch=clone(old);renderScoring();alert(`Match finish नहीं हुआ: ${err.message}`);throw err; }
   }
