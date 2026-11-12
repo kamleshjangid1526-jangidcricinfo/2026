@@ -157,7 +157,7 @@ async function saveMatch(uid,match) {
 async function loadPublicMatches() { return toList(await getDocs(query(publicCol('publicMatches'),orderBy('updatedAt','desc'),limit(250)))); }
 async function loadPublicTournaments() { return toList(await getDocs(query(publicCol('publicTournaments'),orderBy('updatedAt','desc'),limit(100)))).filter(x=>x.published!==false); }
 async function loadPublicBroadcasts() { return toList(await getDocs(query(publicCol('publicBroadcasts'),orderBy('updatedAt','desc'),limit(100)))); }
-const publicCache = { publicMatches: [], publicTournaments: [], publicBroadcasts: [], publicBroadcastCards: [], publicBroadcastEvents: [] };
+const publicCache = { publicMatches: [], publicTournaments: [], publicBroadcasts: [], publicBroadcastDesigns: [] };
 function emitPublicCache(changedCollection = 'initial') {
   const visible = [...publicCache.publicMatches].sort((a,b)=>dateMs(b.updatedAt||b.startedAt||b.dateTime)-dateMs(a.updatedAt||a.startedAt||a.dateTime)).slice(0,250);
   const tournaments = publicCache.publicTournaments.filter(x=>x.published!==false).map(t=>({
@@ -170,10 +170,10 @@ function emitPublicCache(changedCollection = 'initial') {
   const broadcastMap = {};
   for(const b of publicCache.publicBroadcasts) broadcastMap[b.id]={...b};
   const broadcastCards = {};
-  for(const card of publicCache.publicBroadcastCards) broadcastCards[String(card.uid||card.ownerUid||card.id)]={...card};
+  for(const card of publicCache.publicBroadcastDesigns.filter(x=>x.kind==='broadcast-card-state')) broadcastCards[String(card.uid||card.ownerUid||card.id)]={...card};
   const broadcastEvents = {};
   const now = Date.now();
-  for(const event of [...publicCache.publicBroadcastEvents].sort((a,b)=>dateMs(b.createdAt)-dateMs(a.createdAt))){
+  for(const event of [...publicCache.publicBroadcastDesigns.filter(x=>x.kind==='broadcast-event')].sort((a,b)=>dateMs(b.createdAt)-dateMs(a.createdAt))){
     const uid=String(event.uid||event.ownerUid||'');
     const age=now-dateMs(event.createdAt);
     if(!uid||!event.eventId||!event.event||!dateMs(event.createdAt)||age>30000||age< -60000||broadcastEvents[uid])continue;
@@ -186,9 +186,9 @@ let publicUnsubs=[];
 function subscribePublic(_onUpdate=emitPublicCache,onError=()=>{}) {
   // One listener per public collection per page. EventSource widgets share this cached stream.
   if(!publicUnsubs.length) {
-    for(const name of ['publicMatches','publicTournaments','publicBroadcasts','publicBroadcastCards','publicBroadcastEvents']) {
+    for(const name of ['publicMatches','publicTournaments','publicBroadcasts','publicBroadcastDesigns']) {
       const source = name==='publicMatches' ? query(publicCol(name),orderBy('updatedAt','desc'),limit(250))
-        : name==='publicBroadcastEvents' ? query(publicCol(name),orderBy('createdAt','desc'),limit(200))
+        : name==='publicBroadcastDesigns' ? query(publicCol(name),where('kind','in',['broadcast-event','broadcast-card-state']))
         : query(publicCol(name),orderBy('updatedAt','desc'),limit(100));
       publicUnsubs.push(onSnapshot(source,snapshot=>{
         publicCache[name]=toList(snapshot);
@@ -305,7 +305,7 @@ async function savePublicBroadcast(uid, broadcast) {
     cardAnimation:broadcast.cardAnimation!==undefined?broadcast.cardAnimation:(previous.cardAnimation||null),
     cardAnimations:broadcast.cardAnimations!==undefined?broadcast.cardAnimations:(previous.cardAnimations||{}),
     cardDurations:broadcast.cardDurations!==undefined?broadcast.cardDurations:(previous.cardDurations||{}), updatedAt:nowIso() };
-  await setDoc(publicDoc('publicBroadcastCards',uid),cleanData(cardState),{merge:true});
+  await setDoc(publicDoc('publicBroadcastDesigns',uid+'_broadcast_card_state'),cleanData({...cardState,kind:'broadcast-card-state'}),{merge:true});
   const summary = { ownerUid: uid, updatedAt: nowIso(), layer: broadcast.layer || previous.layer || 1, color: broadcast.color || previous.color || 1,
     hasStudioDesign: has('studioDesign'), hasCardDesign: has('cardDesign'), hasAnimationDesign: has('animationDesign'),
     studioDesignUpdatedAt: broadcast.studioDesignUpdatedAt || previous.studioDesignUpdatedAt || null,
@@ -519,7 +519,7 @@ async function handleApi(url,init={}) {
         eventAnimations:body.eventAnimations||{},eventDurations:body.eventDurations||{},
         eventPlayer:body.eventPlayer||null,wicketDetails:body.wicketDetails||null,
         teamMilestone:body.teamMilestone||null,resultDetails:body.resultDetails||null};
-      await setDoc(publicDoc('publicBroadcastEvents',uid+'_'+safeEventId),cleanData(record),{merge:true});
+      await setDoc(publicDoc('publicBroadcastDesigns',uid+'_broadcast_event_'+safeEventId),cleanData({...record,kind:'broadcast-event'}),{merge:true});
       return ok({eventId,createdAt:record.createdAt});
     }
     if(path==='/api/broadcast'&&method==='POST'){
