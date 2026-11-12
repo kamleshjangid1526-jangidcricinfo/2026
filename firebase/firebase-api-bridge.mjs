@@ -157,7 +157,7 @@ async function saveMatch(uid,match) {
 async function loadPublicMatches() { return toList(await getDocs(query(publicCol('publicMatches'),orderBy('updatedAt','desc'),limit(250)))); }
 async function loadPublicTournaments() { return toList(await getDocs(query(publicCol('publicTournaments'),orderBy('updatedAt','desc'),limit(100)))).filter(x=>x.published!==false); }
 async function loadPublicBroadcasts() { return toList(await getDocs(query(publicCol('publicBroadcasts'),orderBy('updatedAt','desc'),limit(100)))); }
-const publicCache = { publicMatches: [], publicTournaments: [], publicBroadcasts: [] };
+const publicCache = { publicMatches: [], publicTournaments: [], publicBroadcasts: [], publicBroadcastCards: [], publicBroadcastEvents: [] };
 function emitPublicCache(changedCollection = 'initial') {
   const visible = [...publicCache.publicMatches].sort((a,b)=>dateMs(b.updatedAt||b.startedAt||b.dateTime)-dateMs(a.updatedAt||a.startedAt||a.dateTime)).slice(0,250);
   const tournaments = publicCache.publicTournaments.filter(x=>x.published!==false).map(t=>({
@@ -169,14 +169,26 @@ function emitPublicCache(changedCollection = 'initial') {
   }));
   const broadcastMap = {};
   for(const b of publicCache.publicBroadcasts) broadcastMap[b.id]={...b};
-  window.__JC_EMIT_PUBLIC__?.({activeMatches:visible.filter(x=>x.status==='live'),matches:visible,tournaments,broadcasts:broadcastMap,changedCollection});
+  const broadcastCards = {};
+  for(const card of publicCache.publicBroadcastCards) broadcastCards[String(card.uid||card.ownerUid||card.id)]={...card};
+  const broadcastEvents = {};
+  const now = Date.now();
+  for(const event of [...publicCache.publicBroadcastEvents].sort((a,b)=>dateMs(b.createdAt)-dateMs(a.createdAt))){
+    const uid=String(event.uid||event.ownerUid||'');
+    const age=now-dateMs(event.createdAt);
+    if(!uid||!event.eventId||!event.event||!dateMs(event.createdAt)||age>30000||age< -60000||broadcastEvents[uid])continue;
+    broadcastEvents[uid]={...event};
+  }
+  window.__JC_EMIT_PUBLIC__?.({activeMatches:visible.filter(x=>x.status==='live'),matches:visible,tournaments,broadcasts:broadcastMap,broadcastCards,broadcastEvents,changedCollection});
 }
 let publicUnsubs=[];
 function subscribePublic(_onUpdate=emitPublicCache,onError=()=>{}) {
   // One listener per public collection per page. EventSource widgets share this cached stream.
   if(!publicUnsubs.length) {
-    for(const name of ['publicMatches','publicTournaments','publicBroadcasts']) {
-      const source = name==='publicMatches' ? query(publicCol(name),orderBy('updatedAt','desc'),limit(250)) : query(publicCol(name),orderBy('updatedAt','desc'),limit(100));
+    for(const name of ['publicMatches','publicTournaments','publicBroadcasts','publicBroadcastCards','publicBroadcastEvents']) {
+      const source = name==='publicMatches' ? query(publicCol(name),orderBy('updatedAt','desc'),limit(250))
+        : name==='publicBroadcastEvents' ? query(publicCol(name),orderBy('createdAt','desc'),limit(200))
+        : query(publicCol(name),orderBy('updatedAt','desc'),limit(100));
       publicUnsubs.push(onSnapshot(source,snapshot=>{
         publicCache[name]=toList(snapshot);
         emitPublicCache(name);
@@ -287,6 +299,12 @@ async function savePublicBroadcast(uid, broadcast) {
       { ownerUid: uid, uid, kind: category, value: cleanData(broadcast[key]), updatedAt: nowIso() }, { merge: true });
   }
   const has = key => broadcast[key] !== undefined ? !!broadcast[key] : !!previous[`has${key[0].toUpperCase()}${key.slice(1)}`];
+  const cardState = { ownerUid:uid, uid, card:broadcast.card!==undefined?broadcast.card:(previous.card||null),
+    cardId:broadcast.cardId!==undefined?broadcast.cardId:(previous.cardId||null),
+    cardAnimation:broadcast.cardAnimation!==undefined?broadcast.cardAnimation:(previous.cardAnimation||null),
+    cardAnimations:broadcast.cardAnimations!==undefined?broadcast.cardAnimations:(previous.cardAnimations||{}),
+    cardDurations:broadcast.cardDurations!==undefined?broadcast.cardDurations:(previous.cardDurations||{}), updatedAt:nowIso() };
+  await setDoc(publicDoc('publicBroadcastCards',uid),cleanData(cardState),{merge:true});
   const summary = { ownerUid: uid, updatedAt: nowIso(), layer: broadcast.layer || previous.layer || 1, color: broadcast.color || previous.color || 1,
     hasStudioDesign: has('studioDesign'), hasCardDesign: has('cardDesign'), hasAnimationDesign: has('animationDesign'),
     studioDesignUpdatedAt: broadcast.studioDesignUpdatedAt || previous.studioDesignUpdatedAt || null,
@@ -488,6 +506,21 @@ async function handleApi(url,init={}) {
     if(path==='/api/match/finish'&&method==='POST'){const {user,profile}=await requireUser();gate(profile,'basic');const m=await getOwner(user.uid,'matches',String(body.matchId||''));if(!m)return fail(404,'Live Match नहीं मिला।');if(m.status!=='live')return fail(409,'यह Match LIVE नहीं है।');const type=['winner','tie','no-result'].includes(body.resultType)?body.resultType:'winner';if(type==='winner'){if(![m.teamA,m.teamB].includes(String(body.winnerTeamId)))return fail(400,'Winner Team चुनें।');m.winnerTeamId=String(body.winnerTeamId);m.resultType='winner';m.result=cleanText(body.resultText,140)||`${m.winnerTeamId===m.teamA?m.teamAName:m.teamBName} won`;}else{m.winnerTeamId=null;m.resultType=type==='tie'?'tie':'no-result';m.result=type==='tie'?'Match tied':'No Result';}m.status='finished';m.completedAt=nowIso();m.updatedAt=m.completedAt;await saveMatch(user.uid,m);return ok({match:m});}
     if(path==='/api/match/recover-stale'&&method==='POST'){const {user}=await requireUser();const m=await getOwner(user.uid,'matches',String(body.matchId||''));if(!m)return fail(404,'Match नहीं मिला।');if(m.status!=='live')return fail(409,'यह Match अब LIVE नहीं है।');m.status='abandoned';m.resultType='abandoned';m.result='Abandoned / closed by account owner';m.completedAt=nowIso();await saveMatch(user.uid,m);return ok({match:m,preservedScorecard:true});}
     const matchDelete=path.match(/^\/api\/match\/([^/]+)$/);if(matchDelete&&method==='DELETE'){const {user}=await requireUser();const id=decodeURIComponent(matchDelete[1]);const m=await getOwner(user.uid,'matches',id);if(!m)return fail(404,'Match नहीं मिला।');await deleteDoc(ownerDoc(user.uid,'matches',id));await deleteDoc(publicDoc('publicMatches',id));return ok({deletedId:id});}
+    if(path==='/api/broadcast/event'&&method==='POST'){
+      const {user,profile}=await requireUser();gate(profile,'basic');const uid=user.uid;
+      const eventId=cleanText(body.eventId,100),eventName=cleanText(body.event,40).toUpperCase(),matchId=cleanText(body.matchId,100);
+      if(!eventId||!eventName||!matchId)return fail(400,'Broadcast Event में eventId, event और matchId जरूरी हैं।');
+      const safeEventId=eventId.replace(/[^a-zA-Z0-9_-]/g,'_');
+      if(!safeEventId)return fail(400,'Broadcast Event ID सही नहीं है।');
+      const record={ownerUid:uid,uid,eventId,event:eventName,matchId,eventAt:Number(body.eventAt)||Date.now(),createdAt:nowIso(),
+        eventStyle:cleanText(body.eventStyle,32)||'generic',animation:cleanText(body.animation,40)||'zoom',
+        duration:Math.max(300,Math.min(10000,Number(body.duration)||2200)),
+        eventAnimations:body.eventAnimations||{},eventDurations:body.eventDurations||{},
+        eventPlayer:body.eventPlayer||null,wicketDetails:body.wicketDetails||null,
+        teamMilestone:body.teamMilestone||null,resultDetails:body.resultDetails||null};
+      await setDoc(publicDoc('publicBroadcastEvents',uid+'_'+safeEventId),cleanData(record),{merge:true});
+      return ok({eventId,createdAt:record.createdAt});
+    }
     if(path==='/api/broadcast'&&method==='POST'){
       const {user,profile}=await requireUser();gate(profile,'basic');const uid=user.uid;
       const b={...(await getOwner(uid,'broadcasts','current')||{}),...body,updatedAt:nowIso()};
