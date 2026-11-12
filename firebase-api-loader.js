@@ -5,7 +5,7 @@
   const ready=new Promise((resolve,reject)=>{resolveBridge=resolve;rejectBridge=reject;});
   window.__JC_FIREBASE_BRIDGE_READY__=ready;window.__JC_FIREBASE_BRIDGE_RESOLVE__=resolveBridge;window.__JC_FIREBASE_BRIDGE_REJECT__=rejectBridge;
   window.__JC_FIREBASE_EVENTS__=new Set();window.__JC_LAST_PUBLIC_PAYLOAD__=null;window.__JC_FIREBASE_INIT_ERROR__=null;
-  let cachedState=null,activeUid='',syncing=false,syncRequested=false,cacheWriteSequence=0,channel=null,syncRetryTimer=null,syncFailureCount=0,syncStatusTimer=null;
+  let cachedState=null,activeUid='',verifiedUid='',syncing=false,syncRequested=false,cacheWriteSequence=0,channel=null,syncRetryTimer=null,syncFailureCount=0,syncStatusTimer=null;
   const BG_SYNC_TAG='jangid-cricinfo-pending-sync-v1';
   function requestBackgroundSync(){
     if(!('serviceWorker' in navigator))return;
@@ -99,7 +99,11 @@
   async function syncNow(){
     if(syncing||!navigator.onLine){if(syncing)syncRequested=true;return false;}syncing=true;syncRequested=false;let rerunSync=false;clearTimeout(syncStatusTimer);syncStatusTimer=setTimeout(()=>{if(syncing)localStatus('syncing','स्कोर device पर सुरक्षित है; Firebase में background upload चल रहा है।');},700);
     try{
-      const state=await readState(),uid=activeUid||uidOf(state);if(!uid){localStatus('offline','Login करें; saved offline data इस device पर सुरक्षित है।');return false;}
+      const state=await readState(),uid=activeUid||uidOf(state);
+      if(!uid){localStatus('offline','Login करें; saved offline data इस device पर सुरक्षित है।');return false;}
+      // A cached profile alone is not proof that Firebase Auth has restored the current session.
+      // Wait for a successful authenticated /api/state request before uploading old local queue rows.
+      if(verifiedUid!==uid){const queued=(await records('queue:'+uid+':')).length;if(queued)localStatus('pending','Login सत्यापित होने के बाद pending बदलाव Firebase से Sync होंगे।');return false;}
       const matchRows=await records('queue:'+uid+':match:');
       const finishRows=await records('queue:'+uid+':finish:');
       const broadcastRow=await store?.get(key(uid,'broadcast'));
@@ -141,7 +145,7 @@
     const method=String(init.method||'GET').toUpperCase(),body=(()=>{try{return init.body?JSON.parse(init.body):{};}catch{return {};}})();
     try{
       if(url.pathname==='/api/state'&&method==='GET'){
-        try{const result=await apiRequest(url,init);if((result.status||200)<400&&result.body?.user){markVerifiedSession(result.body);await saveState(result.body);const merged=await withPending(clone(result.body));await saveState(merged);const pending=activeUid?(await records('queue:'+activeUid+':')).length:0;localStatus(pending?'pending':'synced',pending?pending+' pending items.':'Firebase connected.');return toResponse({status:200,body:merged});}return toResponse(result);}
+        try{const result=await apiRequest(url,init);if((result.status||200)<400&&result.body?.user){verifiedUid=uidOf(result.body);markVerifiedSession(result.body);await saveState(result.body);const merged=await withPending(clone(result.body));await saveState(merged);const pending=activeUid?(await records('queue:'+activeUid+':')).length:0;localStatus(pending?'pending':'synced',pending?pending+' pending items.':'Firebase connected.');if(pending)scheduleSync(350);return toResponse({status:200,body:merged});}return toResponse(result);}
         catch(error){if(!isNetworkError(error))throw error;const saved=await readState();if(!saved||!hasVerifiedSession(saved))throw error;const merged=await withPending(saved);localStatus('offline','Offline mode · पिछला Match और Teams डेटा लोड हुआ।');return toResponse({status:200,body:{...merged,firebaseConnection:'offline',offlineMode:true}});}
       }
       const publicMatchPath=url.pathname.match(/^\/api\/public\/match\/([^/]+)$/);
@@ -175,7 +179,7 @@
         return toResponse({status:200,body:{ok:true,queued:true,localFirst:true}});
       }
       if((url.pathname==='/api/login'||url.pathname==='/api/admin/login')&&method==='POST'){
-        try{sessionStorage.removeItem(AUTH_SESSION_KEY);}catch{}
+        verifiedUid='';try{sessionStorage.removeItem(AUTH_SESSION_KEY);}catch{}
         const result=await apiRequest(url,init);
         if((result.status||200)<400&&result.body?.user)markVerifiedSession(result.body);
         return toResponse(result);
@@ -185,7 +189,7 @@
         const result=await apiRequest(url,init);
         if((result.status||200)<400){
           try{sessionStorage.removeItem(AUTH_SESSION_KEY);}catch{}
-          cachedState=null;activeUid='';
+          cachedState=null;activeUid='';verifiedUid='';
           await store?.remove('state:last');
           if(uid)await store?.remove('state:'+uid);
         }
@@ -229,5 +233,6 @@
   window.addEventListener('offline',()=>localStatus('offline','Offline · scoring device पर सेव होगी।'));
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&navigator.onLine)syncNow();});
   setInterval(()=>{if(navigator.onLine)syncNow();},30000);
-  window.addEventListener('load',()=>{requestBackgroundSync();scheduleSync(500);},{once:true});
+  // Authenticated /api/state now starts any pending queue upload; do not race it on page load.
+  window.addEventListener('load',()=>{requestBackgroundSync();},{once:true});
 })();
