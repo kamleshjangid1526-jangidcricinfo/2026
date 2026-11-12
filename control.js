@@ -402,6 +402,7 @@ async function saveBroadcast(extra={}){
   else if(STATE?.broadcast?.eventId!==undefined)payload.eventId=STATE.broadcast.eventId;
   await api('/api/broadcast',{method:'POST',body:JSON.stringify(payload)});
   if(STATE)STATE.broadcast={...(STATE.broadcast||{}),...payload};
+   if(Object.prototype.hasOwnProperty.call(extra,'card')){activeCardType=payload.card?.type||null;syncCardButtonState(activeCardType);}
 }
 // The no-code visual editor persists its template library beside the existing broadcast settings.
 window.persistScoreboardStudio = async (studioDesign) => saveBroadcast({studioDesign, event:null});
@@ -411,7 +412,7 @@ async function publishEventNow(event,meta={}){
  if(!activePlan())return {ok:false,skipped:true};
  const duration=EVENT_DURATION_MAP[event]||Math.max(300,Math.min(10000,+$('animationDuration').value||2200));
  try{
-  await saveBroadcast({event,eventStyle:eventStyle(event),animation:EVENT_ANIM_MAP[event]||$('animationSelect').value,duration,...meta,matchId:MATCH?.id||meta.matchId||null,eventAt:Date.now()});
+  await saveBroadcast({card:null,cardId:Date.now(),event,eventStyle:eventStyle(event),animation:EVENT_ANIM_MAP[event]||$('animationSelect').value,duration,...meta,matchId:MATCH?.id||meta.matchId||null,eventAt:Date.now()});
   return {ok:true};
  }catch(error){
   console.warn(`Broadcast effect ${event} could not be shown; scoring remains saved.`,error);
@@ -714,6 +715,21 @@ async function boot(options={}){
  showPage('dashboard');
  return true;
 }
+function preservePrivateUndoHistory(publicMatch,candidates=[]){
+ const incoming=publicMatch;
+ if(!incoming?.activeInnings)return incoming;
+ const inningsKey=match=>[
+  Number(match?.inningsNo||match?.activeInnings?.number||1),
+  String(match?.activeInnings?.battingId||''),
+  String(match?.activeInnings?.bowlingId||'')
+ ].join('|');
+ const key=inningsKey(incoming);
+ const privateMatch=candidates
+  .filter(item=>item&&String(item.id)===String(incoming.id)&&Array.isArray(item.activeInnings?.undoStack)&&inningsKey(item)===key)
+  .sort((a,b)=>(Date.parse(b.offlineUpdatedAt||b.updatedAt||'')||0)-(Date.parse(a.offlineUpdatedAt||a.updatedAt||'')||0))[0];
+ if(!privateMatch)return incoming;
+ return {...incoming,activeInnings:{...incoming.activeInnings,undoStack:clone(privateMatch.activeInnings.undoStack)}};
+}
 const es=new EventSource('/events');es.onmessage=e=>{try{
  const p=JSON.parse(e.data);PUBLIC_LIVE=p.activeMatches||[];
  const ownBroadcast=STATE?.user?.id?p.broadcasts?.[STATE.user.id]:null;
@@ -725,7 +741,7 @@ const es=new EventSource('/events');es.onmessage=e=>{try{
    const stamp=value=>({local:Date.parse(value?.offlineUpdatedAt||'')||0,updated:Date.parse(value?.updatedAt||'')||0});
    const localStamp=stamp(localMatch),incomingStamp=stamp(incomingMine);
    const keepLocal=localMatch&&(localStamp.local>incomingStamp.local||(localStamp.local===incomingStamp.local&&localStamp.updated>incomingStamp.updated));
-   const mine=keepLocal?localMatch:incomingMine;
+   const mine=keepLocal?localMatch:preservePrivateUndoHistory(incomingMine,[MATCH,STATE.activeMatch,...(STATE.matches||[])]);
    MATCH=mine;STATE.activeMatch=mine;STATE.matches||=[];
    const matchIndex=STATE.matches.findIndex(m=>String(m.id)===String(mine.id));
    if(matchIndex>=0)STATE.matches[matchIndex]=mine;else STATE.matches.push(mine);
