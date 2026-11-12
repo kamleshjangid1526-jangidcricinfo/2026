@@ -170,6 +170,10 @@ function emitPublicCache(changedCollection = 'initial') {
   const broadcastMap = {};
   for(const b of publicCache.publicBroadcasts) broadcastMap[b.id]={...b};
   const broadcastCards = {};
+  for(const b of publicCache.publicBroadcasts){
+    broadcastCards[String(b.id)]={uid:String(b.id),ownerUid:String(b.ownerUid||b.id),card:b.card??null,cardId:b.cardId??null,
+      cardAnimation:b.cardAnimation||null,cardAnimations:b.cardAnimations||{},cardDurations:b.cardDurations||{}};
+  }
   for(const card of publicCache.publicBroadcastDesigns.filter(x=>x.kind==='broadcast-card-state')) broadcastCards[String(card.uid||card.ownerUid||card.id)]={...card};
   const broadcastEvents = {};
   const now = Date.now();
