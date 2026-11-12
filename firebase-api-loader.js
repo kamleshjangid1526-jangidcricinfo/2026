@@ -113,51 +113,125 @@
     },Math.max(50,Number(delay)||220));
   }
   async function syncNow(){
-    if(syncing||!navigator.onLine){if(syncing)syncRequested=true;return false;}syncing=true;syncRequested=false;let rerunSync=false;clearTimeout(syncStatusTimer);syncStatusTimer=setTimeout(()=>{if(syncing)localStatus('syncing','स्कोर device पर सुरक्षित है; Firebase में background upload चल रहा है।');},700);
+    if(syncing||!navigator.onLine){if(syncing)syncRequested=true;return false;}
+    syncing=true;syncRequested=false;let rerunSync=false;const rowErrors=[];
+    clearTimeout(syncStatusTimer);
+    syncStatusTimer=setTimeout(()=>{if(syncing)localStatus('syncing','स्कोर और Broadcast graphics Firebase में अलग-अलग Sync हो रहे हैं।');},700);
+    const publicMatchIsFinal=async(matchId)=>{
+      if(!matchId)return false;
+      try{
+        const response=await apiRequest(new URL('/api/public/match/'+encodeURIComponent(matchId),location.href));
+        const remote=response.body?.match;
+        return !!remote&&['finished','abandoned'].includes(String(remote.status||''));
+      }catch{return false;}
+    };
+    const noteRowError=(kind,row,error)=>{
+      const message=String(error?.message||'Sync failed');
+      rowErrors.push(kind+': '+message);
+      console.warn('Jangid '+kind+' queue item remains pending:',row?.key||'',error);
+    };
     try{
       const state=await readState(),uid=activeUid||uidOf(state);
       if(!uid){localStatus('offline','Login करें; saved offline data इस device पर सुरक्षित है।');return false;}
       // A cached profile alone is not proof that Firebase Auth has restored the current session.
-      // Wait for a successful authenticated /api/state request before uploading old local queue rows.
-      if(verifiedUid!==uid){const queued=(await records('queue:'+uid+':')).length;if(queued)localStatus('pending','Login सत्यापित होने के बाद pending बदलाव Firebase से Sync होंगे।');return false;}
+      if(verifiedUid!==uid){
+        const queued=(await records('queue:'+uid+':')).length;
+        if(queued)localStatus('pending','Login सत्यापित होने के बाद pending बदलाव Firebase से Sync होंगे।');
+        return false;
+      }
       const matchRows=await records('queue:'+uid+':match:');
       const finishRows=await records('queue:'+uid+':finish:');
       const eventRows=await records('queue:'+uid+':broadcast-event:');
       const broadcastRow=await store?.get(key(uid,'broadcast'));
-      if(!matchRows.length&&!finishRows.length&&!eventRows.length&&!broadcastRow){localStatus('synced','कोई pending बदलाव नहीं है।');return true;}
+      if(!matchRows.length&&!finishRows.length&&!eventRows.length&&!broadcastRow){
+        localStatus('synced','कोई pending बदलाव नहीं है।');return true;
+      }
+
+      // Match sync failures are recorded per item; cards/events still get their own upload attempt.
       for(const row of matchRows){
-        const queued=await store?.get(row.key);
-        if(!queued)continue;
-        if(queued.version!==row.value?.version){rerunSync=true;continue;}
-        const match=queued?.match;if(!match?.id)throw new Error('Offline queue में Match snapshot सही रूप में नहीं मिला।');
-        const result=await apiRequest(new URL('/api/match/state',location.href),{method:'POST',body:JSON.stringify({match})});
-        if((result.status||200)>=400)throw Object.assign(new Error(result.body?.error||'Match sync failed'),{code:result.body?.code,status:result.status});
-        const latest=await store?.get(row.key);
-        if(latest?.version===queued.version)await store?.remove(row.key);
-        else rerunSync=true;
+        try{
+          const queued=await store?.get(row.key);
+          if(!queued)continue;
+          if(queued.version!==row.value?.version){rerunSync=true;continue;}
+          const match=queued?.match;
+          if(!match?.id)throw new Error('Offline queue में Match snapshot की ID नहीं मिली।');
+          const result=await apiRequest(new URL('/api/match/state',location.href),{method:'POST',body:JSON.stringify({match})});
+          if((result.status||200)>=400){
+            if(['finished','abandoned'].includes(String(match.status||''))&&await publicMatchIsFinal(match.id)){
+              const latest=await store?.get(row.key);
+              if(latest?.version===queued.version)await store?.remove(row.key);
+              else rerunSync=true;
+              continue;
+            }
+            throw Object.assign(new Error(result.body?.error||'Match sync failed'),{code:result.body?.code,status:result.status});
+          }
+          const latest=await store?.get(row.key);
+          if(latest?.version===queued.version)await store?.remove(row.key);else rerunSync=true;
+        }catch(error){noteRowError('Match sync',row,error);}
       }
-      for(const row of eventRows){
-        const queued=await store?.get(row.key);
-        if(!queued)continue;
-        if(queued.version!==row.value?.version){rerunSync=true;continue;}
-        const result=await apiRequest(new URL('/api/broadcast/event',location.href),{method:'POST',body:JSON.stringify(queued.payload||{})});
-        if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast Event sync failed');
-        const latest=await store?.get(row.key);
-        if(latest?.version===queued.version)await store?.remove(row.key);else rerunSync=true;
-      }
+
+      // A stale/duplicate Finish request is safely cleared only when Firebase already
+      // confirms this match is finished or abandoned. Otherwise keep the score data.
       for(const row of finishRows){
-        const result=await apiRequest(new URL('/api/match/finish',location.href),{method:'POST',body:JSON.stringify(row.value.body||{})});
-        if((result.status||200)>=400)throw new Error(result.body?.error||'Match finish sync failed');
-        await store?.remove(row.key);await store?.remove(key(uid,'match',String(row.key).split(':').pop()));
+        try{
+          const matchId=String(row.value?.body?.matchId||String(row.key||'').split(':').pop());
+          const result=await apiRequest(new URL('/api/match/finish',location.href),{method:'POST',body:JSON.stringify(row.value.body||{})});
+          if((result.status||200)>=400){
+            if([404,409].includes(Number(result.status))&&await publicMatchIsFinal(matchId)){
+              await store?.remove(row.key);
+              await store?.remove(key(uid,'match',matchId));
+              continue;
+            }
+            throw new Error(result.body?.error||'Match finish sync failed');
+          }
+          await store?.remove(row.key);await store?.remove(key(uid,'match',matchId));
+        }catch(error){noteRowError('Finish sync',row,error);}
       }
-      if(broadcastRow){const result=await apiRequest(new URL('/api/broadcast',location.href),{method:'POST',body:JSON.stringify(broadcastRow.payload)});if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast save failed');const latest=await store?.get(key(uid,'broadcast'));if(latest?.version===broadcastRow.version)await store?.remove(key(uid,'broadcast'));}
-      const pending=(await records('queue:'+uid+':')).length;rerunSync=pending>0;syncFailureCount=0;localStatus(pending?'syncing':'synced',pending?pending+' बदलाव Sync के लिए queue में हैं।':'सभी बदलाव Firebase से Sync हो गए।');return pending===0;
-    }catch(error){syncFailureCount=Math.min(6,syncFailureCount+1);const detail=String(error?.message||'Sync अभी पूरा नहीं हुआ; फिर प्रयास होगा।');window.__JC_LAST_SYNC_ERROR__=detail;localStatus('error',detail);console.error('Jangid Firebase background sync failed:',error);return false;}
-    finally{
+
+      // Event queue is independent from score snapshots and card settings.
+      for(const row of eventRows){
+        try{
+          const queued=await store?.get(row.key);
+          if(!queued)continue;
+          if(queued.version!==row.value?.version){rerunSync=true;continue;}
+          const result=await apiRequest(new URL('/api/broadcast/event',location.href),{method:'POST',body:JSON.stringify(queued.payload||{})});
+          if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast Event sync failed');
+          const latest=await store?.get(row.key);
+          if(latest?.version===queued.version)await store?.remove(row.key);else rerunSync=true;
+        }catch(error){noteRowError('Broadcast Event sync',row,error);}
+      }
+
+      // Crucially, a failing old Match/Finish queue row no longer blocks this upload.
+      if(broadcastRow){
+        try{
+          const result=await apiRequest(new URL('/api/broadcast',location.href),{method:'POST',body:JSON.stringify(broadcastRow.payload)});
+          if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast save failed');
+          const latest=await store?.get(key(uid,'broadcast'));
+          if(latest?.version===broadcastRow.version)await store?.remove(key(uid,'broadcast'));else rerunSync=true;
+        }catch(error){noteRowError('Broadcast Cards/Graphics sync',broadcastRow,error);}
+      }
+
+      const pending=(await records('queue:'+uid+':')).length;
+      if(rowErrors.length){
+        syncFailureCount=Math.min(6,syncFailureCount+1);
+        const detail=rowErrors[0]+(pending?' · '+pending+' बदलाव सुरक्षित queue में हैं।':'');
+        window.__JC_LAST_SYNC_ERROR__=detail;
+        localStatus('error',detail);
+        return false;
+      }
+      syncFailureCount=0;
+      rerunSync=rerunSync||pending>0;
+      localStatus(pending?'syncing':'synced',pending?pending+' बदलाव Sync के लिए queue में हैं।':'स्कोर, Cards और Broadcast graphics Firebase से Sync हो गए।');
+      return pending===0;
+    }catch(error){
+      syncFailureCount=Math.min(6,syncFailureCount+1);
+      const detail=String(error?.message||'Sync अभी पूरा नहीं हुआ; फिर प्रयास होगा।');
+      window.__JC_LAST_SYNC_ERROR__=detail;localStatus('error',detail);
+      console.error('Jangid Firebase background sync failed:',error);return false;
+    }finally{
       syncing=false;clearTimeout(syncStatusTimer);syncStatusTimer=null;
       if((rerunSync||syncRequested)&&navigator.onLine){syncRequested=false;scheduleSync(160);}
       else if(syncFailureCount>0&&navigator.onLine){
-        // A failed upload used to wait for the 30-second poll. Retry with capped backoff instead.
         const retryDelay=Math.min(30000,1000*Math.pow(2,Math.min(5,syncFailureCount-1)));
         scheduleSync(retryDelay);
       }
