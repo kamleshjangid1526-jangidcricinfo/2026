@@ -117,13 +117,16 @@
     syncing=true;syncRequested=false;let rerunSync=false;const rowErrors=[];
     clearTimeout(syncStatusTimer);
     syncStatusTimer=setTimeout(()=>{if(syncing)localStatus('syncing','स्कोर और Broadcast graphics Firebase में अलग-अलग Sync हो रहे हैं।');},700);
-    const publicMatchIsFinal=async(matchId)=>{
-      if(!matchId)return false;
+    const publicMatchSnapshot=async(matchId)=>{
+      if(!matchId)return null;
       try{
         const response=await apiRequest(new URL('/api/public/match/'+encodeURIComponent(matchId),location.href));
-        const remote=response.body?.match;
-        return !!remote&&['finished','abandoned'].includes(String(remote.status||''));
-      }catch{return false;}
+        return (response.status||200)<400?(response.body?.match||null):null;
+      }catch{return null;}
+    };
+    const publicMatchIsFinal=async(matchId)=>{
+      const remote=await publicMatchSnapshot(matchId);
+      return !!remote&&['finished','abandoned'].includes(String(remote.status||''));
     };
     const noteRowError=(kind,row,error)=>{
       const message=String(error?.message||'Sync failed');
@@ -170,21 +173,40 @@
         }catch(error){noteRowError('Match sync',row,error);}
       }
 
-      // A stale/duplicate Finish request is safely cleared only when Firebase already
-      // confirms this match is finished or abandoned. Otherwise keep the score data.
+      // A Finish request can outlive the private Match document. When the public
+      // snapshot proves this is the same user's still-live Match, restore the private
+      // owner copy but do not replay the old Finish action or end an active game.
+      // Only the obsolete Finish command is cleared; score snapshots remain untouched.
       for(const row of finishRows){
         try{
           const matchId=String(row.value?.body?.matchId||String(row.key||'').split(':').pop());
           const result=await apiRequest(new URL('/api/match/finish',location.href),{method:'POST',body:JSON.stringify(row.value.body||{})});
           if((result.status||200)>=400){
-            if([404,409].includes(Number(result.status))&&await publicMatchIsFinal(matchId)){
-              await store?.remove(row.key);
-              await store?.remove(key(uid,'match',matchId));
+            const remote=[404,409].includes(Number(result.status))?await publicMatchSnapshot(matchId):null;
+            const ownedRemote=!!remote&&(String(remote.ownerUid||'')===uid||String(remote.userId||'')===uid);
+            if(ownedRemote&&String(remote.status||'')==='live'&&Number(result.status)===404){
+              const restored=await apiRequest(new URL('/api/match/state',location.href),{
+                method:'POST',
+                body:JSON.stringify({match:{...remote,userId:uid,ownerUid:uid}})
+              });
+              if((restored.status||200)>=400)throw new Error(restored.body?.error||'लाइव Match की private copy बहाल नहीं हो सकी।');
+              const latest=await store?.get(row.key);
+              if(latest?.version===row.value?.version)await store?.remove(row.key);else rerunSync=true;
+              console.info('Restored the owner Match snapshot and cleared an obsolete Finish command without ending the live Match:',matchId);
+              continue;
+            }
+            if(ownedRemote&&['finished','abandoned'].includes(String(remote.status||''))){
+              const latest=await store?.get(row.key);
+              if(latest?.version===row.value?.version)await store?.remove(row.key);else rerunSync=true;
               continue;
             }
             throw new Error(result.body?.error||'Match finish sync failed');
           }
-          await store?.remove(row.key);await store?.remove(key(uid,'match',matchId));
+          const latest=await store?.get(row.key);
+          if(latest?.version===row.value?.version){
+            await store?.remove(row.key);
+            await store?.remove(key(uid,'match',matchId));
+          }else rerunSync=true;
         }catch(error){noteRowError('Finish sync',row,error);}
       }
 
