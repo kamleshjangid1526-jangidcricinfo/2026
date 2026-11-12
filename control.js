@@ -1,5 +1,5 @@
 let STATE=null, MATCH=null, selectedTeamId=null, matchStep=1, modalCloseHook=null, PUBLIC_LIVE=[], activeCardType=null, draftSaveTimer=null, restoringMatchDraft=false, secondSetupModalOpen=false, secondSetupDismissed=false, secondSetupOpenScheduled=false, nextInningsModalOpen=false, nextInningsPromptDismissed=false, nextInningsPromptScheduled=false, newBatterModalOpen=false, newBatterDismissed=false, newBatterOpenScheduled=false;
-let broadcastSequence=Date.now(),eventBroadcastQueue=Promise.resolve(),eventPublishGeneration=0,eventSequenceResolve=null;
+let broadcastSequence=Date.now(),eventBroadcastQueue=Promise.resolve(),eventPublishGeneration=0,eventSequenceResolve=null,broadcastEventClearTimer=null;
 const eventSequenceTimers=new Set();
 // Auth bootstrap guard: an initial unauthenticated /api/state request must never undo a later successful login.
 let authBootSequence=0, loginSubmitting=false;
@@ -412,7 +412,13 @@ async function publishEventNow(event,meta={}){
  if(!activePlan())return {ok:false,skipped:true};
  const duration=EVENT_DURATION_MAP[event]||Math.max(300,Math.min(10000,+$('animationDuration').value||2200));
  try{
+  clearTimeout(broadcastEventClearTimer);
   await saveBroadcast({card:null,cardId:Date.now(),event,eventStyle:eventStyle(event),animation:EVENT_ANIM_MAP[event]||$('animationSelect').value,duration,...meta,matchId:MATCH?.id||meta.matchId||null,eventAt:Date.now()});
+  const publishedEventId=STATE?.broadcast?.eventId;
+  broadcastEventClearTimer=setTimeout(()=>{
+   if(String(STATE?.broadcast?.eventId??'')!==String(publishedEventId??''))return;
+   void saveBroadcast({event:null,eventId:publishedEventId,eventAt:null,matchId:null}).catch(error=>console.warn('Broadcast event cleanup could not sync:',error));
+  },Math.max(1200,duration+350));
   return {ok:true};
  }catch(error){
   console.warn(`Broadcast effect ${event} could not be shown; scoring remains saved.`,error);
@@ -726,9 +732,9 @@ function preservePrivateUndoHistory(publicMatch,candidates=[]){
  const key=inningsKey(incoming);
  const privateMatch=candidates
   .filter(item=>item&&String(item.id)===String(incoming.id)&&Array.isArray(item.activeInnings?.undoStack)&&inningsKey(item)===key)
-  .sort((a,b)=>(Date.parse(b.offlineUpdatedAt||b.updatedAt||'')||0)-(Date.parse(a.offlineUpdatedAt||a.updatedAt||'')||0))[0];
+  .sort((a,b)=>((b.activeInnings.undoStack?.length||0)-(a.activeInnings.undoStack?.length||0))||((Date.parse(b.offlineUpdatedAt||b.updatedAt||'')||0)-(Date.parse(a.offlineUpdatedAt||a.updatedAt||'')||0)))[0];
  if(!privateMatch)return incoming;
- return {...incoming,activeInnings:{...incoming.activeInnings,undoStack:clone(privateMatch.activeInnings.undoStack)}};
+ return {...incoming,activeInnings:{...incoming.activeInnings,undoStack:JSON.parse(JSON.stringify(privateMatch.activeInnings.undoStack))}};
 }
 const es=new EventSource('/events');es.onmessage=e=>{try{
  const p=JSON.parse(e.data);PUBLIC_LIVE=p.activeMatches||[];
