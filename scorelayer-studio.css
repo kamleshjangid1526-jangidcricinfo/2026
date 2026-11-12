@@ -41,3 +41,11 @@
 .jlStudioChips i{display:inline!important;min-width:0!important;height:auto!important;padding:0!important;margin:0 .08em!important;border:0!important;border-radius:0!important;background:transparent!important;color:inherit!important}
 .jlStudioBallText{display:block;width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .jlStudioBatter .strikeMark{background:transparent!important;border:0!important}
+
+/* World Cup 2026 uses a distinct vector-art layer and broadcast-safe motion. */
+.jlStudioRoot.jlWorldCup2026 .jlStudioItem.isShape{
+  transform-origin:center center;backface-visibility:hidden;
+}
+.jlStudioRoot.jlWorldCup2026 .jlStudioItem[class*="jlStudioMotion-"]{
+  will-change:transform,opacity,filter;
+}

@@ -88,16 +88,93 @@
     ];
     return { id: uid(), category, name, width:meta.width, height:meta.height, backgroundImage: '', backgroundFit: 'contain', animationPreset:category==='animation'?'fireworks':'none', published:false, elements: items };
   }
+  function buildWorldCup2026Templates() {
+    const palettes = [
+      ['Aurora Prime','#06162b','#0e3c59','#30e6de','#b8ff78'],['Neon Velocity','#090d26','#25145a','#c4ff31','#00d7ff'],
+      ['Crown Jewel','#15101d','#49300c','#f5c64a','#fff0ad'],['Prism Shock','#130d2f','#392064','#ff4ab7','#4ce8ff'],
+      ['Emerald Arena','#061f1c','#0a4a3c','#7bffc5','#f3d36d'],['Solar Flare','#271006','#74310b','#ffb13c','#fff0a0'],
+      ['Arctic Edge','#071c32','#15516b','#75eeff','#f5ffff'],['Royal Night','#140c29','#392052','#d8a7ff','#ffd36a'],
+      ['Sapphire Orbit','#06152c','#123d78','#53a9ff','#65ffe0'],['Crimson Storm','#250b18','#681d36','#ff637b','#ffd18a'],
+      ['Diamond Grid','#101a2a','#344d69','#c8f0ff','#6fd6ff'],['Pulse Circuit','#061d24','#07536a','#23f0d0','#a9ffef'],
+      ['Cosmic Rings','#180b32','#3e1a69','#b58cff','#ff78d1'],['Titanium X','#151b24','#394454','#d9e5f2','#ff9f43'],
+      ['Stadium Lights','#061b2a','#0d493d','#8dffbb','#f5d56e'],['Phoenix Rise','#260d1a','#6e260e','#ff9250','#ffc94f'],
+      ['Hexa Force','#061e20','#0a4e55','#54f2d0','#b1ff74'],['Skyline Sport','#0c1b38','#244f82','#f5f8ff','#65c7ff'],
+      ['Eclipse Pro','#100d1c','#30203f','#fa54c6','#e8dcff'],['Final Glory','#190d25','#4b2b47','#ffd36b','#ffffff']
+    ];
+    const patterns = [
+      [['parallelogram',0,0,38,100,1,0,12,0],['chevron',30,4,37,92,2,1,135,0],['parallelogram',67,0,33,100,0,1,145,0],['rect',0,94,100,6,2,3,0,0]],
+      [['parallelogram',0,0,100,22,1,0,0,-2],['parallelogram',0,78,100,22,0,1,0,2],['hexagon',34,4,32,92,2,1,90,0],['chevron',0,18,32,64,1,0,20,0]],
+      [['roundRect',0,4,100,92,1,0,90,0],['pentagon',37,7,26,86,2,1,110,0],['diamond',1,22,15,56,3,2,35,0],['diamond',84,22,15,56,3,2,35,0],['star8',46,0,8,14,3,2,0,0]],
+      [['triangle',0,0,43,100,2,1,0,180],['triangle',57,0,43,100,1,2,0,0],['parallelogram',38,0,24,100,3,2,90,0],['rect',0,0,100,12,1,0,0,0]],
+      [['roundRect',0,8,100,84,1,0,110,0],['hexagon',35,9,30,82,2,1,90,0],['rect',0,48,34,4,3,2,0,0],['rect',66,48,34,4,3,2,0,0]],
+      [['parallelogram',0,0,100,100,1,0,30,0],['lightning',0,4,30,92,2,3,20,0],['lightning',70,4,30,92,3,2,20,180],['roundRect',31,7,38,86,0,1,90,0]],
+      [['rect',0,0,100,14,2,1,0,0],['rect',0,86,100,14,1,2,0,0],['chevron',0,14,27,72,1,0,0,0],['diamond',38,4,24,92,2,1,90,0],['chevron',73,14,27,72,0,1,180,0]],
+      [['roundRect',0,0,31,100,1,0,90,0],['trapezoid',29,10,43,80,2,1,100,0],['roundRect',73,0,27,100,0,1,90,0],['star8',46,0,8,14,3,2,0,0]],
+      [['ellipse',40,0,20,100,1,2,0,0],['roundRect',31,10,38,80,2,1,100,0],['parallelogram',0,5,31,90,0,1,120,0],['parallelogram',69,5,31,90,1,0,120,0]],
+      [['rightArrow',0,0,38,100,2,1,120,0],['hexagon',33,6,34,88,1,0,90,0],['leftArrow',65,0,35,100,0,1,120,0],['rect',0,93,100,7,3,2,0,0]],
+      [['diamond',0,0,34,100,1,0,45,0],['diamond',66,0,34,100,0,1,45,0],['octagon',30,4,40,92,2,1,90,0],['star8',47,0,6,18,3,2,0,0]],
+      [['hexagon',0,0,34,100,1,0,90,0],['hexagon',66,0,34,100,0,1,90,0],['roundRect',34,6,32,88,2,1,90,0],['circle',4,44,6,12,3,2,0,0],['circle',90,44,6,12,3,2,0,0]],
+      [['parallelogram',0,4,43,92,1,0,20,0],['parallelogram',57,4,43,92,0,1,160,0],['ellipse',35,0,30,100,2,1,90,0],['rect',0,0,100,4,3,2,0,0]],
+      [['rect',0,0,100,9,3,1,0,0],['rect',0,91,100,9,3,1,0,0],['trapezoid',0,9,34,82,1,0,90,0],['trapezoid',66,9,34,82,0,1,90,0],['octagon',35,10,30,80,2,1,90,0]],
+      [['arc',34,0,32,100,2,3,0,0],['roundRect',0,6,24,88,1,0,90,0],['roundRect',76,6,24,88,0,1,90,0],['chevron',27,13,46,74,2,1,90,0]],
+      [['lightning',0,0,37,100,2,1,0,0],['lightning',63,0,37,100,3,1,0,180],['diamond',34,8,32,84,1,0,90,0],['rect',0,91,100,9,2,3,0,0]],
+      [['hexagon',0,0,33,100,1,0,90,0],['hexagon',67,0,33,100,0,1,90,0],['roundRect',32,4,36,92,2,1,90,0],['circle',47,0,6,10,3,2,0,0]],
+      [['parallelogram',0,0,100,20,1,0,0,0],['parallelogram',0,80,100,20,0,1,0,0],['trapezoid',0,20,29,60,2,1,90,0],['trapezoid',71,20,29,60,3,1,90,0],['rect',31,13,38,74,0,1,90,0]],
+      [['ellipse',39,0,22,100,1,0,90,0],['chevron',0,8,42,84,2,1,0,0],['chevron',58,8,42,84,1,2,180,0],['roundRect',36,13,28,74,0,1,90,0]],
+      [['roundRect',0,4,100,92,1,0,90,0],['pentagon',38,4,24,92,2,1,90,0],['parallelogram',0,17,38,66,0,1,10,0],['parallelogram',62,17,38,66,1,0,170,0],['star8',47,0,6,14,3,2,0,0]]
+    ];
+    const profiles=[{left:32,scoreX:35,scoreW:25,rightX:62,rightW:37},{left:30,scoreX:32,scoreW:26,rightX:61,rightW:38},{left:35,scoreX:38,scoreW:22,rightX:63,rightW:36},{left:31,scoreX:34,scoreW:25,rightX:62,rightW:37},{left:34,scoreX:36,scoreW:23,rightX:62,rightW:37}];
+    const motion=['none','orbit','spark','fireworks','spotlight','glitch','zoom','shatter','slideUp','flash'];
+    return palettes.map((palette,index)=>{
+      const [name,base,mid,accent,secondary]=palette,profile=profiles[index%profiles.length],items=[],colors=[base,mid,accent,secondary];
+      patterns[index].forEach((row,j)=>{
+        const [type,x,y,w,h,fill,fill2,angle,rotation]=row;
+        items.push(makeItem('shape','',name+' · '+type,x,y,w,h,j+1,{
+          fill:colors[fill],fill2:colors[fill2],fillMode:'gradient',gradientAngle:angle,stroke:j%2?secondary:accent,
+          strokeWidth:j%3===0?1.2:0,opacity:j%3===1?86:100,shapeType:type,rotation,shadow:true,shadowBlur:12,
+          animationType:motion[(index+j)%motion.length]
+        }));
+      });
+      const addShape=(label,x,y,w,h,z,fill,fill2)=>items.push(makeItem('shape','',label,x,y,w,h,z,{
+        fill,fill2,fillMode:'gradient',gradientAngle:120,stroke:accent,strokeWidth:1,radius:14,shapeType:'roundRect',opacity:72,shadow:true,shadowBlur:8
+      }));
+      const addData=(key,label,x,y,w,h,z,fontSize,color=secondary,align='left')=>items.push(makeItem('data',key,label,x,y,w,h,z,{
+        fontFamily:'condensed',fontSize,fontWeight:950,color,fill:'transparent',stroke:'transparent',strokeWidth:0,align,shadow:true,shadowBlur:7
+      }));
+      const left=profile.left,sx=profile.scoreX,sw=profile.scoreW,rx=profile.rightX,rw=profile.rightW;
+      addShape('Batting live glass',1,5,left-2,90,20,base,mid);
+      addShape('Score glass',sx-1,5,sw+2,90,21,mid,base);
+      addShape('Bowling live glass',rx,5,rw-1,90,20,base,mid);
+      addData('battingTeam','BATTING TEAM',2,7,left-5,12,31,17,secondary);
+      addData('teamLogo','Batting logo',2,34,4.5,32,32,34,secondary,'center');
+      addData('batter1','Striker',7,23,left-12,27,32,29);
+      addData('batter2','Non-striker',7,55,left-12,25,32,27);
+      addData('target','Target',sx+2,7,sw-4,13,32,18,secondary,'center');
+      addData('score','Score',sx+1,21,sw-11,55,33,84,palette[4],'center');
+      addData('overs','Overs',sx+sw-10,34,9,28,33,38,secondary,'center');
+      addData('phase','Powerplay',sx+2,81,sw-4,11,33,15,secondary,'center');
+      addData('bowlingTeam','BOWLING TEAM',rx+2,7,rw-6,12,31,16,secondary);
+      addData('bowlerName','Bowler',rx+3,23,rw-7,21,32,29);
+      addData('bowlerFigures','Bowling figures',rx+3,47,rw-7,17,32,22,secondary);
+      addData('balls','This over',rx+3,70,rw-7,22,32,18,secondary);
+      addData('crr','CRR',sx+1,65,10,10,34,13,secondary,'center');
+      addData('rrr','RRR',sx+sw-11,65,10,10,34,13,secondary,'center');
+      return {id:'wc26-'+String(index+1).padStart(2,'0'),category:'score',groupId:'worldcup2026',groupName:'World Cup 2026',name,width:1920,height:260,backgroundImage:'',backgroundFit:'contain',backgroundPositionX:50,backgroundPositionY:50,animationPreset:'none',published:true,elements:items};
+    });
+  }
+
   function freshDocument() {
     const score=defaultTemplate('World Cup Inspired','score');
     const card=defaultTemplate('Player Feature Card','card');
     const animation=defaultTemplate('Event Animation Starter','animation');
-    return { version: 2, enabled: false, activeTemplateId: score.id, activeCardTemplateId:card.id, activeAnimationTemplateId:animation.id, activeCategory:'score', previewResolution: '1920x1080', templates: [score], cardTemplates:[card], animationTemplates:[animation] };
+    score.groupId='existing';score.groupName='Existing Designs';
+    return { version: 3, enabled: false, worldCup2026Seeded:true, activeTemplateId: score.id, activeCardTemplateId:card.id, activeAnimationTemplateId:animation.id, activeCategory:'score', previewResolution: '1920x1080', templates: [score,...buildWorldCup2026Templates()], cardTemplates:[card], animationTemplates:[animation] };
   }
   let doc = freshDocument();
   let selectedId = null, drawMode = '', drawPoints = [], drag = null, undoStack = [], undoIndex = -1, saveTimer = null, initialized = false;
 
   let currentCategory='score';
+  let currentGroup='existing';
   function categoryList(category=currentCategory) { const meta=CATEGORIES[category]||CATEGORIES.score; return doc[meta.key] || (doc[meta.key]=[]); }
   function activeId(category=currentCategory) { const meta=CATEGORIES[category]||CATEGORIES.score; return doc[meta.activeKey]; }
   function setActiveId(id,category=currentCategory) { const meta=CATEGORIES[category]||CATEGORIES.score; doc[meta.activeKey]=id; }
@@ -107,8 +184,9 @@
   function setCategory(category) { if(!CATEGORIES[category])return; currentCategory=category;doc.activeCategory=category;const t=activeTemplate();selectedId=t?.elements?.[0]?.id||null;cancelDraw(false);resetHistory();renderAll();setHint(`${CATEGORIES[category].label} खुल गया। यह Design Library अलग सुरक्षित रहेगी।`); }
   function normalizeTemplates(list,category) {
     const meta=CATEGORIES[category];
-    return (Array.isArray(list)?list:[]).slice(0,20).map(t => ({
-      id:String(t.id||uid()),category,name:String(t.name||'My Design').slice(0,50),width:safeNum(t.width,400,4000,meta.width),height:safeNum(t.height,180,2400,meta.height),published:!!t.published,
+    const maxTemplates=category==='score'?40:20;
+    return (Array.isArray(list)?list:[]).slice(0,maxTemplates).map(t => ({
+      id:String(t.id||uid()),category,groupId:category==='score'&&t.groupId==='worldcup2026'?'worldcup2026':'existing',groupName:category==='score'&&t.groupId==='worldcup2026'?'World Cup 2026':'Existing Designs',name:String(t.name||'My Design').slice(0,50),width:safeNum(t.width,400,4000,meta.width),height:safeNum(t.height,180,2400,meta.height),published:!!t.published,
       animationPreset:ANIMATIONS.includes(t.animationPreset)?t.animationPreset:(category==='animation'?'fireworks':'none'),
       backgroundImage:typeof t.backgroundImage==='string'&&t.backgroundImage.length<=600000&&/^data:image\/(?:webp|png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(t.backgroundImage)?t.backgroundImage:'',
       backgroundFit:['cover','contain','stretch'].includes(t.backgroundFit)?t.backgroundFit:'contain',backgroundPositionX:safeNum(t.backgroundPositionX,0,100,50),backgroundPositionY:safeNum(t.backgroundPositionY,0,100,50),
@@ -123,8 +201,9 @@
   }
   function normaliseDocument(input) {
     if (!input || !Array.isArray(input.templates) || !input.templates.length) return freshDocument();
-    const next=clone(input);next.version=2;next.enabled=!!next.enabled;
+    const next=clone(input);next.version=3;next.enabled=!!next.enabled;
     next.templates=normalizeTemplates(next.templates,'score');
+    if(next.worldCup2026Seeded!==true){const existingIds=new Set(next.templates.map(t=>String(t.id)));for(const template of buildWorldCup2026Templates())if(!existingIds.has(template.id)&&next.templates.length<40)next.templates.push(template);next.worldCup2026Seeded=true;}
     next.cardTemplates=normalizeTemplates(next.cardTemplates,'card');
     next.animationTemplates=normalizeTemplates(next.animationTemplates,'animation');
     if(!next.cardTemplates.length)next.cardTemplates=[defaultTemplate('Player Feature Card','card')];
@@ -134,6 +213,7 @@
     if(!next.animationTemplates.some(t=>t.id===next.activeAnimationTemplateId))next.activeAnimationTemplateId=next.animationTemplates[0].id;
     next.activeCategory=['score','card','animation'].includes(next.activeCategory)?next.activeCategory:'score';
     currentCategory=next.activeCategory;
+    currentGroup=next.templates.find(t=>String(t.id)===String(next.activeTemplateId))?.groupId||'existing';
     return next;
   }
   function setHint(message, isError = false) {
@@ -166,7 +246,7 @@
   }
   function setActiveTemplate(id) {
     const t = categoryList().find(x => x.id === id); if (!t) return;
-    setActiveId(id); selectedId = t.elements[0]?.id || null; resetHistory(); renderAll(); queuePersist();
+    setActiveId(id); if(currentCategory==='score')currentGroup=t.groupId||'existing'; selectedId = t.elements[0]?.id || null; resetHistory(); renderAll(); queuePersist();
   }
   function resetHistory() { undoStack = []; undoIndex = -1; checkpoint(); }
   function addElement(type, key = '', label = 'New Element', extra = {}) {
@@ -234,7 +314,7 @@
         <button type="button" data-category="card">▣ Card Designer</button>
         <button type="button" data-category="animation">✦ Animation Designer</button>
       </div>
-      <div class="jc-studio-header"><div><span class="eyebrow">POWERPOINT-STYLE BROADCAST DESIGNER</span><h3 id="jcStudioCategoryTitle">Score Layer Designer</h3><p id="jcStudioCategoryDescription">अपना Lower Third बनाएं और Cricket Data Fields जोड़ें।</p></div><div class="jc-studio-header-actions"><label>Design<select id="jcStudioTemplate"></select></label><label>Preview output<select id="jcStudioResolution"><option value="1920x1080">1920 × 1080 · Full HD</option><option value="1280x720">1280 × 720 · HD</option><option value="2560x1440">2560 × 1440 · QHD</option><option value="1080x1920">1080 × 1920 · Vertical</option></select></label><label>Motion preview<select id="jcStudioAnimationPreset">${ANIMATIONS.map(a=>`<option value="${a}">${a}</option>`).join('')}</select></label></div></div>
+      <div class="jc-studio-header"><div><span class="eyebrow">POWERPOINT-STYLE BROADCAST DESIGNER</span><h3 id="jcStudioCategoryTitle">Score Layer Designer</h3><p id="jcStudioCategoryDescription">अपना Lower Third बनाएं और Cricket Data Fields जोड़ें।</p></div><div class="jc-studio-header-actions"><label id="jcStudioGroupWrap">Design Group<select id="jcStudioGroup"><option value="existing">Existing Designs</option><option value="worldcup2026">World Cup 2026 · 20 New Layouts</option></select></label><label>Design<select id="jcStudioTemplate"></select></label><label>Preview output<select id="jcStudioResolution"><option value="1920x1080">1920 × 1080 · Full HD</option><option value="1280x720">1280 × 720 · HD</option><option value="2560x1440">2560 × 1440 · QHD</option><option value="1080x1920">1080 × 1920 · Vertical</option></select></label><label>Motion preview<select id="jcStudioAnimationPreset">${ANIMATIONS.map(a=>`<option value="${a}">${a}</option>`).join('')}</select></label></div></div>
       <div class="jc-studio-toolbar">
         <div class="jc-tool-group jc-layout-upload-group"><b>Artwork / Background</b><label class="jc-upload-layout-btn" for="jcStudioLayoutUpload">⬆ Upload PNG / JPG / WebP</label><input id="jcStudioLayoutUpload" class="jc-studio-file-input" type="file" accept="image/png,image/jpeg,image/webp"><label class="jc-layout-fit-label">Image fit<select id="jcStudioBackgroundFit"><option value="contain">Contain</option><option value="cover">Cover / Crop</option><option value="stretch">Stretch</option></select></label><label class="jc-layout-fit-label">Crop X <input id="jcStudioCropX" type="range" min="0" max="100" value="50"></label><label class="jc-layout-fit-label">Crop Y <input id="jcStudioCropY" type="range" min="0" max="100" value="50"></label><button type="button" data-layout-clear>Remove artwork</button><small>Transparent PNG/WebP artwork upload करें। Cricket data fields को artwork के ऊपर रखें।</small></div>
         <div class="jc-tool-group"><b>Insert Elements</b><button type="button" data-add-image>＋ Image Element</button><input id="jcStudioElementImageUpload" class="jc-studio-file-input" type="file" accept="image/png,image/jpeg,image/webp"></div><div class="jc-tool-group"><b>Cricket Data Library</b><select id="jcStudioFieldPicker" aria-label="Cricket data field">${groupedFields}</select><button type="button" data-add-picked-field>＋ Add Field</button><button type="button" data-add-text>＋ Text Box</button></div>
@@ -273,6 +353,7 @@
     root.addEventListener('input', e => { const field = e.target.closest('[data-prop]'); if (field) updateProperty(field, false); });
     root.addEventListener('change', e => { const field = e.target.closest('[data-prop]'); if (field) { updateProperty(field, true); } });
     $('jcStudioTemplate').addEventListener('change', e => setActiveTemplate(e.target.value));
+    $('jcStudioGroup')?.addEventListener('change',e=>{if(currentCategory!=='score')return;currentGroup=e.target.value==='worldcup2026'?'worldcup2026':'existing';const first=categoryList('score').find(t=>(t.groupId||'existing')===currentGroup);if(first)setActiveTemplate(first.id);else renderAll();});
     $('jcStudioAnimationPreset').addEventListener('change',e=>{const t=activeTemplate();if(!t)return;t.animationPreset=e.target.value;checkpoint();renderViewport();queuePersist();});
     $('jcStudioResolution').addEventListener('change', e => { doc.previewResolution = e.target.value; renderViewport(); });
     $('jcStudioLayoutUpload').addEventListener('change', async e => { const file=e.target.files?.[0]; e.target.value=''; if(file) await uploadLayoutImage(file); });
@@ -301,8 +382,14 @@
   }
   function renderTemplateOptions() {
     const select = $('jcStudioTemplate'); if (!select) return;
-    const meta=CATEGORIES[currentCategory],list=categoryList(),active=activeTemplate();
-    select.innerHTML = list.map(t => `<option value="${safeText(t.id)}" ${t.id === activeId() ? 'selected' : ''}>${safeText(t.name)}</option>`).join('');
+    const meta=CATEGORIES[currentCategory],list=categoryList();
+    let active=activeTemplate();const groupWrap=$('jcStudioGroupWrap'),groupSelect=$('jcStudioGroup');
+    if(currentCategory==='score'){
+      currentGroup=active?.groupId||currentGroup||'existing';if(groupWrap)groupWrap.hidden=false;if(groupSelect)groupSelect.value=currentGroup;
+      const visible=list.filter(t=>(t.groupId||'existing')===currentGroup);
+      if(!visible.some(t=>t.id===activeId())&&visible[0]){setActiveId(visible[0].id);active=visible[0];}
+      select.innerHTML=visible.map(t=>`<option value="${safeText(t.id)}" ${t.id===activeId()?'selected':''}>${safeText(t.name)}</option>`).join('');
+    }else{if(groupWrap)groupWrap.hidden=true;select.innerHTML=list.map(t=>`<option value="${safeText(t.id)}" ${t.id===activeId()?'selected':''}>${safeText(t.name)}</option>`).join('');}
     $('jcStudioTemplateName').value = active?.name || 'My Design';
     $('jcStudioResolution').value = doc.previewResolution || '1920x1080';
     if($('jcStudioBackgroundFit')) $('jcStudioBackgroundFit').value = active?.backgroundFit || 'contain';if($('jcStudioCropX'))$('jcStudioCropX').value=String(active?.backgroundPositionX??50);if($('jcStudioCropY'))$('jcStudioCropY').value=String(active?.backgroundPositionY??50);
@@ -525,27 +612,27 @@
   async function saveTemplate() {
     const t = activeTemplate(); if (!t) return;
     t.name = String($('jcStudioTemplateName').value || 'My Scoreboard').trim().slice(0,50) || 'My Scoreboard';
-    t.category=currentCategory;t.published = true; checkpoint(); renderTemplateOptions();
+    t.category=currentCategory;if(currentCategory==='score'){t.groupId=currentGroup;t.groupName=currentGroup==='worldcup2026'?'World Cup 2026':'Existing Designs';}t.published = true; checkpoint(); renderTemplateOptions();
     await persistNow(true);
   }
   function duplicateTemplate() {
     const t = clone(activeTemplate()); if (!t) return;
-    t.id = uid(); t.name = `${t.name} Copy`.slice(0,50); t.published=false; t.elements.forEach(e=>{e.id=uid()}); const list=categoryList(); if(list.length>=20){setHint('इस Designer में अधिकतम 20 designs रख सकते हैं।',true);return;} list.push(t);setActiveId(t.id);selectedId=t.elements[0]?.id||null;resetHistory();renderAll();queuePersist();setHint('Design duplicate हो गया। अब इसे अलग edit कर सकते हैं।');
+    t.id = uid(); t.name = `${t.name} Copy`.slice(0,50); t.published=false;if(currentCategory==='score'){t.groupId=currentGroup;t.groupName=currentGroup==='worldcup2026'?'World Cup 2026':'Existing Designs';} t.elements.forEach(e=>{e.id=uid()}); const list=categoryList(); if(list.length>=(currentCategory==='score'?40:20)){setHint('इस Designer में और designs जोड़ने की सीमा पूरी हो गई है।',true);return;} list.push(t);setActiveId(t.id);selectedId=t.elements[0]?.id||null;resetHistory();renderAll();queuePersist();setHint('Design duplicate हो गया। अब इसे अलग edit कर सकते हैं।');
   }
   function deleteTemplate() {
     const list=categoryList(); if (list.length <= 1) { setHint('हर Designer में कम से कम एक Design रहना जरूरी है।', true); return; }
     const t = activeTemplate(); if (!confirm(`Delete design “${t.name}”?`)) return;
-    const next=list.filter(x=>x.id!==t.id);const meta=CATEGORIES[currentCategory];doc[meta.key]=next;setActiveId(next[0].id);selectedId=next[0].elements[0]?.id||null;resetHistory();renderAll();queuePersist();
+    const next=list.filter(x=>x.id!==t.id);const meta=CATEGORIES[currentCategory];doc[meta.key]=next;const replacement=next.find(x=>currentCategory!=='score'||(x.groupId||'existing')===currentGroup)||next[0];setActiveId(replacement.id);if(currentCategory==='score')currentGroup=replacement.groupId||'existing';selectedId=replacement.elements[0]?.id||null;resetHistory();renderAll();queuePersist();
   }
   function resetCurrentTemplate() {
     if (!confirm('Current template को World Cup starter design से replace करें?')) return;
-    const old=activeTemplate(), next=defaultTemplate(old?.name||'Starter Design',currentCategory); next.id=old.id; const list=categoryList(),ix=list.findIndex(t=>t.id===old.id); list[ix]=next; selectedId=next.elements[0]?.id||null; resetHistory(); renderAll(); queuePersist();
+    const old=activeTemplate(), next=defaultTemplate(old?.name||'Starter Design',currentCategory); next.id=old.id;next.groupId=old.groupId||currentGroup;next.groupName=old.groupName|| (currentGroup==='worldcup2026'?'World Cup 2026':'Existing Designs'); const list=categoryList(),ix=list.findIndex(t=>t.id===old.id); list[ix]=next; selectedId=next.elements[0]?.id||null; resetHistory(); renderAll(); queuePersist();
   }
   async function persistNow(apply) {
     if (saveTimer) clearTimeout(saveTimer);
     window.__jcStudioDirty = true;
     activeTemplate().name = String($('jcStudioTemplateName').value || activeTemplate().name).trim().slice(0,50) || 'My Design';
-    activeTemplate().category=currentCategory;
+    activeTemplate().category=currentCategory;if(currentCategory==='score'){activeTemplate().groupId=currentGroup;activeTemplate().groupName=currentGroup==='worldcup2026'?'World Cup 2026':'Existing Designs';}
     if (apply) { activeTemplate().published=true; if(currentCategory==='score')doc.enabled=true; }
     try {
       if (typeof window.persistScoreboardStudio !== 'function') throw new Error('Control Board save connection is not ready.');

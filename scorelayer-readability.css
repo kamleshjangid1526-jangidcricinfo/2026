@@ -139,8 +139,16 @@
 #cardLayer.cardLayer .broadcastCardStage *,
 #cardLayer.cardLayer .broadcastCardStage *::before,
 #cardLayer.cardLayer .broadcastCardStage *::after{
-  animation:none!important;transition:none!important;
+  transition:none!important;
 }
 #cardLayer.cardLayer .broadcastCardStage.cardEntering{
   transform-origin:center center;backface-visibility:hidden;will-change:transform,opacity;
+}
+
+/* Studio elements and the selected outer-card entrance must remain animated in OBS. */
+#cardLayer.cardLayer .broadcastCardStage.cardEntering{
+  animation-play-state:running!important;will-change:transform,opacity,filter!important;
+}
+#cardLayer.cardLayer .broadcastCardStage [class*="jlStudioMotion-"]{
+  animation-play-state:running!important;
 }

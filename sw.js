@@ -1,8 +1,8 @@
 /* Static asset cache for offline scoring sessions. API writes are handled by firebase-api-loader.js. */
-const JC_CACHE='jangid-cricinfo-static-v41';
+const JC_CACHE='jangid-cricinfo-static-v42';
 const JC_ASSETS=[
   './','./index.html','./control.html','./scorelayer.html','./scoreboard.html','./jangid-cricinfo.html',
-  './firebase-api-loader.js','./firebase-api-loader.js?v=5.1.4','./control.js?v=5.1.13','./firebase/firebase-api-bridge.mjs?v=5.1.0','./scoring-engine.js?v=4.4.22','./mobile-scoring-v2.css?v=5.0.4','./mobile-scoring-tap-targets.css?v=1.0.0','./scorelayer-readability.css?v=1.1.0','./scorelayer-obs-consistent.css?v=1.0.0','./offline-store.js','./offline-store.js?v=5.0.1','./offline-status-ui.js','./offline-status-ui.js?v=5.1.4','./scorelayer.js?v=8.1.5','./scorelayer-broadcast-v2.css?v=9.0.2','./scorelayer-obs-fixes.css','./scorelayer-obs-fixes.css?v=5.1.3','./mobile-scoring-v2.css?v=5.0.2','./event-animation-themes.js','./mobile-scoring-v2.css','./event-animation-themes.css','./scorelayer-broadcast-v2.css','./mobile-scoring-tap-targets.css','./scorelayer-readability.css','./scorelayer-obs-consistent.css','./broadcast-ui-fixes.css','./broadcast-ui-fixes.css?v=5.0.1',
+  './firebase-api-loader.js','./firebase-api-loader.js?v=5.1.4','./control.js?v=5.1.13','./firebase/firebase-api-bridge.mjs?v=5.1.1','./scoring-engine.js?v=4.4.22','./mobile-scoring-v2.css?v=5.0.4','./mobile-scoring-tap-targets.css?v=1.0.0','./scorelayer-readability.css?v=1.1.1','./scorelayer-obs-consistent.css?v=1.0.1','./offline-store.js','./offline-store.js?v=5.0.1','./offline-status-ui.js','./offline-status-ui.js?v=5.1.4','./scorelayer.js?v=8.1.6','./scorelayer-broadcast-v2.css?v=9.0.2','./scorelayer-studio.css?v=4.4.18','./scorelayer-obs-fixes.css','./scorelayer-obs-fixes.css?v=5.1.3','./scorelayer-studio.css?v=4.4.18','./scorelayer-readability.css?v=1.1.1','./scorelayer-obs-consistent.css?v=1.0.1','./mobile-scoring-v2.css?v=5.0.2','./event-animation-themes.js','./mobile-scoring-v2.css','./event-animation-themes.css','./scorelayer-broadcast-v2.css','./mobile-scoring-tap-targets.css','./scorelayer-readability.css','./scorelayer-obs-consistent.css','./broadcast-ui-fixes.css','./broadcast-ui-fixes.css?v=5.0.1',
   './theme.js','./theme.css','./control.js','./scoring-engine.js','./tournament-manager.js',
   './control.css','./control-workflow.css','./tournament-manager.css','./mobile-scoring-v2.css',
   './event-animation-themes.css','./scorelayer.js','./scorelayer.css','./scorelayer.css?v=4.4.17','./scorelayer-v6.css','./scorelayer-v7.css',
@@ -10,7 +10,7 @@ const JC_ASSETS=[
   './scorelayer-v4_4_11-fixes.css','./scorelayer-card-layout-v4414.css','./scorelayer-broadcast-v2.css',
   './firebase/firebase-api-bridge.mjs','./firebase/firebase-config.js','./firebase/firebase-init.mjs',
   'https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js','https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js','https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js',
-  './scoreboard.css','./scoreboard.js','./jangid.css','./jangid.js',
+  './scoreboard.css','./scoreboard.js','./scoreboard-studio.js?v=4.6.0','./scoreboard-studio.css?v=4.6.0','./admin.html','./jangid.css','./jangid.js',
   './assets/demo/india-flag.svg','./assets/demo/pakistan-flag.svg',
   './assets/stickers/bat-ball-sticker.png','./assets/stickers/batter-sticker.png','./assets/stickers/bowler-sticker.png',
   './assets/stickers/celebration-sticker.png','./assets/stickers/umpire-out-sticker.png'

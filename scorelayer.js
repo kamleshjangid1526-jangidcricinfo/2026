@@ -169,12 +169,13 @@ function renderStudioBar(layer,m,b,template){
  applyScoreDesign({enabled:false});
  const hasThemeArtwork=typeof template.backgroundImage==='string'&&template.backgroundImage.length<=600000&&/^data:image\/(?:webp|png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(template.backgroundImage);
  const items=(template.elements||[]).filter(e=>!e.hidden&&!(hasThemeArtwork&&e.type==='shape')).slice(0,100).sort((a,c)=>(Number(a.z)||0)-(Number(c.z)||0));
- layer.innerHTML=`<div class="jlStudioRoot">${items.map(e=>{
+ layer.innerHTML=`<div class="jlStudioRoot ${template.groupId==='worldcup2026'?'jlWorldCup2026':''}" data-design-group="${esc(template.groupId||'existing')}">${items.map(e=>{
   const x=studioNum(e.x,0,100,0),y=studioNum(e.y,0,100,0),w=studioNum(e.w,1,100,10),h=studioNum(e.h,1,100,20),font=studioFont(e.fontFamily);
   const fill=e.fillMode==='gradient'?`linear-gradient(${studioNum(e.gradientAngle,0,360,110)}deg,${studioColor(e.fill,'#241654')},${studioColor(e.fill2,'#ff168f')})`:e.fill==='transparent'?'transparent':studioColor(e.fill,'#171033');
   const css=`left:${x}%;top:${y}%;width:${w}%;height:${h}%;z-index:${studioNum(e.z,0,200,1)};--studio-fs:${studioNum(e.fontSize,6,220,30)};--studio-color:${studioColor(e.color,'#ffffff')};--studio-fill:${e.type==='data'?'transparent':fill};--studio-stroke:${studioColor(e.stroke,'#ff168f')};--studio-stroke-width:${e.type==='data'?0:studioNum(e.strokeWidth,0,20,0)}px;--studio-radius:${e.type==='data'?0:studioNum(e.radius,0,100,0)}px;--studio-opacity:${studioNum(e.opacity,0,100,100)/100};--studio-font:${font};--studio-weight:${studioNum(e.fontWeight,100,1000,900)};--studio-align:${['left','center','right'].includes(e.align)?e.align:'center'};--studio-justify:${e.align==='left'?'flex-start':e.align==='right'?'flex-end':'center'};--studio-letter:${studioNum(e.letterSpacing,-8,20,0)}px;--studio-rotation:${studioNum(e.rotation,-180,180,0)}deg;--studio-valign:${e.valign==='top'?'flex-start':e.valign==='bottom'?'flex-end':'center'};--studio-transform:${['uppercase','lowercase','capitalize'].includes(e.textTransform)?e.textTransform:'none'};--studio-shadow:${e.shadow===false?'none':`0 2px ${studioNum(e.shadowBlur,0,30,9)}px ${studioColor(e.shadowColor,'#000000')}`};`;
   const content=e.type==='shape'?studioShapeMarkup(e):e.type==='image'&&/^data:image\/(?:webp|png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(String(e.imageData||''))?`<img src="${e.imageData}" alt="" style="width:100%;height:100%;object-fit:${['cover','contain','fill'].includes(e.imageFit)?e.imageFit:'cover'};object-position:${studioNum(e.imagePositionX,0,100,50)}% ${studioNum(e.imagePositionY,0,100,50)}%">`:e.type==='text'?`<span>${esc(e.text||e.label||'')}</span>`:studioDataMarkup(e,m,i,batting,bw);
-  return `<div class="jlStudioItem ${e.type==='shape'?'isShape':''} ${e.type==='text'?'isText':''}" data-studio-id="${esc(e.id||'')}" style="${css}">${content}</div>`;
+  const motion=String(e.animationType||'none');const motionClass=['slideUp','slideDown','slideLeft','slideRight','fade','zoom','pop','bounce','flip','rotate','wipe','flash','glitch','blur','fireworks','spark','slam','shatter','orbit','spotlight'].includes(motion)&&motion!=='none'?'jlStudioMotion-'+motion:'';
+  return `<div class="jlStudioItem ${e.type==='shape'?'isShape':''} ${e.type==='text'?'isText':''} ${motionClass}" data-studio-id="${esc(e.id||'')}" style="${css}">${content}</div>`;
  }).join('')}</div>`;
  const root=layer.querySelector('.jlStudioRoot');
  const background=typeof template.backgroundImage==='string' && template.backgroundImage.length<=600000 && /^data:image\/(?:webp|png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(template.backgroundImage) ? template.backgroundImage : '';
@@ -197,9 +198,17 @@ function studioOverlayTemplateMarkup(template,m,{kind='card',card=null,event=nul
   return `<div class="jlStudioItem ${e.type==='shape'?'isShape':''} ${e.type==='text'?'isText':''} ${animClass}" style="${css}">${content}</div>`;
  }).join('')}</div>`;
 }
-function selectedStudioOverlay(design){
- if(!design?.enabled||!design.template||!Array.isArray(design.template.elements))return null;
- return design.template;
+function selectedStudioOverlay(design,category='card'){
+ if(!design?.enabled)return null;
+ if(design.template&&Array.isArray(design.template.elements))return design.template;
+ if(Array.isArray(design.elements))return design;
+ const key=category==='animation'?'animationTemplates':'cardTemplates';
+ const activeKey=category==='animation'?'activeAnimationTemplateId':'activeCardTemplateId';
+ const rows=Array.isArray(design[key])?design[key]:[];
+ if(!rows.length)return null;
+ const active=rows.find(item=>String(item.id)===String(design[activeKey]||''));
+ const selected=active||rows.find(item=>item.published===true)||rows[0];
+ return selected&&Array.isArray(selected.elements)?selected:null;
 }
 
 function renderBar(m,b){
@@ -410,10 +419,11 @@ function rememberEventId(id,eventAt=0){
   if(lastEventAt)localStorage.setItem(lastEventStorageKey+':at',String(lastEventAt));
  }catch{}
 }
-function clearEventVisual(el,cardEl){
+function clearEventVisual(el,cardEl,restoreCard=false){
  clearTimeout(el._hide);eventVisible=false;el.style.display='none';el.innerHTML='';
  el.className='eventLayer';el.removeAttribute('data-anim');el.removeAttribute('data-event-type');
  el.style.removeProperty('animation-duration');
+ if(restoreCard&&latestBroadcast?.card&&latestMatch)renderCard(latestBroadcast,latestMatch);
  if(!cardEl.classList.contains('isVisible'))flushPendingSponsor();
 }
 function resetEventAnimation(el){
@@ -436,7 +446,7 @@ function renderEvent(b,matchId){
  // Do not compare timestamps from different computers: their clocks may be out of sync.
  // The unique event ID is the reliable de-duplication key across OBS devices.
  if(!b.event){
-  clearEventVisual(el,cardEl);
+  clearEventVisual(el,cardEl,true);
   if(incomingId)rememberEventId(incomingId,eventAt);
   return;
  }
@@ -445,7 +455,7 @@ function renderEvent(b,matchId){
  resetEventAnimation(el);clearTimeout(el._hide);rememberEventId(incomingId,eventAt);eventVisible=true;hideSponsorLayer();
  if(cardEl.classList.contains('isVisible')){dismissedCardId=String(latestBroadcast?.cardId??'');cardEl.classList.remove('isVisible');cardEl.style.display='none';cardEl.innerHTML='';cardEl.dataset.cardMarkup='';cardEl.dataset.cardId='';document.body.classList.remove('cardActive')}
  const eventName=String(b.event||'').toUpperCase();const corner=['NEW BATSMAN','NEW BOWLER'].includes(eventName);
- const animationTemplate=!corner?selectedStudioOverlay(b.animationDesign):null;
+ const animationTemplate=!corner?selectedStudioOverlay(b.animationDesign||b.studioDesign,'animation'):null;
  if(corner){el.innerHTML=incomingCornerMarkup(eventName,b);el.className=`eventLayer incomingCornerLayer ${eventName==='NEW BOWLER'?'isBowler':'isBatter'}`;el.dataset.anim=b.animation||'fade';}
  else if(eventName==='WICKET'&&b.wicketDetails){const d=b.wicketDetails;el.innerHTML=`<div class="eventInner wicketEventInner detailedWicketEvent"><div class="eventTitle">WICKET</div><b class="eventPlayerName">${esc(d.batter||'Batter')}</b><div class="eventSub">${esc(d.dismissal||'OUT')}</div><small>${esc(d.bowler||'')} ${d.fielder?` · ${esc(d.fielder)}`:''}</small></div>`;el.className='eventLayer style-wicket';el.dataset.anim=b.animation||'slam';}
  else{el.innerHTML=animationTemplate?studioOverlayTemplateMarkup(animationTemplate,latestMatch||{}, {kind:'animation',event:b.event}):eventMarkup(b.event,b);el.className=`eventLayer style-${String(b.eventStyle||'generic').toLowerCase().replace(/\s+/g,'')}${animationTemplate?' studioAnimationEvent':''}`;el.dataset.anim=eventName==='NO BALL'?(b.eventAnimations?.['FREE HIT']||b.eventAnimations?.[eventName]||b.animation||'spotlight'):(b.eventAnimations?.[b.event]||b.animation||'zoom');}
@@ -468,7 +478,7 @@ function renderCard(b,m){
  }
  hideSponsorLayer();
  const type=card.type||'batter',newCard=currentCardId!==String(lastCardId??''),anim=b.cardAnimations?.[type]||b.cardAnimation||'zoom';
- const cardTemplate=selectedStudioOverlay(b.cardDesign);
+ const cardTemplate=selectedStudioOverlay(b.cardDesign||b.studioDesign,'card');
  const custom=cardTemplate?studioOverlayTemplateMarkup(cardTemplate,m,{kind:'card',card}):cardMarkup(card,m);
  const duration=Number(b.cardDurations?.[type]||b.cardDuration||1800);
  let stage=el.querySelector('.broadcastCardStage');
