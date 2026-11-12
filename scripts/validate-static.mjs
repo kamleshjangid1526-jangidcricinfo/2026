@@ -76,6 +76,7 @@ const animStart = control.indexOf('const ANIMS=[');
 const animEnd = control.indexOf('];', animStart);
 const animationNames = animStart >= 0 && animEnd > animStart
   ? [...control.slice(animStart, animEnd).matchAll(/'([^']+)'/g)].map(match => match[1]).filter(name => name !== 'none') : [];
+// Sync regression: cached queue uploads only after authenticated /api/state verification.
 const checks = [
   ['20 International Score Layer shape layouts are available', layerCount === 20],
   ['All 20 Score Layer layouts have dedicated shape treatments', Array.from({length:20},(_,i)=>freshScoreCss.includes('.jlInternationalScorebar.layer'+(i+1)+' .jcIntlPanel')).every(Boolean)],
