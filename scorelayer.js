@@ -1,7 +1,7 @@
 'use strict';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const q=new URLSearchParams(location.search);const owner=q.get('owner');const scoreLayerLoadedAt=Date.now();
-let lastEventId=null,lastEventStorageKey='',eventScopeInitialized=false,lastCardId=null,lastRenderMatchId=null,eventVisible=false,latestBroadcast={},latestSSEBroadcast={},latestMatch=null,ownerBroadcast={},ownerBroadcastVersion='',ownerBroadcastRequestedVersion='',ownerBroadcastUserId='';
+let lastEventId=null,lastEventAt=0,lastEventStorageKey='',eventScopeInitialized=false,lastCardId=null,lastRenderMatchId=null,eventVisible=false,latestBroadcast={},latestSSEBroadcast={},latestMatch=null,ownerBroadcast={},ownerBroadcastVersion='',ownerBroadcastRequestedVersion='',ownerBroadcastUserId='';
 let sponsorLibrary=[],sponsorLibraryVersion='',sponsorLibraryRequested=false,lastSponsorManualToken='',lastSponsorTimeoutToken='',sponsorAutoState={matchId:'',innings:0,over:0,status:''},pendingSponsor=null,sponsorVisible=false,sponsorHideTimer=null,sponsorRotationIndex=0,sponsorRotationBase='',dismissedCardId=null;
 const accentByColor={1:'#58c8ff',2:'#43e09b',3:'#ff6074',4:'#ffae4d',5:'#c59bff',6:'#f5d06c',7:'#ffffff',8:'#44e1d5',9:'#ef8493',10:'#dce5ef'};
 function currentTeamName(id,m){return id===m.teamA?m.teamAName:id===m.teamB?m.teamBName:id}
@@ -393,10 +393,15 @@ function incomingCornerMarkup(eventName,meta={}){
  return `<div class="incomingPlayerToast ${eventName==='NEW BOWLER'?'isBowler':'isBatter'}"><span class="incomingKicker">${label}</span><b>${esc(name)}</b><small>${esc(team)}</small><em>${detail}</em></div>`;
 }
 function eventStorageKey(matchId){return `jc:last-event:${owner||'public'}:${String(matchId||'unknown')}`;}
-function rememberEventId(id){
+function rememberEventId(id,eventAt=0){
  lastEventId=String(id??'');
+ const stamp=Number(eventAt)||0;
+ if(stamp>lastEventAt)lastEventAt=stamp;
  if(!lastEventStorageKey||!lastEventId)return;
- try{localStorage.setItem(lastEventStorageKey,lastEventId);}catch{}
+ try{
+  localStorage.setItem(lastEventStorageKey,lastEventId);
+  if(lastEventAt)localStorage.setItem(lastEventStorageKey+':at',String(lastEventAt));
+ }catch{}
 }
 function clearEventVisual(el,cardEl){
  clearTimeout(el._hide);eventVisible=false;el.style.display='none';el.innerHTML='';
@@ -416,30 +421,30 @@ function renderEvent(b,matchId){
  const scope=eventStorageKey(matchId);
  if(scope!==lastEventStorageKey){
   lastEventStorageKey=scope;
-  try{lastEventId=localStorage.getItem(scope)||null;}catch{lastEventId=null;}
+  try{lastEventId=localStorage.getItem(scope)||null;lastEventAt=Number(localStorage.getItem(scope+':at'))||0;}catch{lastEventId=null;lastEventAt=0;}
   eventScopeInitialized=false;
  }
- const incomingId=String(b.eventId??'');
+ const incomingId=String(b.eventId??''),eventAt=Number(b.eventAt)||0;
  // Ignore an event that belongs to a previous match, even if Firestore delivers its snapshot late.
  if(b.matchId&&String(b.matchId)!==String(matchId)){clearEventVisual(el,cardEl);return;}
  if(!eventScopeInitialized){
   eventScopeInitialized=true;
   // On refresh, skip only an event that was already active before this Score Layer opened.
   // A newly received event must still play even when it is the first message for this match.
-  const eventAt=Number(b.eventAt)||0;
-  const isOldSnapshot=!!eventAt&&eventAt<scoreLayerLoadedAt;
-  if(b.event&&incomingId&&!lastEventId&&(!eventAt||isOldSnapshot)){
-   rememberEventId(incomingId);clearEventVisual(el,cardEl);return;
+  const isOldSnapshot=!!eventAt&&(eventAt<scoreLayerLoadedAt||(lastEventAt>0&&eventAt<=lastEventAt));
+  if(b.event&&incomingId&&(isOldSnapshot||(!eventAt&&!lastEventId))){
+   rememberEventId(incomingId,eventAt);clearEventVisual(el,cardEl);return;
   }
  }
  if(!b.event){
   clearEventVisual(el,cardEl);
-  if(incomingId)rememberEventId(incomingId);
+  if(incomingId)rememberEventId(incomingId,eventAt);
   return;
  }
- // Each event ID can animate only once for this match, even after SSE re-renders.
+ // Delayed/out-of-order broadcast snapshots must not replay an older event under a different ID.
  if(!incomingId||incomingId===String(lastEventId??''))return;
- resetEventAnimation(el);clearTimeout(el._hide);rememberEventId(incomingId);eventVisible=true;hideSponsorLayer();
+ if(eventAt>0&&lastEventAt>0&&eventAt<=lastEventAt)return;
+ resetEventAnimation(el);clearTimeout(el._hide);rememberEventId(incomingId,eventAt);eventVisible=true;hideSponsorLayer();
  if(cardEl.classList.contains('isVisible')){dismissedCardId=String(latestBroadcast?.cardId??'');cardEl.classList.remove('isVisible');cardEl.style.display='none';cardEl.innerHTML='';cardEl.dataset.cardMarkup='';cardEl.dataset.cardId='';document.body.classList.remove('cardActive')}
  const eventName=String(b.event||'').toUpperCase();const corner=['NEW BATSMAN','NEW BOWLER'].includes(eventName);
  const animationTemplate=!corner?selectedStudioOverlay(b.animationDesign):null;
