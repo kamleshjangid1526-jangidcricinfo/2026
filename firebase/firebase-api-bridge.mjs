@@ -167,24 +167,39 @@ function emitPublicCache(changedCollection = 'initial') {
     completedCount:visible.filter(m=>m.tournamentId===t.id&&m.status==='finished').length,
     scheduledCount:visible.filter(m=>m.tournamentId===t.id&&m.status==='scheduled').length
   }));
-  const broadcastMap = {};
-  for(const b of publicCache.publicBroadcasts) broadcastMap[b.id]={...b};
-  const broadcastCards = {};
+  const broadcastMap = {}, broadcastsByMatch = {};
+  const broadcastCards = {}, broadcastCardsByMatch = {};
   for(const b of publicCache.publicBroadcasts){
-    broadcastCards[String(b.id)]={uid:String(b.id),ownerUid:String(b.ownerUid||b.id),card:b.card??null,cardId:b.cardId??null,
-      cardAnimation:b.cardAnimation||null,cardAnimations:b.cardAnimations||{},cardDurations:b.cardDurations||{}};
+    const uid=String(b.ownerUid||b.uid||b.id||''),matchId=String(b.matchId||'');
+    if(!uid)continue;
+    if(matchId){
+      const matchKey=uid+':'+matchId;
+      broadcastsByMatch[matchKey]={...b};
+      broadcastCardsByMatch[matchKey]={uid,ownerUid:uid,matchId,card:b.card??null,cardId:b.cardId??null,
+        cardAnimation:b.cardAnimation||null,cardMotion:b.cardMotion||null,cardAnimations:b.cardAnimations||{},cardDurations:b.cardDurations||{}};
+    }else{
+      broadcastMap[uid]={...b};
+      broadcastCards[uid]={uid,ownerUid:uid,card:b.card??null,cardId:b.cardId??null,
+        cardAnimation:b.cardAnimation||null,cardMotion:b.cardMotion||null,cardAnimations:b.cardAnimations||{},cardDurations:b.cardDurations||{}};
+    }
   }
-  for(const card of publicCache.publicBroadcastDesigns.filter(x=>x.kind==='broadcast-card-state')) broadcastCards[String(card.uid||card.ownerUid||card.id)]={...card};
-  const broadcastEvents = {};
+  for(const card of publicCache.publicBroadcastDesigns.filter(x=>x.kind==='broadcast-card-state')){
+    const uid=String(card.uid||card.ownerUid||'');if(!uid)continue;
+    if(card.matchId)broadcastCardsByMatch[uid+':'+String(card.matchId)]={...card};
+    else broadcastCards[uid]={...card};
+  }
+  const broadcastEvents = {}, broadcastEventsByMatch = {};
   const now = Date.now();
   for(const event of [...publicCache.publicBroadcastDesigns.filter(x=>x.kind==='broadcast-event')].sort((a,b)=>dateMs(b.createdAt)-dateMs(a.createdAt))){
-    const uid=String(event.uid||event.ownerUid||'');
+    const uid=String(event.uid||event.ownerUid||''),matchId=String(event.matchId||'');
     const age=now-dateMs(event.createdAt);
-    if(!uid||!event.eventId||!event.event||!dateMs(event.createdAt)||age>30000||age< -60000||broadcastEvents[uid])continue;
-    broadcastEvents[uid]={...event};
+    if(!uid||!event.eventId||!event.event||!dateMs(event.createdAt)||age>30000||age< -60000)continue;
+    if(matchId){const matchKey=uid+':'+matchId;if(!broadcastEventsByMatch[matchKey])broadcastEventsByMatch[matchKey]={...event};}
+    else if(!broadcastEvents[uid])broadcastEvents[uid]={...event};
   }
   for(const [uid,event] of Object.entries(broadcastEvents))broadcastMap[uid]={...(broadcastMap[uid]||{}),...event};
-  window.__JC_EMIT_PUBLIC__?.({activeMatches:visible.filter(x=>x.status==='live'),matches:visible,tournaments,broadcasts:broadcastMap,broadcastCards,broadcastEvents,changedCollection});
+  for(const [matchKey,event] of Object.entries(broadcastEventsByMatch))broadcastsByMatch[matchKey]={...(broadcastsByMatch[matchKey]||{}),...event};
+  window.__JC_EMIT_PUBLIC__?.({activeMatches:visible.filter(x=>x.status==='live'),matches:visible,tournaments,broadcasts:broadcastMap,broadcastsByMatch,broadcastCards,broadcastCardsByMatch,broadcastEvents,broadcastEventsByMatch,changedCollection});
 }
 let publicUnsubs=[];
 function subscribePublic(_onUpdate=emitPublicCache,onError=()=>{}) {
@@ -240,8 +255,13 @@ async function loadBroadcast(uid,full=true) {
   ]);
   return {...b,studioDesign:studio?.value||b.studioDesign||null,cardDesign:card?.value||b.cardDesign||null,animationDesign:animation?.value||b.animationDesign||null,sponsorLibrary:sponsors?.value||null};
 }
-async function loadPublicBroadcast(uid) {
-  const snap = await getDoc(publicDoc('publicBroadcasts', uid));
+function safeBroadcastMatchKey(matchId){
+  return String(matchId||'').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,110);
+}
+async function loadPublicBroadcast(uid,matchId='') {
+  const safeMatch=safeBroadcastMatchKey(matchId);
+  let snap=safeMatch?await getDoc(publicDoc('publicBroadcasts',uid+'_match_'+safeMatch)):await getDoc(publicDoc('publicBroadcasts',uid));
+  if(!snap.exists()&&safeMatch)snap=await getDoc(publicDoc('publicBroadcasts',uid));
   if (!snap.exists()) return {};
   const base = snap.data() || {};
   const [studio, card, animation, designRows] = await Promise.all([
@@ -294,7 +314,10 @@ async function savePublicStudioDesign(uid, design) {
   await batch.commit();
 }
 async function savePublicBroadcast(uid, broadcast) {
-  const previousSnap = await getDoc(publicDoc('publicBroadcasts', uid));
+  const matchId=cleanText(broadcast.matchId,120);
+  const safeMatch=safeBroadcastMatchKey(matchId);
+  const scopeId=safeMatch?uid+'_match_'+safeMatch:uid;
+  const previousSnap = await getDoc(publicDoc('publicBroadcasts', scopeId));
   const previous = previousSnap.exists() ? previousSnap.data() : {};
   const keys = ['studioDesign','cardDesign','animationDesign'];
   for (const key of keys) if (broadcast[key] !== undefined) {
@@ -304,13 +327,17 @@ async function savePublicBroadcast(uid, broadcast) {
       { ownerUid: uid, uid, kind: category, value: cleanData(broadcast[key]), updatedAt: nowIso() }, { merge: true });
   }
   const has = key => broadcast[key] !== undefined ? !!broadcast[key] : !!previous[`has${key[0].toUpperCase()}${key.slice(1)}`];
-  const cardState = { ownerUid:uid, uid, card:broadcast.card!==undefined?broadcast.card:(previous.card||null),
-    cardId:broadcast.cardId!==undefined?broadcast.cardId:(previous.cardId||null),
+  const cardState = { ownerUid:uid, uid, matchId:matchId||null,
+    card:broadcast.card!==undefined?broadcast.card:(previous.card??null),
+    cardId:broadcast.cardId!==undefined?broadcast.cardId:(previous.cardId??null),
     cardAnimation:broadcast.cardAnimation!==undefined?broadcast.cardAnimation:(previous.cardAnimation||null),
+    cardMotion:broadcast.cardMotion!==undefined?broadcast.cardMotion:(previous.cardMotion||null),
     cardAnimations:broadcast.cardAnimations!==undefined?broadcast.cardAnimations:(previous.cardAnimations||{}),
     cardDurations:broadcast.cardDurations!==undefined?broadcast.cardDurations:(previous.cardDurations||{}), updatedAt:nowIso() };
-  await setDoc(publicDoc('publicBroadcastDesigns',uid+'_broadcast_card_state'),cleanData({...cardState,kind:'broadcast-card-state'}),{merge:true});
-  const summary = { ownerUid: uid, updatedAt: nowIso(), layer: broadcast.layer || previous.layer || 1, color: broadcast.color || previous.color || 1,
+  await setDoc(publicDoc('publicBroadcastDesigns',scopeId+'_broadcast_card_state'),cleanData({...cardState,kind:'broadcast-card-state'}),{merge:true});
+  const summary = { ownerUid: uid, uid, matchId:matchId||null, updatedAt: nowIso(),
+    layer: broadcast.layer || previous.layer || 1, layoutGroup:broadcast.layoutGroup||previous.layoutGroup||null,
+    color: broadcast.color || previous.color || 1,
     hasStudioDesign: has('studioDesign'), hasCardDesign: has('cardDesign'), hasAnimationDesign: has('animationDesign'),
     studioDesignUpdatedAt: broadcast.studioDesignUpdatedAt || previous.studioDesignUpdatedAt || null,
     cardDesignUpdatedAt: broadcast.cardDesignUpdatedAt || previous.cardDesignUpdatedAt || null,
@@ -318,8 +345,12 @@ async function savePublicBroadcast(uid, broadcast) {
     sponsorLibraryUpdatedAt: broadcast.sponsorLibraryUpdatedAt || previous.sponsorLibraryUpdatedAt || null,
     sponsorDisplay: broadcast.sponsorDisplay !== undefined ? broadcast.sponsorDisplay : previous.sponsorDisplay || null,
     event: broadcast.event !== undefined ? broadcast.event : previous.event || null,
-    card: broadcast.card !== undefined ? broadcast.card : previous.card || null,
-    cardId: broadcast.cardId !== undefined ? broadcast.cardId : previous.cardId || null,
+    card: broadcast.card !== undefined ? broadcast.card : previous.card ?? null,
+    cardId: broadcast.cardId !== undefined ? broadcast.cardId : previous.cardId ?? null,
+    cardAnimation: broadcast.cardAnimation !== undefined ? broadcast.cardAnimation : previous.cardAnimation || null,
+    cardMotion: broadcast.cardMotion !== undefined ? broadcast.cardMotion : previous.cardMotion || null,
+    cardAnimations: broadcast.cardAnimations !== undefined ? broadcast.cardAnimations : previous.cardAnimations || {},
+    cardDurations: broadcast.cardDurations !== undefined ? broadcast.cardDurations : previous.cardDurations || {},
     animation: broadcast.animation !== undefined ? broadcast.animation : previous.animation || null,
     eventStyle: broadcast.eventStyle !== undefined ? broadcast.eventStyle : previous.eventStyle || null,
     eventAnimations: broadcast.eventAnimations !== undefined ? broadcast.eventAnimations : previous.eventAnimations || {},
@@ -330,10 +361,8 @@ async function savePublicBroadcast(uid, broadcast) {
     eventPlayer: broadcast.event===null ? null : broadcast.eventPlayer !== undefined ? broadcast.eventPlayer : previous.eventPlayer || null,
     teamMilestone: broadcast.event==='TEAM 50'||broadcast.event==='TEAM 100' ? (broadcast.teamMilestone||null) : broadcast.event===null ? null : (previous.teamMilestone||null),
     resultDetails: broadcast.event==='RESULT' ? (broadcast.resultDetails||null) : broadcast.event===null ? null : (previous.resultDetails||null),
-    eventId: broadcast.eventId !== undefined ? broadcast.eventId : previous.eventId || null,
-    matchId: broadcast.matchId !== undefined ? broadcast.matchId : previous.matchId || null,
-    selectedLayout: broadcast.selectedLayout || previous.selectedLayout || null };
-  await setDoc(publicDoc('publicBroadcasts', uid), cleanData(summary), { merge: true });
+    eventId: broadcast.eventId !== undefined ? broadcast.eventId : previous.eventId || null };
+  await setDoc(publicDoc('publicBroadcasts',scopeId), cleanData(summary), { merge: true });
 }
 async function saveLargeLibrary(uid,key,value) {
   const map={studio:['studioTemplates','templates'],card:['cardTemplates','cardTemplates'],animation:['animationTemplates','animationTemplates'],sponsors:['sponsors','sponsors']};
@@ -455,7 +484,7 @@ async function handleApi(url,init={}) {
     const publicTournament=path.match(/^\/api\/public\/tournament\/([^/]+)$/);
     if(publicTournament&&method==='GET'){const result=await getPublicTournament(decodeURIComponent(publicTournament[1]));return result?{status:200,body:{ok:true,...result}}:fail(404,'यह Tournament प्रकाशित नहीं है।');}
     const publicBroadcast=path.match(/^\/api\/public\/broadcast\/([^/]+)$/);
-    if(publicBroadcast&&method==='GET'){const uid=decodeURIComponent(publicBroadcast[1]);const b=await loadPublicBroadcast(uid);return ok({broadcast:b,version:b.updatedAt||null});}
+    if(publicBroadcast&&method==='GET'){const uid=decodeURIComponent(publicBroadcast[1]),matchId=cleanText(url.searchParams.get('match'),120);const b=await loadPublicBroadcast(uid,matchId);return ok({broadcast:b,version:b.updatedAt||null});}
     if(path==='/api/admin/state'&&method==='GET'){const {user,profile}=await requireAdmin();return {status:200,body:await adminState(user.uid,profile)};}
     if(path==='/api/admin/studio-library'&&method==='GET'){await requireAdmin();return ok({studioDesign:await getGlobalLibrary('studio')});}
     if(path==='/api/admin/studio-library'&&method==='POST'){
@@ -528,7 +557,9 @@ async function handleApi(url,init={}) {
     }
     if(path==='/api/broadcast'&&method==='POST'){
       const {user,profile}=await requireUser();gate(profile,'basic');const uid=user.uid;
-      const b={...(await getOwner(uid,'broadcasts','current')||{}),...body,updatedAt:nowIso()};
+      const matchId=cleanText(body.matchId,120),safeMatch=safeBroadcastMatchKey(matchId);
+      const storageId=safeMatch?'match_'+safeMatch:'current';
+      const b={...(await getOwner(uid,'broadcasts',storageId)||{}),...body,matchId:matchId||null,updatedAt:nowIso()};
       for(const key of ['studioDesign','cardDesign','animationDesign','sponsorLibrary']) {
         if(body[key]!==undefined) {
           const coll=key==='studioDesign'?'studio':key==='cardDesign'?'card':key==='animationDesign'?'animation':'sponsors';
@@ -537,7 +568,7 @@ async function handleApi(url,init={}) {
       }
       const publicPayload={...b};
       for(const key of ['studioDesign','cardDesign','animationDesign','sponsorLibrary']) delete b[key];
-      await saveOwner(uid,'broadcasts','current',b);
+      await saveOwner(uid,'broadcasts',storageId,b);
       await savePublicBroadcast(uid,publicPayload);
       return ok({});
     }
