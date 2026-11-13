@@ -561,7 +561,8 @@
   window.resumeScoringSetup=()=>{const i=innings();if(!i)return;if(MATCH?.awaitingNextInnings||MATCH?.awaitingInningsSetup)startSecondInnings();else if(i.awaitingNewBatter&&i._replaceSlot)promptReplacement(i._replaceSlot);else if(i.awaitingBowler)promptBowler();};
   window.JangidScoring={recordDelivery,undoLastDelivery,saveMatch,finalizeMatch,renderScoring,startSecondInnings,requestNextInnings,openChangeBatter,getAllOutWicketLimit:allOutWicketLimit,isInningsAllOut};
   const scoringActionSelector='[data-run],[data-extra],#wicketBtn,#undoBall,#changeBowler,#retiredHurt,#changeBatter,#startNextInningsBtn';
-  let lastMobileScoringPointer=null;
+  let lastMobileScoringPointer=null,mobileClickSuppressionTimer=null;
+  const isMobileScoringViewport=()=>!!window.matchMedia?.('(max-width:700px)').matches;
   async function dispatchScoringAction(button,event){
     const run=button.closest('[data-run]');
     const extra=button.closest('[data-extra]');
@@ -575,23 +576,31 @@
     if(button.closest('#startNextInningsBtn')){event.preventDefault();requestNextInnings();return true;}
     return false;
   }
-  // Mobile scoring has its own compact touch layout. Handle touch-pointer release directly,
-  // then suppress the synthetic click that mobile browsers emit for the same tap.
+  // The compact mobile desk scores on touch release; desktop retains its ordinary click path.
+  // A short-lived one-shot guard prevents one physical tap from counting twice.
   document.addEventListener('pointerup',async event=>{
-    if(!window.matchMedia?.('(max-width:700px)').matches)return;
+    if(!isMobileScoringViewport())return;
+    if(event.pointerType&&event.pointerType!=='touch'&&event.pointerType!=='pen')return;
     const node=event.target instanceof Element?event.target:null;
     const button=node?.closest(scoringActionSelector);
     if(!button)return;
     event.preventDefault();
     lastMobileScoringPointer={button,at:Date.now()};
+    clearTimeout(mobileClickSuppressionTimer);
+    mobileClickSuppressionTimer=setTimeout(()=>{
+      lastMobileScoringPointer=null;
+      mobileClickSuppressionTimer=null;
+    },800);
     await dispatchScoringAction(button,event);
   },{passive:false});
   document.addEventListener('click',async event=>{
     const node=event.target instanceof Element?event.target:null;
     const button=node?.closest(scoringActionSelector);
     if(!button)return;
-    if(lastMobileScoringPointer&&lastMobileScoringPointer.button===button&&Date.now()-lastMobileScoringPointer.at<900){
-      event.preventDefault();lastMobileScoringPointer=null;return;
+    if(isMobileScoringViewport()&&lastMobileScoringPointer&&lastMobileScoringPointer.button===button&&Date.now()-lastMobileScoringPointer.at<800){
+      event.preventDefault();event.stopImmediatePropagation();
+      clearTimeout(mobileClickSuppressionTimer);mobileClickSuppressionTimer=null;lastMobileScoringPointer=null;
+      return;
     }
     await dispatchScoringAction(button,event);
   });
