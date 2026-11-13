@@ -546,11 +546,13 @@ function boot(){
    }
    latestMatch=m;
    const matchKey=String(m.userId)+':'+String(m.id);
-   const incoming={...(d.broadcastsByMatch?.[matchKey]||d.broadcasts?.[m.userId]||{})};
-   const cardState=d.broadcastCardsByMatch?.[matchKey]||d.broadcastCards?.[m.userId];
+   // A Score Layer opened with a Match ID must use only that Match's data.
+   // No global fallback: it could belong to another simultaneous LIVE match.
+   const incoming={...(d.broadcastsByMatch?.[matchKey]||{})};
+   const cardState=d.broadcastCardsByMatch?.[matchKey]||null;
    if(cardState){incoming.card=cardState.card??null;incoming.cardId=cardState.cardId??incoming.cardId;incoming.cardAnimation=cardState.cardAnimation||incoming.cardAnimation;incoming.cardMotion=cardState.cardMotion||incoming.cardMotion;incoming.cardAnimations=cardState.cardAnimations||incoming.cardAnimations;incoming.cardDurations=cardState.cardDurations||incoming.cardDurations;}
-   const durableEvent=d.broadcastEventsByMatch?.[matchKey]||d.broadcastEvents?.[m.userId];
-   if(durableEvent&&String(durableEvent.matchId||m.id)===String(m.id))Object.assign(incoming,durableEvent);
+   const durableEvent=d.broadcastEventsByMatch?.[matchKey]||null;
+   if(durableEvent&&String(durableEvent.matchId||'')===String(m.id))Object.assign(incoming,durableEvent);
    latestSSEBroadcast=incoming;
    const version=[String(m.id),incoming.studioDesignUpdatedAt,incoming.cardDesignUpdatedAt,incoming.animationDesignUpdatedAt].join('|');
    const sponsorVersion=String(incoming.sponsorLibraryUpdatedAt||incoming.sponsorDisplayUpdatedAt||'');if(sponsorVersion!==sponsorLibraryVersion&&!sponsorLibraryRequested)loadSponsorLibrary(sponsorVersion);
