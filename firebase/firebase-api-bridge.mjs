@@ -260,8 +260,8 @@ function safeBroadcastMatchKey(matchId){
 }
 async function loadPublicBroadcast(uid,matchId='') {
   const safeMatch=safeBroadcastMatchKey(matchId);
-  let snap=safeMatch?await getDoc(publicDoc('publicBroadcasts',uid+'_match_'+safeMatch)):await getDoc(publicDoc('publicBroadcasts',uid));
-  if(!snap.exists()&&safeMatch)snap=await getDoc(publicDoc('publicBroadcasts',uid));
+  const snap=safeMatch?await getDoc(publicDoc('publicBroadcasts',uid+'_match_'+safeMatch)):await getDoc(publicDoc('publicBroadcasts',uid));
+  // A requested Match never inherits another Match's global card or event state.
   if (!snap.exists()) return {};
   const base = snap.data() || {};
   const [studio, card, animation, designRows] = await Promise.all([
