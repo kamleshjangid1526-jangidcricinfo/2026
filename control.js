@@ -418,7 +418,7 @@ async function saveBroadcast(extra={}){
   else if(hasEventUpdate){
     payload.eventId=++broadcastSequence;
     payload.eventAt=extra.event?Number(extra.eventAt||Date.now()):null;
-    payload.matchId=extra.event?String(extra.matchId||MATCH?.id||''):null;
+    payload.matchId=extra.event?String(extra.matchId||MATCH?.id||''):String(extra.matchId||MATCH?.id||STATE?.broadcast?.matchId||'');
   }
   else if(STATE?.broadcast?.eventId!==undefined)payload.eventId=STATE.broadcast.eventId;
   await api('/api/broadcast',{method:'POST',body:JSON.stringify(payload)});
