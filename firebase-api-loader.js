@@ -141,12 +141,16 @@
     syncing=true;syncRequested=false;let rerunSync=false;const rowErrors=[];
     clearTimeout(syncStatusTimer);
     syncStatusTimer=setTimeout(()=>{if(syncing)localStatus('syncing','स्कोर और Broadcast graphics Firebase में अलग-अलग Sync हो रहे हैं।');},700);
-    const publicMatchSnapshot=async(matchId)=>{
+    const publicMatchLookup=async(matchId)=>{
       if(!matchId)return null;
       try{
         const response=await apiRequest(new URL('/api/public/match/'+encodeURIComponent(matchId),location.href));
-        return (response.status||200)<400?(response.body?.match||null):null;
+        return {status:Number(response.status)||200,match:response.body?.match||null};
       }catch{return null;}
+    };
+    const publicMatchSnapshot=async(matchId)=>{
+      const lookup=await publicMatchLookup(matchId);
+      return lookup&&lookup.status<400?lookup.match:null;
     };
     const publicMatchIsFinal=async(matchId)=>{
       const remote=await publicMatchSnapshot(matchId);
@@ -208,7 +212,8 @@
           const matchId=String(row.value?.body?.matchId||String(row.key||'').split(':').pop());
           const result=await apiRequest(new URL('/api/match/finish',location.href),{method:'POST',body:JSON.stringify(row.value.body||{})});
           if((result.status||200)>=400){
-            const remote=[404,409].includes(Number(result.status))?await publicMatchSnapshot(matchId):null;
+            const lookup=[404,409].includes(Number(result.status))?await publicMatchLookup(matchId):null;
+            const remote=lookup?.match||null;
             const ownedRemote=!!remote&&(String(remote.ownerUid||'')===uid||String(remote.userId||'')===uid);
             if(ownedRemote&&String(remote.status||'')==='live'&&Number(result.status)===404){
               const restored=await apiRequest(new URL('/api/match/state',location.href),{
@@ -224,6 +229,15 @@
             if(ownedRemote&&['finished','abandoned'].includes(String(remote.status||''))){
               const latest=await store?.get(row.key);
               if(latest?.version===row.value?.version)await store?.remove(row.key);else rerunSync=true;
+              continue;
+            }
+            // A confirmed public 404 means this Finish command points to a Match
+            // that no longer exists. Clear only the command; preserve every score
+            // snapshot queue, so a newer/live match is never deleted or ended.
+            if(Number(result.status)===404&&lookup?.status===404&&!lookup.match){
+              const latest=await store?.get(row.key);
+              if(latest?.version===row.value?.version)await store?.remove(row.key);else rerunSync=true;
+              console.info('Cleared an orphaned Finish command; score snapshots were preserved:',matchId);
               continue;
             }
             throw new Error(result.body?.error||'Match finish sync failed');
