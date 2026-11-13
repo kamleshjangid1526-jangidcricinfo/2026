@@ -411,6 +411,11 @@ function clearEventVisual(el,cardEl){
  el.style.removeProperty('animation-duration');
  if(!cardEl.classList.contains('isVisible'))flushPendingSponsor();
 }
+function restoreDeferredCard(cardEl){
+ const cardId=String(cardEl.dataset.cardId||'');
+ if(!cardEl.classList.contains('isVisible')||!cardEl.dataset.cardMarkup||!cardId||dismissedCardId===cardId)return false;
+ cardEl.style.display='grid';document.body.classList.add('cardActive');return true;
+}
 function resetEventAnimation(el){
  // Remove the previous event selectors and force a style boundary so the next event starts cleanly.
  el.style.display='none';el.className='eventLayer';
@@ -441,6 +446,8 @@ function renderEvent(b,matchId){
  }
  if(!b.event){
   clearEventVisual(el,cardEl);
+  // A card selected during an event is deferred until the event layer has cleared.
+  restoreDeferredCard(cardEl);
   if(incomingId)rememberEventId(incomingId);
   return;
  }
@@ -458,7 +465,7 @@ function renderEvent(b,matchId){
   if(batterName){const name=document.createElement('div');name.className='eventPlayerName jcEventPlayerNameOverlay';name.textContent=batterName;el.appendChild(name);}
  }
  el.dataset.eventType=eventName.toLowerCase().replace(/\s+/g,'-');el.style.animationDuration=`${b.duration||2200}ms`;el.style.display='grid';const inner=el.querySelector('.eventInner,.jlStudioOverlayRoot,.incomingPlayerToast');if(inner)inner.style.animationDuration=`${b.duration||2200}ms`;
- el._hide=setTimeout(()=>{eventVisible=false;el.style.display='none';el.innerHTML='';el.classList.remove('incomingCornerLayer');if(!cardEl.classList.contains('isVisible'))flushPendingSponsor()},Math.max(900,Number(b.duration||2200)-50));
+ el._hide=setTimeout(()=>{eventVisible=false;el.style.display='none';el.innerHTML='';el.classList.remove('incomingCornerLayer');if(!restoreDeferredCard(cardEl)&&!cardEl.classList.contains('isVisible'))flushPendingSponsor()},Math.max(900,Number(b.duration||2200)-50));
 }
 function renderCard(b,m){
  const el=document.getElementById('cardLayer'),card=b.card;
