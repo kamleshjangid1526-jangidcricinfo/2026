@@ -315,7 +315,7 @@
         closeModal();
         try{
           await saveMatch(false);renderScoring();
-          void fireEvent('NEW BATSMAN',{eventPlayer:incomingPlayerMeta(current.battingId,id,stat,'BATTER')});
+          await fireEvent('NEW BATSMAN',{eventPlayer:incomingPlayerMeta(current.battingId,id,stat,'BATTER')});
           if(current.awaitingBowler && !MATCH?.awaitingNextInnings && !MATCH?.awaitingMatchFinish) promptBowler();
           else {settlePendingScoring(current);await saveMatch(false);renderScoring();}
         }catch(e){MATCH=old;if(STATE)STATE.activeMatch=clone(old);renderScoring();alert(`New Batter सेव नहीं हुआ: ${e.message}`)}
@@ -349,7 +349,7 @@
         i[slotName]=null;i._replaceSlot=slotName;i.awaitingNewBatter=true;
         statusAfterDelivery(i);
         if(MATCH.awaitingNextInnings||MATCH.awaitingMatchFinish){i._replaceSlot=null;i.awaitingNewBatter=false;i.awaitingBowler=false;}
-        closeModal();try{await saveMatch(false);renderScoring();void fireEvent('WICKET',{wicketDetails:{batter:batter.name||playerLabel(i.battingId,dismissedId),teamName:getTeam(i.battingId)?.name||'',dismissal:type,bowler:bowler?.name||playerLabel(i.bowlingId,i.currentBowler),fielder:fielderId?playerLabel(i.bowlingId,fielderId):''}});if(MATCH?.awaitingNextInnings){setTimeout(()=>{if(MATCH?.awaitingNextInnings)startSecondInnings()},180)}else if(i._replaceSlot)promptReplacement(i._replaceSlot);else if(i.awaitingBowler){setTimeout(()=>{if(MATCH?.status==='live' && MATCH?.activeInnings?.awaitingBowler)promptBowler()},350)}}catch(e){MATCH=old;if(STATE)STATE.activeMatch=clone(old);renderScoring();alert(`Wicket save नहीं हुआ: ${e.message}`)}
+        closeModal();try{await saveMatch(false);renderScoring();await fireEvent('WICKET',{wicketDetails:{batter:batter.name||playerLabel(i.battingId,dismissedId),teamName:getTeam(i.battingId)?.name||'',dismissal:type,bowler:bowler?.name||playerLabel(i.bowlingId,i.currentBowler),fielder:fielderId?playerLabel(i.bowlingId,fielderId):''}});if(MATCH?.awaitingNextInnings){setTimeout(()=>{if(MATCH?.awaitingNextInnings)startSecondInnings()},180)}else if(i._replaceSlot)promptReplacement(i._replaceSlot);else if(i.awaitingBowler){setTimeout(()=>{if(MATCH?.status==='live' && MATCH?.activeInnings?.awaitingBowler)promptBowler()},350)}}catch(e){MATCH=old;if(STATE)STATE.activeMatch=clone(old);renderScoring();alert(`Wicket save नहीं हुआ: ${e.message}`)}
       };
     });
   }
@@ -367,7 +367,7 @@
     const override=!legalChoices.length;
     openModal(`<div class="modalHead"><div><div class="eyebrow">BOWLING CHANGE</div><h3>Select Next Bowler</h3></div><button class="closeBtn" data-close>×</button></div><p class="muted">${override?'कोई सामान्य quota-eligible bowler नहीं बचा। मजबूरी में सूची से चयन किया जा सकता है; यह Over Manual Override होगा।':'पिछले over के bowler को लगातार अगला over नहीं दिया जा सकता।'}</p><div class="choices">${choices.map(id=>{const st=i.bowlStats[id];return `<button class="btn ghost" data-next-bowler="${safe(id)}">${safe(playerLabel(i.bowlingId,id))} · ${fmtOvers(st.balls||0)} ov, ${st.wickets||0} W${override?' · Override':''}</button>`}).join('')}</div>`,box=>{
       box.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{closeModal();renderScoring()});
-      box.querySelectorAll('[data-next-bowler]').forEach(b=>b.onclick=async()=>{const id=String(b.dataset.nextBowler||'');const current=innings();if(!current?.bowlStats?.[id])return alert('Bowler record नहीं मिला।');const old=clone(MATCH);current.currentBowler=id;current.awaitingBowler=false;current.awaitingNewBatter=false;current._replaceSlot=null;if(override)current.lastBowlerOverrideAt=new Date().toISOString();closeModal();try{settlePendingScoring(current);await saveMatch(false);renderScoring();void fireEvent('NEW BOWLER',{eventPlayer:incomingPlayerMeta(current.bowlingId,id,current.bowlStats[id],'BOWLER')});settlePendingScoring(current);renderScoring()}catch(e){MATCH=old;if(STATE)STATE.activeMatch=clone(old);renderScoring();alert(`Bowler चयन सेव नहीं हुआ: ${e.message}`)}});
+      box.querySelectorAll('[data-next-bowler]').forEach(b=>b.onclick=async()=>{const id=String(b.dataset.nextBowler||'');const current=innings();if(!current?.bowlStats?.[id])return alert('Bowler record नहीं मिला।');const old=clone(MATCH);current.currentBowler=id;current.awaitingBowler=false;current.awaitingNewBatter=false;current._replaceSlot=null;if(override)current.lastBowlerOverrideAt=new Date().toISOString();closeModal();try{settlePendingScoring(current);await saveMatch(false);renderScoring();await fireEvent('NEW BOWLER',{eventPlayer:incomingPlayerMeta(current.bowlingId,id,current.bowlStats[id],'BOWLER')});settlePendingScoring(current);renderScoring()}catch(e){MATCH=old;if(STATE)STATE.activeMatch=clone(old);renderScoring();alert(`Bowler चयन सेव नहीं हुआ: ${e.message}`)}});
     });
   }
   function renderScoring() {
@@ -492,7 +492,7 @@
         for(const id of batIds){const p=player(batId,id);next.batStats[id]={id,name:p.name,runs:0,balls:0,fours:0,sixes:0,out:false,retired:false,howOut:'',assist:''};}
         for(const id of bowlIds){const p=player(bowlId,id);next.bowlStats[id]={id,name:p.name,runs:0,balls:0,wickets:0,wides:0,noBalls:0,maidens:0,overRuns:0,oversLimit:limit};}
         MATCH.inningsHistory=history;MATCH.activeInnings=next;MATCH.inningsNo=2;MATCH.awaitingNextInnings=false;MATCH.awaitingMatchFinish=false;MATCH.awaitingInningsSetup=false;closeModal();
-        try{await saveMatch(false);renderScoring();void fireEvent('INNINGS BREAK');}catch(e){MATCH=old;if(STATE)STATE.activeMatch=clone(old);renderScoring();alert(e.message)}
+        try{await saveMatch(false);renderScoring();await fireEvent('INNINGS BREAK');}catch(e){MATCH=old;if(STATE)STATE.activeMatch=clone(old);renderScoring();alert(e.message)}
       };
     });
   }
