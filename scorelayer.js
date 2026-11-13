@@ -469,6 +469,9 @@ function renderEvent(b,matchId){
 }
 function renderCard(b,m){
  const el=document.getElementById('cardLayer'),card=b.card;
+ if(b.matchId&&String(b.matchId)!==String(m?.id||'')){
+  el.classList.remove('isVisible');el.style.display='none';el.innerHTML='';el.dataset.cardMarkup='';el.dataset.cardId='';lastCardId=null;document.body.classList.remove('cardActive');return;
+ }
  const currentCardId=String(b.cardId??'');
  if(card && dismissedCardId!==null && currentCardId===dismissedCardId){
   el.classList.remove('isVisible');el.style.display='none';el.innerHTML='';el.dataset.cardMarkup='';el.dataset.cardId='';document.body.classList.remove('cardActive');return;
@@ -538,7 +541,8 @@ function boot(){
    const broadcastMatch=broadcastMatchId?allMatches.find(x=>String(x.id)===broadcastMatchId):null;
    // Prefer a requested match, then a currently live match. A finished match is
    // only kept on air when its own RESULT event or a manually selected card targets it.
-   const m=requested?requestedMatch:(liveCandidates[0]||((selectedBroadcast.event||selectedBroadcast.card)&&broadcastMatch?.status==='finished'?broadcastMatch:(broadcastMatch?.status==='live'?broadcastMatch:null)));
+   const latestFinished=allMatches.filter(x=>x.status==='finished').sort((a,b)=>(Date.parse(b.updatedAt||b.completedAt||b.startedAt||'')||0)-(Date.parse(a.updatedAt||a.completedAt||a.startedAt||'')||0))[0]||null;
+   const m=requested?requestedMatch:(liveCandidates[0]||((selectedBroadcast.event||selectedBroadcast.card)&&broadcastMatch?.status==='finished'?broadcastMatch:(broadcastMatch?.status==='live'?broadcastMatch:latestFinished)));
    if(!m){const bar=document.getElementById('scoreBar');if(owner||requested)bar.innerHTML='';return;}
    latestMatch=m;
    const incoming={...(d.broadcasts?.[m.userId]||{})};
