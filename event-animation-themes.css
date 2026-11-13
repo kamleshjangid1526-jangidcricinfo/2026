@@ -185,3 +185,26 @@
 @keyframes jcCardOrbit{0%{opacity:0;transform:rotate(-2deg) scale(.95)}70%{opacity:1;transform:rotate(.4deg) scale(1.005)}100%{opacity:1;transform:rotate(0) scale(1)}}
 @keyframes jcCardTrophy{0%{opacity:0;filter:brightness(1.6);transform:translateY(8px) scale(.95)}65%{opacity:1;filter:brightness(1.08)}100%{opacity:1;filter:brightness(1);transform:translateY(0) scale(1)}}
 @keyframes jcCardRibbon{0%{opacity:0;transform:translateY(8px);clip-path:inset(0 0 100%)}65%{opacity:1;clip-path:inset(0 0 0)}100%{opacity:1;transform:translateY(0)}}
+
+/* Specific OBS overrides ensure transparent event canvases win over legacy ID selectors. */
+body.scoreLayerBody #eventLayer.eventLayer{
+ background:transparent!important;background-color:transparent!important;border:0!important;
+ outline:0!important;box-shadow:none!important;backdrop-filter:none!important;overflow:visible!important;
+}
+body.scoreLayerBody #eventLayer.eventLayer:before,
+body.scoreLayerBody #eventLayer.eventLayer:after{content:none!important;display:none!important;border:0!important;box-shadow:none!important}
+body.scoreLayerBody #eventLayer.eventLayer .eventInner,
+body.scoreLayerBody #eventLayer.eventLayer .eventInner:before,
+body.scoreLayerBody #eventLayer.eventLayer .eventInner:after{
+ background-color:transparent!important;border:0!important;outline:0!important;
+ box-shadow:none!important;pointer-events:none!important;
+}
+body.scoreLayerBody #eventLayer.eventLayer[data-event-type="four"] .eventInner,
+body.scoreLayerBody #eventLayer.eventLayer[data-event-type="six"] .eventInner,
+body.scoreLayerBody #eventLayer.eventLayer[data-event-type="wicket"] .eventInner,
+body.scoreLayerBody #eventLayer.eventLayer[data-event-type="free-hit"] .eventInner{background:transparent!important}
+body.scoreLayerBody #eventLayer.eventLayer[data-anim="umpire-signal"] .umpireSticker{
+ display:block!important;transform-origin:52% 82%!important;
+ animation:jcUmpireRaise 1.15s cubic-bezier(.18,.8,.2,1) both!important;
+ filter:drop-shadow(0 0 16px #ffffff68)!important;
+}
