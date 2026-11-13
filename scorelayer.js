@@ -520,7 +520,7 @@ async function loadOwnerBroadcast(userId,version,matchId=''){
   if(payload.ok){
    ownerBroadcast=payload.broadcast||{};
    ownerBroadcastVersion=[String(matchId||''),ownerBroadcast.studioDesignUpdatedAt,ownerBroadcast.cardDesignUpdatedAt,ownerBroadcast.animationDesignUpdatedAt].join('|');
-   if(latestMatch&&String(latestMatch.userId)===String(userId)&&String(latestMatch.id)===String(matchId))render(latestMatch,{...ownerBroadcast,...latestSSEBroadcast});
+   if(latestMatch&&String(latestMatch.userId)===String(userId)&&(!matchId||String(latestMatch.id)===String(matchId)))render(latestMatch,{...ownerBroadcast,...latestSSEBroadcast});
   }
  }catch(error){console.warn('Could not load match-specific Score Layer layout:',error);ownerBroadcastRequestedVersion='';}
 }
@@ -570,7 +570,7 @@ function boot(){
    const hasStudio=!!(incoming.hasStudioDesign||incoming.hasCardDesign||incoming.hasAnimationDesign);
    delete incoming.hasStudioDesign;delete incoming.hasCardDesign;delete incoming.hasAnimationDesign;
    if(version!==ownerBroadcastVersion||String(m.userId)!==ownerBroadcastUserId){
-    if(hasStudio)loadOwnerBroadcast(m.userId,version,m.id);
+    if(hasStudio)loadOwnerBroadcast(m.userId,version,requested?m.id:'');
     else {ownerBroadcast={};ownerBroadcastVersion=version;ownerBroadcastRequestedVersion=version;ownerBroadcastUserId=String(m.userId);}
    }
    render(m,{...ownerBroadcast,...incoming});
