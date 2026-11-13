@@ -353,10 +353,10 @@ function fillGraphics(){
   groupSelect.innerHTML=SCORE_LAYER_GROUPS.map(x=>`<option value="${x.id}">${x.name}</option>`).join('');
   groupSelect.value=SCORE_LAYER_GROUPS.some(x=>x.id===current.layoutGroup)?current.layoutGroup:defaultGroup.id;
   setLayerOptions(groupSelect.value,current.layer||1);
-  groupSelect.onchange=async()=>{setLayerOptions(groupSelect.value,0);updateLayerPreview();if(activePlan())await saveBroadcast({event:null,layoutGroup:groupSelect.value});};
+  groupSelect.onchange=async()=>{const group=SCORE_LAYER_GROUPS.find(x=>x.id===groupSelect.value)||SCORE_LAYER_GROUPS[0];setLayerOptions(groupSelect.value,0);$('colorSelect').value=String(group.start);updateLayerPreview();if(activePlan())await saveBroadcast({event:null,layoutGroup:groupSelect.value,color:group.start});};
  }
  $('colorSelect').innerHTML=COLORS.map((name,index)=>`<option value="${index+1}">${String(index+1).padStart(2,'0')}. ${name}</option>`).join('');
- $('colorSelect').value=String(Math.max(1,Math.min(COLORS.length,Number(current.color)||1)));
+ $('colorSelect').value=String(Math.max(1,Math.min(COLORS.length,Number(current.color)||Number(current.layer)||1)));
  $('layerSelect').onchange=async()=>{updateLayerPreview();if(activePlan())await saveBroadcast({event:null,layoutGroup:groupSelect?.value||layerGroupFor($('layerSelect').value).id});};
  $('colorSelect').onchange=async()=>{updateLayerPreview();if(activePlan())await saveBroadcast({event:null});};
  for(const [event,id] of [['FOUR','eventThemeFour'],['SIX','eventThemeSix'],['WICKET','eventThemeWicket'],['FREE HIT','eventThemeFreeHit']]){
@@ -389,7 +389,7 @@ function renderGraphics(){
  fillGraphics();
  $('layerGroupSelect').value=SCORE_LAYER_GROUPS.some(x=>x.id===b.layoutGroup)?b.layoutGroup:layerGroupFor(b.layer||1).id;
  setLayerOptions($('layerGroupSelect').value,b.layer||1);
- $('colorSelect').value=String(Math.max(1,Math.min(COLORS.length,Number(b.color)||1)));
+ $('colorSelect').value=String(Math.max(1,Math.min(COLORS.length,Number(b.color)||Number(b.layer)||1)));
  for(const [event,id] of [['FOUR','eventThemeFour'],['SIX','eventThemeSix'],['WICKET','eventThemeWicket'],['FREE HIT','eventThemeFreeHit']]){
   const select=$(id);if(select){const saved=EVENT_ANIM_MAP[event]||EVENT_THEME_NAMES[0];select.value=EVENT_THEME_NAMES.includes(saved)?saved:EVENT_THEME_NAMES[0];}
  }
@@ -486,7 +486,7 @@ async function saveBroadcast(extra={}){
  const selectedLayout=Number($('layerSelect')?.value)||1;
  const selectedGroup=$('layerGroupSelect')?.value||layerGroupFor(selectedLayout).id;
  const matchId=String(MATCH?.id||extra.matchId||'');
- const payload={layer:selectedLayout,layoutGroup:selectedGroup,color:Number($('colorSelect')?.value)||1,design:readDesignControls(),cardMotion:CARD_MOTION_CURRENT,cardAnimation:CARD_MOTION_CURRENT,duration:2400,cardDuration:2200,eventAnimations:EVENT_ANIM_MAP,eventDurations:EVENT_DURATION_MAP,cardAnimations:CARD_ANIM_MAP,cardDurations:CARD_DURATION_MAP,matchId,...extra};
+ const payload={layer:selectedLayout,layoutGroup:selectedGroup,color:Number($('colorSelect')?.value)||selectedLayout,design:readDesignControls(),cardMotion:CARD_MOTION_CURRENT,cardAnimation:CARD_MOTION_CURRENT,duration:2400,cardDuration:2200,eventAnimations:EVENT_ANIM_MAP,eventDurations:EVENT_DURATION_MAP,cardAnimations:CARD_ANIM_MAP,cardDurations:CARD_DURATION_MAP,matchId,...extra};
  if(hasEventIdOverride)payload.eventId=extra.eventId;
  else if(hasEventUpdate){payload.eventId=++broadcastSequence;payload.eventAt=extra.event?Number(extra.eventAt||Date.now()):null;payload.matchId=extra.event?String(extra.matchId||MATCH?.id||''):matchId;}
  else if(STATE?.broadcast?.eventId!==undefined)payload.eventId=STATE.broadcast.eventId;
