@@ -21,6 +21,15 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function activePlan(){if(STATE?.localTestMode)return true;const s=STATE?.user?.subscription;return !!(s&&s.status==='active'&&new Date(s.expiresAt)>new Date())}
 function isPro(){return !!STATE?.localTestMode || (activePlan()&&STATE.user.activePlan==='pro')}
 function team(id){return (STATE?.teams||[]).find(t=>String(t.id)===String(id))}
+function latestScoringMatch(state=STATE){
+ const rows=[...(state?.savedLiveMatches||[]),...(state?.matches||[])].filter(m=>m&&m.id&&m.activeInnings);
+ const unique=[...new Map(rows.map(m=>[String(m.id),m])).values()];
+ const sortRecent=(a,b)=>(Date.parse(b.updatedAt||b.startedAt||b.createdAt||'')||0)-(Date.parse(a.updatedAt||a.startedAt||a.createdAt||'')||0);
+ if(state?.activeMatch?.status==='live'&&state.activeMatch.activeInnings)return state.activeMatch;
+ const live=unique.filter(m=>m.status==='live').sort(sortRecent);
+ if(live.length)return live[0];
+ return unique.filter(m=>m.status==='finished').sort(sortRecent)[0]||null;
+}
 function playerName(pid){for(const t of STATE.teams){const p=(t.players||[]).find(x=>String(x.id)===String(pid));if(p)return p.name}return 'Player'}
 function playerNameInTeam(teamId,pid){const p=(team(teamId)?.players||[]).find(x=>String(x.id)===String(pid));return p?.name||'Unknown player'}
 // A player's eligibility is always intersected with the batting team's own roster. This also repairs old/stale match snapshots that contain foreign player IDs.
@@ -139,7 +148,7 @@ function showPage(id){
 }
 
 document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){e.preventDefault();showPage(g.dataset.go)}});
-async function refresh(){STATE=await api('/api/state');MATCH=STATE.activeMatch;sanitizeActiveMatchPlayers();renderAll()}
+async function refresh(){STATE=await api('/api/state');MATCH=latestScoringMatch(STATE);sanitizeActiveMatchPlayers();renderAll()}
 function sanitizeActiveMatchPlayers(){
  if(!MATCH?.activeInnings||!STATE)return;
  const i=MATCH.activeInnings;MATCH.teamXIs ||= {};
@@ -191,8 +200,20 @@ function renderDashboardHistory(){
  const el=$('matchHistoryGrid'); if(!el||!STATE)return;
  const rows=(STATE.matches||[]).slice().sort((a,b)=>new Date(b.startedAt||b.dateTime||b.createdAt||0)-new Date(a.startedAt||a.dateTime||a.createdAt||0));
  if(!rows.length){el.innerHTML='<div class="emptyState">No match history yet. Every scheduled and started match will be saved here automatically.</div>';return}
- el.innerHTML=rows.map(m=>{const i=m.activeInnings||{},live=m.status==='live',upcoming=m.status==='scheduled',abandoned=m.status==='abandoned',stamp=m.startedAt||m.dateTime||m.createdAt||Date.now(),url=new URL(`scoreboard.html?match=${encodeURIComponent(m.id)}`,document.baseURI).href;return `<div class="historyCard"><div class="historyMain"><div class="historyState ${live?'historyLive':upcoming?'historyScheduled':'historyDone'}">${live?'● LIVE':upcoming?'◷ UPCOMING':abandoned?'◌ ABANDONED':'✓ COMPLETED'}</div><b>${esc(m.title||'Local Match')}</b><span>${esc(m.teamAName||team(m.teamA)?.name||'Team A')} vs ${esc(m.teamBName||team(m.teamB)?.name||'Team B')}</span><small>${new Date(stamp).toLocaleString()}${upcoming?' · '+(Number(m.oversLimit)||20)+' overs':` · ${i.score??0}/${i.wickets??0} · ${Math.floor((i.balls||0)/6)}.${(i.balls||0)%6} ov`}${m.result?' · '+esc(m.result):''}</small><input class="shareMatchUrl" readonly value="${esc(url)}" aria-label="Public match share link"></div><div class="historyActions">${upcoming?`<button class="miniBtn" data-start-fixture="${esc(m.id)}">Start this match</button>`:''}<a class="miniBtn" target="_blank" rel="noopener" href="scoreboard.html?match=${encodeURIComponent(m.id)}">Open Public Score</a><button class="miniBtn" data-copymatch="${esc(m.id)}">Copy Link</button><button class="miniBtn dangerMini" data-delmatch="${esc(m.id)}">Delete Match</button></div></div>`}).join('');
+ el.innerHTML=rows.map(m=>{const i=m.activeInnings||{},live=m.status==='live',upcoming=m.status==='scheduled',abandoned=m.status==='abandoned',stamp=m.startedAt||m.dateTime||m.createdAt||Date.now(),url=new URL(`scoreboard.html?match=${encodeURIComponent(m.id)}`,document.baseURI).href;return `<div class="historyCard"><div class="historyMain"><div class="historyState ${live?'historyLive':upcoming?'historyScheduled':'historyDone'}">${live?'● LIVE':upcoming?'◷ UPCOMING':abandoned?'◌ ABANDONED':'✓ COMPLETED'}</div><b>${esc(m.title||'Local Match')}</b><span>${esc(m.teamAName||team(m.teamA)?.name||'Team A')} vs ${esc(m.teamBName||team(m.teamB)?.name||'Team B')}</span><small>${new Date(stamp).toLocaleString()}${upcoming?' · '+(Number(m.oversLimit)||20)+' overs':` · ${i.score??0}/${i.wickets??0} · ${Math.floor((i.balls||0)/6)}.${(i.balls||0)%6} ov`}${m.result?' · '+esc(m.result):''}</small><input class="shareMatchUrl" readonly value="${esc(url)}" aria-label="Public match share link"></div><div class="historyActions">${upcoming?`<button class="miniBtn" data-start-fixture="${esc(m.id)}">Start this match</button>`:''}<a class="miniBtn" target="_blank" rel="noopener" href="scoreboard.html?match=${encodeURIComponent(m.id)}">Open Public Score</a><button class="miniBtn" data-copymatch="${esc(m.id)}">Copy Link</button>${!live&&!upcoming?`<button class="miniBtn" data-export-match="${esc(m.id)}">Download JSON</button>`:''}<button class="miniBtn dangerMini" data-delmatch="${esc(m.id)}">Delete Match</button></div></div>`}).join('');
 }
+
+function downloadMatchJson(matchId){
+ const match=(STATE?.matches||[]).find(m=>String(m.id)===String(matchId));
+ if(!match)return alert('Match का सेव किया हुआ JSON record नहीं मिला।');
+ const payload={app:'Jangid Cricinfo',schemaVersion:1,exportedAt:new Date().toISOString(),match};
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ const clean=String(match.title||match.id).replace(/[^a-z0-9-_]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,60)||String(match.id);
+ a.href=url;a.download=`Jangid-Cricinfo-${clean}.json`;document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+document.addEventListener('click',e=>{const button=e.target.closest('[data-export-match]');if(button){e.preventDefault();downloadMatchJson(button.dataset.exportMatch)}});
 
 async function compressedLogo(file){if(!file)return '';return new Promise((resolve,reject)=>{const fr=new FileReader();fr.onerror=()=>reject(new Error('Logo file could not be read'));fr.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('Logo image format not supported'));img.onload=()=>{const max=320,s=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*s));c.height=Math.max(1,Math.round(img.height*s));c.getContext('2d').drawImage(img,0,0,c.width,c.height);resolve(c.toDataURL('image/webp',.68))};img.src=fr.result};fr.readAsDataURL(file)})}
 async function compressedBanner(file){return new Promise((resolve,reject)=>{if(!file)return resolve('');const fr=new FileReader();fr.onerror=()=>reject(new Error('Banner file could not be read'));fr.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('Image format not supported'));img.onload=()=>{const w=1280,h=420,c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d'),scale=Math.max(w/img.width,h/img.height),sw=img.width*scale,sh=img.height*scale;ctx.drawImage(img,(w-sw)/2,(h-sh)/2,sw,sh);resolve(c.toDataURL('image/webp',.78))};img.src=fr.result};fr.readAsDataURL(file)})}
@@ -390,7 +411,7 @@ let EVENT_ANIM_MAP={FOUR:'boundary-ripple',SIX:'stadium-surge',WICKET:'shard-bre
 async function saveBroadcast(extra={}){
   const hasEventUpdate=Object.prototype.hasOwnProperty.call(extra,'event');
   const hasEventIdOverride=Object.prototype.hasOwnProperty.call(extra,'eventId');
-  const payload={layer:+$('layerSelect').value,color:+$('colorSelect').value,design:readDesignControls(),animation:$('animationSelect').value,duration:Math.max(300,Math.min(10000,+$('animationDuration').value||2200)),cardAnimation:$('cardAnimationSelect')?.value||'zoom',cardDuration:Math.max(300,Math.min(10000,+$('cardAnimationDuration')?.value||1800)),eventAnimations:EVENT_ANIM_MAP,eventDurations:EVENT_DURATION_MAP,cardAnimations:CARD_ANIM_MAP,cardDurations:CARD_DURATION_MAP,...extra};
+  const payload={layer:+$('layerSelect').value,color:+$('colorSelect').value,design:readDesignControls(),animation:$('animationSelect').value,duration:Math.max(300,Math.min(10000,+$('animationDuration').value||2200)),cardAnimation:$('cardAnimationSelect')?.value||'zoom',cardDuration:Math.max(300,Math.min(10000,+$('cardAnimationDuration')?.value||1800)),eventAnimations:EVENT_ANIM_MAP,eventDurations:EVENT_DURATION_MAP,cardAnimations:CARD_ANIM_MAP,cardDurations:CARD_DURATION_MAP,matchId:extra.matchId||MATCH?.id||STATE?.broadcast?.matchId||null,...extra};
   // Only a real event change (or explicit eventId) advances the animation token.
   // Palette, layout and other settings must never replay the previous event.
   if(hasEventIdOverride)payload.eventId=extra.eventId;
@@ -682,12 +703,22 @@ $('loginPassword')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.prevent
 $('loginEmail')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('loginPassword')?.focus();}});
 $('registerBtn').onclick=()=>location.href='register.html';
 $('forgotPasswordBtn')?.addEventListener('click',async()=>{const email=prompt('अपना registered Email address लिखें:');if(!email)return;try{const r=await api('/api/password/reset',{method:'POST',body:JSON.stringify({email})});alert(r.message||'Password reset link भेज दिया गया है।')}catch(e){alert(e.message)}});
+async function archiveCompletedLiveMatches(state){
+ const candidates=(state?.matches||[]).filter(m=>m?.status==='live'&&m.activeInnings&&(m.awaitingMatchFinish||(m.activeInnings.finished&&Number(m.inningsNo||m.activeInnings.number||1)>=2)));
+ let archived=false;
+ for(const match of candidates){
+  try{const result=await api('/api/match/archive-completed',{method:'POST',body:JSON.stringify({matchId:match.id})});archived=archived||!!result.archived;}
+  catch(error){console.warn('Completed match JSON archive skipped:',match.id,error);}
+ }
+ return archived?api('/api/state'):state;
+}
 async function boot(options={}){
  const sequence=++authBootSequence;
  let nextState,nextPublic;
  try{
   // Complete authentication/data requests before switching the visible screen.
   nextState=await api('/api/state');
+  nextState=await archiveCompletedLiveMatches(nextState);
   nextPublic=(await api('/api/public')).matches||[];
  }catch(e){
   // Ignore late responses from an older page-load check after the user has logged in.
@@ -698,7 +729,7 @@ async function boot(options={}){
   return false;
  }
  if(sequence!==authBootSequence)return false;
- STATE=nextState;MATCH=STATE.activeMatch;PUBLIC_LIVE=nextPublic;
+ STATE=nextState;MATCH=latestScoringMatch(STATE);PUBLIC_LIVE=nextPublic;
  activeCardType=STATE.broadcast?.card?.type||null;
  if(STATE.broadcast?.cardAnimations)CARD_ANIM_MAP={...CARD_ANIM_MAP,...STATE.broadcast.cardAnimations};
  if(STATE.broadcast?.eventAnimations)EVENT_ANIM_MAP={...EVENT_ANIM_MAP,...STATE.broadcast.eventAnimations};
@@ -726,7 +757,7 @@ const es=new EventSource('/events');es.onmessage=e=>{try{
    if(matchIndex>=0)STATE.matches[matchIndex]=mine;else STATE.matches.push(mine);
    const liveIndex=PUBLIC_LIVE.findIndex(m=>String(m.id)===String(mine.id));
    if(liveIndex>=0)PUBLIC_LIVE[liveIndex]=mine;
-  }else if(!MATCH||MATCH.status!=='live'){MATCH=STATE.activeMatch||null;}
+  }else if(!MATCH||MATCH.status!=='live'){MATCH=latestScoringMatch(STATE);}
   renderDashboard();if(!$('scoring').classList.contains('hidden'))renderScoring();
  }
  }catch(error){console.warn('Live scoring update ignored:',error);}};
