@@ -712,6 +712,22 @@ async function archiveCompletedLiveMatches(state){
  }
  return archived?api('/api/state'):state;
 }
+window.archiveCompletedMatchNow=async function(match=MATCH){
+ if(!match?.id)return false;
+ const result=await api('/api/match/archive-completed',{method:'POST',body:JSON.stringify({matchId:match.id})});
+ if(!result?.match)return false;
+ const finished=result.match;MATCH=finished;
+ if(STATE){
+  STATE.activeMatch=null;
+  STATE.savedLiveMatches=(STATE.savedLiveMatches||[]).filter(m=>String(m.id)!==String(finished.id));
+  STATE.matches||=[];
+  const index=STATE.matches.findIndex(m=>String(m.id)===String(finished.id));
+  if(index>=0)STATE.matches[index]=finished;else STATE.matches.push(finished);
+ }
+ PUBLIC_LIVE=(PUBLIC_LIVE||[]).filter(m=>String(m.id)!==String(finished.id));
+ window.renderScoring?.();renderDashboard();
+ return finished;
+}
 async function boot(options={}){
  const sequence=++authBootSequence;
  let nextState,nextPublic;
