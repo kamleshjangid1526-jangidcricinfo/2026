@@ -546,13 +546,24 @@ function boot(){
    }
    latestMatch=m;
    const matchKey=String(m.userId)+':'+String(m.id);
-   // A Score Layer opened with a Match ID must use only that Match's data.
-   // No global fallback: it could belong to another simultaneous LIVE match.
-   const incoming={...(d.broadcastsByMatch?.[matchKey]||{})};
-   const cardState=d.broadcastCardsByMatch?.[matchKey]||null;
+   const scopedBroadcast=d.broadcastsByMatch?.[matchKey];
+   const legacyBroadcast=d.broadcasts?.[m.userId];
+   const ownerLiveMatches=matchPool.filter(x=>String(x.userId||'')===String(m.userId)&&x.status==='live');
+   const allowLegacy=!requested&&!!legacyBroadcast&&(
+    String(legacyBroadcast.matchId||'')===String(m.id)||
+    (!legacyBroadcast.matchId&&ownerLiveMatches.length===1)
+   );
+   // New Match URLs never inherit another match's cards or animations. Legacy
+   // owner-wide graphics are allowed only on an old no-match URL with one live match.
+   const incoming={...(scopedBroadcast|| (allowLegacy?legacyBroadcast:{}))};
+   const scopedCard=d.broadcastCardsByMatch?.[matchKey];
+   const legacyCard=d.broadcastCards?.[m.userId];
+   const cardState=scopedCard||(allowLegacy&&(!legacyCard?.matchId||String(legacyCard.matchId)===String(m.id))?legacyCard:null);
    if(cardState){incoming.card=cardState.card??null;incoming.cardId=cardState.cardId??incoming.cardId;incoming.cardAnimation=cardState.cardAnimation||incoming.cardAnimation;incoming.cardMotion=cardState.cardMotion||incoming.cardMotion;incoming.cardAnimations=cardState.cardAnimations||incoming.cardAnimations;incoming.cardDurations=cardState.cardDurations||incoming.cardDurations;}
-   const durableEvent=d.broadcastEventsByMatch?.[matchKey]||null;
-   if(durableEvent&&String(durableEvent.matchId||'')===String(m.id))Object.assign(incoming,durableEvent);
+   const scopedEvent=d.broadcastEventsByMatch?.[matchKey];
+   const legacyEvent=d.broadcastEvents?.[m.userId];
+   const durableEvent=scopedEvent||(allowLegacy&&(!legacyEvent?.matchId||String(legacyEvent.matchId)===String(m.id))?legacyEvent:null);
+   if(durableEvent&&String(durableEvent.matchId||m.id)===String(m.id))Object.assign(incoming,durableEvent);
    latestSSEBroadcast=incoming;
    const version=[String(m.id),incoming.studioDesignUpdatedAt,incoming.cardDesignUpdatedAt,incoming.animationDesignUpdatedAt].join('|');
    const sponsorVersion=String(incoming.sponsorLibraryUpdatedAt||incoming.sponsorDisplayUpdatedAt||'');if(sponsorVersion!==sponsorLibraryVersion&&!sponsorLibraryRequested)loadSponsorLibrary(sponsorVersion);
