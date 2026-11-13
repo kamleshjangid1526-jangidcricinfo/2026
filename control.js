@@ -152,9 +152,10 @@ async function loadBroadcastForControlMatch(matchId){
   renderScoring();
  }catch(error){
   console.warn('Could not load saved graphics for selected Match:',error);
-  if(String(MATCH?.id||'')===id)STATE.broadcast={matchId:id};
+  if(String(MATCH?.id||'')===id){STATE.broadcast={matchId:id};controlBroadcastMatchId='';}
  }
 }
+window.loadBroadcastForControlMatch=loadBroadcastForControlMatch;
 function showPage(id){
  if(scoringPageLocked&&id!=='scoring'){showScoringLockNotice('Scoring LOCKED है। पहले ऊपर Unlock दबाएँ।');return;}
  if(!STATE?.user){setAuthView(false);return;}
@@ -506,7 +507,7 @@ async function publishEventNow(event,meta={}){
   await api('/api/broadcast/event',{method:'POST',body:JSON.stringify({eventId:String(publishedEventId||Date.now()),event,matchId:String(MATCH?.id||meta.matchId||''),eventAt:Date.now(),eventStyle:eventStyle(event),animation:EVENT_ANIM_MAP[event]||EVENT_THEME_NAMES[0],duration,eventAnimations:EVENT_ANIM_MAP,eventDurations:EVENT_DURATION_MAP,...meta})});
   broadcastEventClearTimer=setTimeout(()=>{
    if(String(STATE?.broadcast?.eventId??'')!==String(publishedEventId??''))return;
-   void saveBroadcast({event:null,eventId:publishedEventId,eventAt:null,matchId:null}).catch(error=>console.warn('Broadcast event cleanup could not sync:',error));
+   void saveBroadcast({event:null,eventId:publishedEventId,eventAt:null}).catch(error=>console.warn('Broadcast event cleanup could not sync:',error));
   },Math.max(1200,duration+350));
   return {ok:true};
  }catch(error){
