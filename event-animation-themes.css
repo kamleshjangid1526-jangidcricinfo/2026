@@ -193,7 +193,10 @@ body.scoreLayerBody #eventLayer.eventLayer{
 }
 body.scoreLayerBody #eventLayer.eventLayer:before,
 body.scoreLayerBody #eventLayer.eventLayer:after{content:none!important;display:none!important;border:0!important;box-shadow:none!important}
-body.scoreLayerBody #eventLayer.eventLayer .eventInner,
+body.scoreLayerBody #eventLayer.eventLayer .eventInner{
+ background:transparent!important;background-color:transparent!important;border:0!important;
+ outline:0!important;box-shadow:none!important;pointer-events:none!important;
+}
 body.scoreLayerBody #eventLayer.eventLayer .eventInner:before,
 body.scoreLayerBody #eventLayer.eventLayer .eventInner:after{
  background-color:transparent!important;border:0!important;outline:0!important;
