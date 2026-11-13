@@ -16,11 +16,12 @@
   const playerLabel = (teamId,id) => player(teamId,id)?.name || 'Player';
   function recoverLiveMatch() {
     if(MATCH?.status==='live' && MATCH.activeInnings) return MATCH;
-    // Do not resurrect a match that was deliberately finished or abandoned.
-    if(MATCH && MATCH.status!=='live') return MATCH;
+    // A stale/non-live MATCH object must not block recovery of a different valid live snapshot.
+    // Only live records with an innings are eligible, so finished/abandoned matches are never revived.
     const currentId=String(MATCH?.id||'');
     const candidates=[STATE?.activeMatch,...(STATE?.savedLiveMatches||[]),...(STATE?.matches||[])].filter(Boolean);
-    const recovered=candidates.find(match=>match.status==='live'&&match.activeInnings&&(!currentId||String(match.id)===currentId));
+    const validLive=candidates.filter(match=>match.status==='live'&&match.activeInnings&&match.id);
+    const recovered=validLive.find(match=>String(match.id)===currentId)||validLive[0];
     if(recovered) {
       MATCH=clone(recovered);
       if(STATE) STATE.activeMatch=clone(recovered);
