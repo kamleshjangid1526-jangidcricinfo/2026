@@ -563,6 +563,8 @@
       await refresh();
       MATCH=finished;
       if(STATE){STATE.activeMatch=null;STATE.matches||=[];const ix=STATE.matches.findIndex(x=>String(x.id)===String(finished.id));if(ix>=0)STATE.matches[ix]=finished;else STATE.matches.push(finished);}
+      controlBroadcastMatchId='';
+      await window.loadBroadcastForControlMatch?.(finished.id);
       renderScoring();
       showPage('scoring');
       if(!options.automatic)alert('मैच सफलतापूर्वक समाप्त हुआ। Scoring स्क्रीन पर Cards उपलब्ध हैं; रन और विकेट की scoring बंद है।');
