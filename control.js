@@ -756,6 +756,29 @@ async function boot(options={}){
  showPage('dashboard');
  return true;
 }
+function preserveScoringUndoHistory(localMatch,incomingMatch){
+ if(!localMatch?.activeInnings||!incomingMatch?.activeInnings||String(localMatch.id)!==String(incomingMatch.id))return incomingMatch;
+ const localInn=localMatch.activeInnings,remoteInn=incomingMatch.activeInnings;
+ const localNo=String(localInn.number||localMatch.inningsNo||1),remoteNo=String(remoteInn.number||incomingMatch.inningsNo||1);
+ if(localNo!==remoteNo)return incomingMatch;
+ // Public Firestore match snapshots intentionally omit private Undo history.
+ // Keep the local private stack when a realtime public snapshot replaces the same match.
+ if(Array.isArray(remoteInn.undoStack)&&remoteInn.undoStack.length)return incomingMatch;
+ const stack=Array.isArray(localInn.undoStack)?localInn.undoStack.map(x=>JSON.parse(JSON.stringify(x))):[];
+ const localEvents=Array.isArray(localInn.events)?localInn.events:[];
+ const remoteEvents=Array.isArray(remoteInn.events)?remoteInn.events:[];
+ if(remoteEvents.length>localEvents.length){
+  const snapshot=JSON.parse(JSON.stringify(localInn));
+  snapshot._undoEventsLength=localEvents.length;
+  snapshot._undoFirstEvent=localEvents.length?JSON.parse(JSON.stringify(localEvents[0])):null;
+  snapshot._undoFallOfWicketsLength=Array.isArray(localInn.fallOfWickets)?localInn.fallOfWickets.length:0;
+  delete snapshot.events;delete snapshot.fallOfWickets;delete snapshot.undoStack;delete snapshot.lastDelivery;
+  stack.push(snapshot);
+  if(stack.length>50)stack.shift();
+ }
+ remoteInn.undoStack=stack;
+ return incomingMatch;
+}
 const es=new EventSource('/events');es.onmessage=e=>{try{
  const p=JSON.parse(e.data);PUBLIC_LIVE=p.activeMatches||[];
  const ownBroadcast=STATE?.user?.id?p.broadcasts?.[STATE.user.id]:null;
@@ -763,11 +786,11 @@ const es=new EventSource('/events');es.onmessage=e=>{try{
  const incomingMine=PUBLIC_LIVE.find(m=>m.userId===STATE?.user?.id&&m.status==='live');
  if(STATE?.user?.id){
   if(incomingMine){
-   const localMatch=MATCH?.id===incomingMine.id&&MATCH.status==='live'?MATCH:(STATE.activeMatch?.id===incomingMine.id&&STATE.activeMatch.status==='live'?STATE.activeMatch:null);
+   const localMatch=[MATCH,STATE.activeMatch,...(STATE.savedLiveMatches||[]),...(STATE.matches||[])].find(m=>m?.id===incomingMine.id&&m.status==='live')||null;
    const stamp=value=>({local:Date.parse(value?.offlineUpdatedAt||'')||0,updated:Date.parse(value?.updatedAt||'')||0});
    const localStamp=stamp(localMatch),incomingStamp=stamp(incomingMine);
    const keepLocal=localMatch&&(localStamp.local>incomingStamp.local||(localStamp.local===incomingStamp.local&&localStamp.updated>incomingStamp.updated));
-   const mine=keepLocal?localMatch:incomingMine;
+   const mine=keepLocal?localMatch:preserveScoringUndoHistory(localMatch,incomingMine);
    MATCH=mine;STATE.activeMatch=mine;STATE.matches||=[];
    const matchIndex=STATE.matches.findIndex(m=>String(m.id)===String(mine.id));
    if(matchIndex>=0)STATE.matches[matchIndex]=mine;else STATE.matches.push(mine);
