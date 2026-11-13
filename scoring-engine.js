@@ -273,6 +273,10 @@
     else if(extraName==='bye') void fireEvent('BYE');
     else if(batRuns===4) void fireEvent('FOUR');
     else if(batRuns===6) void fireEvent('SIX');
+    if(MATCH?.awaitingMatchFinish&&typeof window.archiveCompletedMatchNow==='function'){
+      try{await window.archiveCompletedMatchNow(MATCH);}
+      catch(archiveError){console.warn('Completed match archive will retry on next Control Board load:',archiveError);}
+    }
     if(MATCH?.awaitingNextInnings){setTimeout(()=>{if(MATCH?.awaitingNextInnings)startSecondInnings()},180)}
     else if(i.awaitingBowler && !MATCH?.awaitingMatchFinish){setTimeout(()=>{if(MATCH?.status==='live' && MATCH?.activeInnings?.awaitingBowler)promptBowler()},350)}
     return true;
