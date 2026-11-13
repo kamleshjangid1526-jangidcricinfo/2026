@@ -10,7 +10,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
-const DEFAULT_LIMITS = Object.freeze({ scoreLayouts:20, eventAnimations:20, graphicCards:20, liveScoring:true, publicScoreboard:true, obsScoreLayer:true });
+const DEFAULT_LIMITS = Object.freeze({ scoreLayouts:25, eventAnimations:10, graphicCards:20, liveScoring:true, publicScoreboard:true, obsScoreLayer:true });
 const PLANS = Object.freeze({
   basic:{id:'basic',name:'Basic',daily:100,minDays:1,maxDays:5,tournament:false,label:'Single Match'},
   pro:{id:'pro',name:'Pro',daily:200,minDays:3,maxDays:15,tournament:true,label:'All Features'}
@@ -545,14 +545,15 @@ async function handleApi(url,init={}) {
       const eventId=cleanText(body.eventId,100),eventName=cleanText(body.event,40).toUpperCase(),matchId=cleanText(body.matchId,100);
       if(!eventId||!eventName||!matchId)return fail(400,'Broadcast Event में eventId, event और matchId जरूरी हैं।');
       const safeEventId=eventId.replace(/[^a-zA-Z0-9_-]/g,'_');
-      if(!safeEventId)return fail(400,'Broadcast Event ID सही नहीं है।');
+      const safeMatchId=matchId.replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,110);
+      if(!safeEventId||!safeMatchId)return fail(400,'Broadcast Event ID या Match ID सही नहीं है।');
       const record={ownerUid:uid,uid,eventId,event:eventName,matchId,eventAt:Number(body.eventAt)||Date.now(),createdAt:nowIso(),
         eventStyle:cleanText(body.eventStyle,32)||'generic',animation:cleanText(body.animation,40)||'zoom',
         duration:Math.max(300,Math.min(10000,Number(body.duration)||2200)),
         eventAnimations:body.eventAnimations||{},eventDurations:body.eventDurations||{},
         eventPlayer:body.eventPlayer||null,wicketDetails:body.wicketDetails||null,
         teamMilestone:body.teamMilestone||null,resultDetails:body.resultDetails||null};
-      await setDoc(publicDoc('publicBroadcastDesigns',uid+'_broadcast_event_'+safeEventId),cleanData({...record,kind:'broadcast-event'}),{merge:true});
+      await setDoc(publicDoc('publicBroadcastDesigns',uid+'_broadcast_event_'+safeMatchId+'_'+safeEventId),cleanData({...record,kind:'broadcast-event'}),{merge:true});
       return ok({eventId,createdAt:record.createdAt});
     }
     if(path==='/api/broadcast'&&method==='POST'){
