@@ -217,8 +217,8 @@ function renderBar(m,b){
  const savedStudio=studioTemplate(b?.studioDesign);
  if(savedStudio){renderStudioBar(layer,m,b,savedStudio);return;}
  layer.dataset.studio='false';
- const color=Math.max(1,Math.min(20,Number(b?.color)||1));
- const layout=Math.max(1,Math.min(20,Number(b?.layer)||1));
+ const color=Math.max(1,Math.min(25,Number(b?.color)||1));
+ const layout=Math.max(1,Math.min(25,Number(b?.layer)||1));
  layer.className=`scoreBar jlInternationalScorebar layer${layout} color${color}`;
  layer.dataset.layout='international';layer.dataset.family='international-lower-third';layer.dataset.color=String(color);
  layer.removeAttribute('style');
@@ -457,13 +457,13 @@ function renderEvent(b,matchId){
  const eventName=String(b.event||'').toUpperCase();const corner=['NEW BATSMAN','NEW BOWLER'].includes(eventName);
  const animationTemplate=!corner?selectedStudioOverlay(b.animationDesign||b.studioDesign,'animation'):null;
  if(corner){el.innerHTML=incomingCornerMarkup(eventName,b);el.className=`eventLayer incomingCornerLayer ${eventName==='NEW BOWLER'?'isBowler':'isBatter'}`;el.dataset.anim=b.animation||'fade';}
- else if(eventName==='WICKET'&&b.wicketDetails){const d=b.wicketDetails;el.innerHTML=`<div class="eventInner wicketEventInner detailedWicketEvent"><div class="eventTitle">WICKET</div><b class="eventPlayerName">${esc(d.batter||'Batter')}</b><div class="eventSub">${esc(d.dismissal||'OUT')}</div><small>${esc(d.bowler||'')} ${d.fielder?` · ${esc(d.fielder)}`:''}</small></div>`;el.className='eventLayer style-wicket';el.dataset.anim=b.animation||'slam';}
+ else if(eventName==='WICKET'&&b.wicketDetails){const d=b.wicketDetails;el.innerHTML=`<div class="eventInner wicketEventInner detailedWicketEvent"><img class="eventSticker umpireSticker" src="assets/stickers/umpire-out-sticker.png" alt="Umpire OUT signal illustration"><div class="eventTitle">WICKET</div><b class="eventPlayerName">${esc(d.batter||'Batter')}</b><div class="eventSub">${esc(d.dismissal||'OUT')}</div><small>${esc(d.bowler||'')} ${d.fielder?` · ${esc(d.fielder)}`:''}</small></div>`;el.className='eventLayer style-wicket';el.dataset.anim=b.eventAnimations?.WICKET||b.animation||'umpire-signal';}
  else{el.innerHTML=animationTemplate?studioOverlayTemplateMarkup(animationTemplate,latestMatch||{}, {kind:'animation',event:b.event}):eventMarkup(b.event,b);el.className=`eventLayer style-${String(b.eventStyle||'generic').toLowerCase().replace(/\s+/g,'')}${animationTemplate?' studioAnimationEvent':''}`;el.dataset.anim=eventName==='NO BALL'?(b.eventAnimations?.['FREE HIT']||b.eventAnimations?.[eventName]||b.animation||'spotlight'):(b.eventAnimations?.[b.event]||b.animation||'zoom');}
  if(['FOUR','SIX','WICKET'].includes(eventName)&&!el.querySelector('.eventPlayerName')){
   const batterName=resolveEventBatterName(b,eventName);
   if(batterName){const name=document.createElement('div');name.className='eventPlayerName jcEventPlayerNameOverlay';name.textContent=batterName;el.appendChild(name);}
  }
- el.dataset.eventType=eventName.toLowerCase().replace(/\s+/g,'-');el.style.animationDuration=`${b.duration||2200}ms`;el.style.display='grid';const inner=el.querySelector('.eventInner,.jlStudioOverlayRoot,.incomingPlayerToast');if(inner)inner.style.animationDuration=`${b.duration||2200}ms`;
+ el.dataset.eventType=['NO BALL','FREE HIT'].includes(eventName)?'free-hit':eventName.toLowerCase().replace(/\s+/g,'-');el.style.animationDuration=`${b.duration||2200}ms`;el.style.display='grid';const inner=el.querySelector('.eventInner,.jlStudioOverlayRoot,.incomingPlayerToast');if(inner)inner.style.animationDuration=`${b.duration||2200}ms`;
  el._hide=setTimeout(()=>clearEventVisual(el,cardEl,true),Math.max(900,Number(b.duration||2200)-50));
 }
 function renderCard(b,m){
@@ -477,7 +477,7 @@ function renderCard(b,m){
   el.classList.remove('isVisible');el.style.display='none';el.innerHTML='';el.removeAttribute('data-anim');el.dataset.cardMarkup='';el.dataset.cardId='';lastCardId=null;document.body.classList.remove('cardActive');flushPendingSponsor();return;
  }
  hideSponsorLayer();
- const type=card.type||'batter',newCard=currentCardId!==String(lastCardId??''),anim=b.cardAnimations?.[type]||b.cardAnimation||'zoom';
+ const type=card.type||'batter',newCard=currentCardId!==String(lastCardId??''),anim=b.cardAnimations?.[type]||b.cardMotion||b.cardAnimation||'soft-pop';
  const cardTemplate=selectedStudioOverlay(b.cardDesign||b.studioDesign,'card');
  const custom=cardTemplate?studioOverlayTemplateMarkup(cardTemplate,m,{kind:'card',card}):cardMarkup(card,m);
  const duration=Number(b.cardDurations?.[type]||b.cardDuration||1800);
@@ -508,16 +508,21 @@ function renderCard(b,m){
 }
 
 function render(m,b){if(!m?.activeInnings)return;latestMatch=m;latestBroadcast=b||{};renderBar(m,b||{});renderCard(b||{},m);renderEvent(b||{},m.id);processSponsorBroadcast(m,b||{});lastRenderMatchId=m.id;}
-async function loadOwnerBroadcast(userId,version){
+async function loadOwnerBroadcast(userId,version,matchId=''){
  if(!userId)return;
- if(ownerBroadcastUserId===String(userId)&&ownerBroadcastRequestedVersion===String(version||''))return;
- ownerBroadcastUserId=String(userId);ownerBroadcastRequestedVersion=String(version||'');
+ const requestKey=String(matchId||'')+'|'+String(version||'');
+ if(ownerBroadcastUserId===String(userId)&&ownerBroadcastRequestedVersion===requestKey)return;
+ ownerBroadcastUserId=String(userId);ownerBroadcastRequestedVersion=requestKey;
  try{
-  const response=await fetch(`/api/public/broadcast/${encodeURIComponent(userId)}?v=${encodeURIComponent(version||'')}`,{cache:'no-store'});
+  const response=await fetch(`/api/public/broadcast/${encodeURIComponent(userId)}?match=${encodeURIComponent(matchId||'')}&v=${encodeURIComponent(version||'')}`,{cache:'no-store'});
   if(!response.ok)throw new Error(`Broadcast config request failed (${response.status})`);
   const payload=await response.json();
-  if(payload.ok){ownerBroadcast=payload.broadcast||{};ownerBroadcastVersion=[ownerBroadcast.studioDesignUpdatedAt,ownerBroadcast.cardDesignUpdatedAt,ownerBroadcast.animationDesignUpdatedAt].join('|');if(latestMatch&&String(latestMatch.userId)===String(userId))render(latestMatch,{...ownerBroadcast,...latestSSEBroadcast});}
- }catch(error){console.warn('Could not load uploaded Score Layer layout:',error);ownerBroadcastRequestedVersion='';}
+  if(payload.ok){
+   ownerBroadcast=payload.broadcast||{};
+   ownerBroadcastVersion=[String(matchId||''),ownerBroadcast.studioDesignUpdatedAt,ownerBroadcast.cardDesignUpdatedAt,ownerBroadcast.animationDesignUpdatedAt].join('|');
+   if(latestMatch&&String(latestMatch.userId)===String(userId)&&(!matchId||String(latestMatch.id)===String(matchId)))render(latestMatch,{...ownerBroadcast,...latestSSEBroadcast});
+  }
+ }catch(error){console.warn('Could not load match-specific Score Layer layout:',error);ownerBroadcastRequestedVersion='';}
 }
 function boot(){
  const es=new EventSource('/events');
@@ -531,20 +536,41 @@ function boot(){
      ?matchPool.find(x=>String(x.id)===String(requested)&&['live','finished'].includes(x.status)&&(!owner||x.userId===owner))
      :matchPool.find(x=>x.status==='live'&&(!owner||x.userId===owner))
       ||matchPool.find(x=>x.status==='finished'&&(!owner||x.userId===owner)&&d.broadcasts?.[x.userId]?.event==='RESULT'&&String(d.broadcasts?.[x.userId]?.matchId||'')===String(x.id));
-   if(!m){const bar=document.getElementById('scoreBar');if(requested)bar.innerHTML='';return;}
+   if(!m){
+    const bar=document.getElementById('scoreBar');if(requested)bar.innerHTML='';
+    const card=document.getElementById('cardLayer'),event=document.getElementById('eventLayer'),sponsor=document.getElementById('sponsorLayer');
+    if(card){card.classList.remove('isVisible');card.style.display='none';card.innerHTML='';}
+    if(event){clearTimeout(event._hide);event.className='eventLayer';event.style.display='none';event.innerHTML='';}
+    if(sponsor){sponsor.classList.remove('isVisible');sponsor.style.display='none';sponsor.innerHTML='';}
+    latestMatch=null;latestSSEBroadcast={};ownerBroadcast={};return;
+   }
    latestMatch=m;
-   const incoming={...(d.broadcasts?.[m.userId]||{})};
-   const cardState=d.broadcastCards?.[m.userId];
-   if(cardState){incoming.card=cardState.card??null;incoming.cardId=cardState.cardId??incoming.cardId;incoming.cardAnimation=cardState.cardAnimation||incoming.cardAnimation;incoming.cardAnimations=cardState.cardAnimations||incoming.cardAnimations;incoming.cardDurations=cardState.cardDurations||incoming.cardDurations;}
-   const durableEvent=d.broadcastEvents?.[m.userId];
-   if(durableEvent&&String(durableEvent.matchId||'')===String(m.id))Object.assign(incoming,durableEvent);
+   const matchKey=String(m.userId)+':'+String(m.id);
+   const scopedBroadcast=d.broadcastsByMatch?.[matchKey];
+   const legacyBroadcast=d.broadcasts?.[m.userId];
+   const ownerLiveMatches=matchPool.filter(x=>String(x.userId||'')===String(m.userId)&&x.status==='live');
+   const allowLegacy=!requested&&!!legacyBroadcast&&(
+    String(legacyBroadcast.matchId||'')===String(m.id)||
+    (!legacyBroadcast.matchId&&ownerLiveMatches.length===1)
+   );
+   // New Match URLs never inherit another match's cards or animations. Legacy
+   // owner-wide graphics are allowed only on an old no-match URL with one live match.
+   const incoming={...(scopedBroadcast|| (allowLegacy?legacyBroadcast:{}))};
+   const scopedCard=d.broadcastCardsByMatch?.[matchKey];
+   const legacyCard=d.broadcastCards?.[m.userId];
+   const cardState=scopedCard||(allowLegacy&&(!legacyCard?.matchId||String(legacyCard.matchId)===String(m.id))?legacyCard:null);
+   if(cardState){incoming.card=cardState.card??null;incoming.cardId=cardState.cardId??incoming.cardId;incoming.cardAnimation=cardState.cardAnimation||incoming.cardAnimation;incoming.cardMotion=cardState.cardMotion||incoming.cardMotion;incoming.cardAnimations=cardState.cardAnimations||incoming.cardAnimations;incoming.cardDurations=cardState.cardDurations||incoming.cardDurations;}
+   const scopedEvent=d.broadcastEventsByMatch?.[matchKey];
+   const legacyEvent=d.broadcastEvents?.[m.userId];
+   const durableEvent=scopedEvent||(allowLegacy&&(!legacyEvent?.matchId||String(legacyEvent.matchId)===String(m.id))?legacyEvent:null);
+   if(durableEvent&&String(durableEvent.matchId||m.id)===String(m.id))Object.assign(incoming,durableEvent);
    latestSSEBroadcast=incoming;
-   const version=[incoming.studioDesignUpdatedAt,incoming.cardDesignUpdatedAt,incoming.animationDesignUpdatedAt].join('|');
+   const version=[String(m.id),incoming.studioDesignUpdatedAt,incoming.cardDesignUpdatedAt,incoming.animationDesignUpdatedAt].join('|');
    const sponsorVersion=String(incoming.sponsorLibraryUpdatedAt||incoming.sponsorDisplayUpdatedAt||'');if(sponsorVersion!==sponsorLibraryVersion&&!sponsorLibraryRequested)loadSponsorLibrary(sponsorVersion);
    const hasStudio=!!(incoming.hasStudioDesign||incoming.hasCardDesign||incoming.hasAnimationDesign);
    delete incoming.hasStudioDesign;delete incoming.hasCardDesign;delete incoming.hasAnimationDesign;
    if(version!==ownerBroadcastVersion||String(m.userId)!==ownerBroadcastUserId){
-    if(hasStudio)loadOwnerBroadcast(m.userId,version);
+    if(hasStudio)loadOwnerBroadcast(m.userId,version,requested?m.id:'');
     else {ownerBroadcast={};ownerBroadcastVersion=version;ownerBroadcastRequestedVersion=version;ownerBroadcastUserId=String(m.userId);}
    }
    render(m,{...ownerBroadcast,...incoming});

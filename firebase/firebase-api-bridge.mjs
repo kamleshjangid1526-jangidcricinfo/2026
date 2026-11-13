@@ -10,7 +10,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
-const DEFAULT_LIMITS = Object.freeze({ scoreLayouts:20, eventAnimations:20, graphicCards:20, liveScoring:true, publicScoreboard:true, obsScoreLayer:true });
+const DEFAULT_LIMITS = Object.freeze({ scoreLayouts:25, eventAnimations:10, graphicCards:20, liveScoring:true, publicScoreboard:true, obsScoreLayer:true });
 const PLANS = Object.freeze({
   basic:{id:'basic',name:'Basic',daily:100,minDays:1,maxDays:5,tournament:false,label:'Single Match'},
   pro:{id:'pro',name:'Pro',daily:200,minDays:3,maxDays:15,tournament:true,label:'All Features'}
@@ -167,24 +167,39 @@ function emitPublicCache(changedCollection = 'initial') {
     completedCount:visible.filter(m=>m.tournamentId===t.id&&m.status==='finished').length,
     scheduledCount:visible.filter(m=>m.tournamentId===t.id&&m.status==='scheduled').length
   }));
-  const broadcastMap = {};
-  for(const b of publicCache.publicBroadcasts) broadcastMap[b.id]={...b};
-  const broadcastCards = {};
+  const broadcastMap = {}, broadcastsByMatch = {};
+  const broadcastCards = {}, broadcastCardsByMatch = {};
   for(const b of publicCache.publicBroadcasts){
-    broadcastCards[String(b.id)]={uid:String(b.id),ownerUid:String(b.ownerUid||b.id),card:b.card??null,cardId:b.cardId??null,
-      cardAnimation:b.cardAnimation||null,cardAnimations:b.cardAnimations||{},cardDurations:b.cardDurations||{}};
+    const uid=String(b.ownerUid||b.uid||b.id||''),matchId=String(b.matchId||'');
+    if(!uid)continue;
+    if(matchId){
+      const matchKey=uid+':'+matchId;
+      broadcastsByMatch[matchKey]={...b};
+      broadcastCardsByMatch[matchKey]={uid,ownerUid:uid,matchId,card:b.card??null,cardId:b.cardId??null,
+        cardAnimation:b.cardAnimation||null,cardMotion:b.cardMotion||null,cardAnimations:b.cardAnimations||{},cardDurations:b.cardDurations||{}};
+    }else{
+      broadcastMap[uid]={...b};
+      broadcastCards[uid]={uid,ownerUid:uid,card:b.card??null,cardId:b.cardId??null,
+        cardAnimation:b.cardAnimation||null,cardMotion:b.cardMotion||null,cardAnimations:b.cardAnimations||{},cardDurations:b.cardDurations||{}};
+    }
   }
-  for(const card of publicCache.publicBroadcastDesigns.filter(x=>x.kind==='broadcast-card-state')) broadcastCards[String(card.uid||card.ownerUid||card.id)]={...card};
-  const broadcastEvents = {};
+  for(const card of publicCache.publicBroadcastDesigns.filter(x=>x.kind==='broadcast-card-state')){
+    const uid=String(card.uid||card.ownerUid||'');if(!uid)continue;
+    if(card.matchId)broadcastCardsByMatch[uid+':'+String(card.matchId)]={...card};
+    else broadcastCards[uid]={...card};
+  }
+  const broadcastEvents = {}, broadcastEventsByMatch = {};
   const now = Date.now();
   for(const event of [...publicCache.publicBroadcastDesigns.filter(x=>x.kind==='broadcast-event')].sort((a,b)=>dateMs(b.createdAt)-dateMs(a.createdAt))){
-    const uid=String(event.uid||event.ownerUid||'');
+    const uid=String(event.uid||event.ownerUid||''),matchId=String(event.matchId||'');
     const age=now-dateMs(event.createdAt);
-    if(!uid||!event.eventId||!event.event||!dateMs(event.createdAt)||age>30000||age< -60000||broadcastEvents[uid])continue;
-    broadcastEvents[uid]={...event};
+    if(!uid||!event.eventId||!event.event||!dateMs(event.createdAt)||age>30000||age< -60000)continue;
+    if(matchId){const matchKey=uid+':'+matchId;if(!broadcastEventsByMatch[matchKey])broadcastEventsByMatch[matchKey]={...event};}
+    else if(!broadcastEvents[uid])broadcastEvents[uid]={...event};
   }
   for(const [uid,event] of Object.entries(broadcastEvents))broadcastMap[uid]={...(broadcastMap[uid]||{}),...event};
-  window.__JC_EMIT_PUBLIC__?.({activeMatches:visible.filter(x=>x.status==='live'),matches:visible,tournaments,broadcasts:broadcastMap,broadcastCards,broadcastEvents,changedCollection});
+  for(const [matchKey,event] of Object.entries(broadcastEventsByMatch))broadcastsByMatch[matchKey]={...(broadcastsByMatch[matchKey]||{}),...event};
+  window.__JC_EMIT_PUBLIC__?.({activeMatches:visible.filter(x=>x.status==='live'),matches:visible,tournaments,broadcasts:broadcastMap,broadcastsByMatch,broadcastCards,broadcastCardsByMatch,broadcastEvents,broadcastEventsByMatch,changedCollection});
 }
 let publicUnsubs=[];
 function subscribePublic(_onUpdate=emitPublicCache,onError=()=>{}) {
@@ -240,8 +255,13 @@ async function loadBroadcast(uid,full=true) {
   ]);
   return {...b,studioDesign:studio?.value||b.studioDesign||null,cardDesign:card?.value||b.cardDesign||null,animationDesign:animation?.value||b.animationDesign||null,sponsorLibrary:sponsors?.value||null};
 }
-async function loadPublicBroadcast(uid) {
-  const snap = await getDoc(publicDoc('publicBroadcasts', uid));
+function safeBroadcastMatchKey(matchId){
+  return String(matchId||'').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,110);
+}
+async function loadPublicBroadcast(uid,matchId='') {
+  const safeMatch=safeBroadcastMatchKey(matchId);
+  const snap=safeMatch?await getDoc(publicDoc('publicBroadcasts',uid+'_match_'+safeMatch)):await getDoc(publicDoc('publicBroadcasts',uid));
+  // A requested Match never inherits another Match's global card or event state.
   if (!snap.exists()) return {};
   const base = snap.data() || {};
   const [studio, card, animation, designRows] = await Promise.all([
@@ -294,7 +314,10 @@ async function savePublicStudioDesign(uid, design) {
   await batch.commit();
 }
 async function savePublicBroadcast(uid, broadcast) {
-  const previousSnap = await getDoc(publicDoc('publicBroadcasts', uid));
+  const matchId=cleanText(broadcast.matchId,120);
+  const safeMatch=safeBroadcastMatchKey(matchId);
+  const scopeId=safeMatch?uid+'_match_'+safeMatch:uid;
+  const previousSnap = await getDoc(publicDoc('publicBroadcasts', scopeId));
   const previous = previousSnap.exists() ? previousSnap.data() : {};
   const keys = ['studioDesign','cardDesign','animationDesign'];
   for (const key of keys) if (broadcast[key] !== undefined) {
@@ -304,13 +327,17 @@ async function savePublicBroadcast(uid, broadcast) {
       { ownerUid: uid, uid, kind: category, value: cleanData(broadcast[key]), updatedAt: nowIso() }, { merge: true });
   }
   const has = key => broadcast[key] !== undefined ? !!broadcast[key] : !!previous[`has${key[0].toUpperCase()}${key.slice(1)}`];
-  const cardState = { ownerUid:uid, uid, card:broadcast.card!==undefined?broadcast.card:(previous.card||null),
-    cardId:broadcast.cardId!==undefined?broadcast.cardId:(previous.cardId||null),
+  const cardState = { ownerUid:uid, uid, matchId:matchId||null,
+    card:broadcast.card!==undefined?broadcast.card:(previous.card??null),
+    cardId:broadcast.cardId!==undefined?broadcast.cardId:(previous.cardId??null),
     cardAnimation:broadcast.cardAnimation!==undefined?broadcast.cardAnimation:(previous.cardAnimation||null),
+    cardMotion:broadcast.cardMotion!==undefined?broadcast.cardMotion:(previous.cardMotion||null),
     cardAnimations:broadcast.cardAnimations!==undefined?broadcast.cardAnimations:(previous.cardAnimations||{}),
     cardDurations:broadcast.cardDurations!==undefined?broadcast.cardDurations:(previous.cardDurations||{}), updatedAt:nowIso() };
-  await setDoc(publicDoc('publicBroadcastDesigns',uid+'_broadcast_card_state'),cleanData({...cardState,kind:'broadcast-card-state'}),{merge:true});
-  const summary = { ownerUid: uid, updatedAt: nowIso(), layer: broadcast.layer || previous.layer || 1, color: broadcast.color || previous.color || 1,
+  await setDoc(publicDoc('publicBroadcastDesigns',scopeId+'_broadcast_card_state'),cleanData({...cardState,kind:'broadcast-card-state'}),{merge:true});
+  const summary = { ownerUid: uid, uid, matchId:matchId||null, updatedAt: nowIso(),
+    layer: broadcast.layer || previous.layer || 1, layoutGroup:broadcast.layoutGroup||previous.layoutGroup||null,
+    color: broadcast.color || previous.color || 1,
     hasStudioDesign: has('studioDesign'), hasCardDesign: has('cardDesign'), hasAnimationDesign: has('animationDesign'),
     studioDesignUpdatedAt: broadcast.studioDesignUpdatedAt || previous.studioDesignUpdatedAt || null,
     cardDesignUpdatedAt: broadcast.cardDesignUpdatedAt || previous.cardDesignUpdatedAt || null,
@@ -318,8 +345,12 @@ async function savePublicBroadcast(uid, broadcast) {
     sponsorLibraryUpdatedAt: broadcast.sponsorLibraryUpdatedAt || previous.sponsorLibraryUpdatedAt || null,
     sponsorDisplay: broadcast.sponsorDisplay !== undefined ? broadcast.sponsorDisplay : previous.sponsorDisplay || null,
     event: broadcast.event !== undefined ? broadcast.event : previous.event || null,
-    card: broadcast.card !== undefined ? broadcast.card : previous.card || null,
-    cardId: broadcast.cardId !== undefined ? broadcast.cardId : previous.cardId || null,
+    card: broadcast.card !== undefined ? broadcast.card : previous.card ?? null,
+    cardId: broadcast.cardId !== undefined ? broadcast.cardId : previous.cardId ?? null,
+    cardAnimation: broadcast.cardAnimation !== undefined ? broadcast.cardAnimation : previous.cardAnimation || null,
+    cardMotion: broadcast.cardMotion !== undefined ? broadcast.cardMotion : previous.cardMotion || null,
+    cardAnimations: broadcast.cardAnimations !== undefined ? broadcast.cardAnimations : previous.cardAnimations || {},
+    cardDurations: broadcast.cardDurations !== undefined ? broadcast.cardDurations : previous.cardDurations || {},
     animation: broadcast.animation !== undefined ? broadcast.animation : previous.animation || null,
     eventStyle: broadcast.eventStyle !== undefined ? broadcast.eventStyle : previous.eventStyle || null,
     eventAnimations: broadcast.eventAnimations !== undefined ? broadcast.eventAnimations : previous.eventAnimations || {},
@@ -330,10 +361,8 @@ async function savePublicBroadcast(uid, broadcast) {
     eventPlayer: broadcast.event===null ? null : broadcast.eventPlayer !== undefined ? broadcast.eventPlayer : previous.eventPlayer || null,
     teamMilestone: broadcast.event==='TEAM 50'||broadcast.event==='TEAM 100' ? (broadcast.teamMilestone||null) : broadcast.event===null ? null : (previous.teamMilestone||null),
     resultDetails: broadcast.event==='RESULT' ? (broadcast.resultDetails||null) : broadcast.event===null ? null : (previous.resultDetails||null),
-    eventId: broadcast.eventId !== undefined ? broadcast.eventId : previous.eventId || null,
-    matchId: broadcast.matchId !== undefined ? broadcast.matchId : previous.matchId || null,
-    selectedLayout: broadcast.selectedLayout || previous.selectedLayout || null };
-  await setDoc(publicDoc('publicBroadcasts', uid), cleanData(summary), { merge: true });
+    eventId: broadcast.eventId !== undefined ? broadcast.eventId : previous.eventId || null };
+  await setDoc(publicDoc('publicBroadcasts',scopeId), cleanData(summary), { merge: true });
 }
 async function saveLargeLibrary(uid,key,value) {
   const map={studio:['studioTemplates','templates'],card:['cardTemplates','cardTemplates'],animation:['animationTemplates','animationTemplates'],sponsors:['sponsors','sponsors']};
@@ -455,7 +484,7 @@ async function handleApi(url,init={}) {
     const publicTournament=path.match(/^\/api\/public\/tournament\/([^/]+)$/);
     if(publicTournament&&method==='GET'){const result=await getPublicTournament(decodeURIComponent(publicTournament[1]));return result?{status:200,body:{ok:true,...result}}:fail(404,'यह Tournament प्रकाशित नहीं है।');}
     const publicBroadcast=path.match(/^\/api\/public\/broadcast\/([^/]+)$/);
-    if(publicBroadcast&&method==='GET'){const uid=decodeURIComponent(publicBroadcast[1]);const b=await loadPublicBroadcast(uid);return ok({broadcast:b,version:b.updatedAt||null});}
+    if(publicBroadcast&&method==='GET'){const uid=decodeURIComponent(publicBroadcast[1]),matchId=cleanText(url.searchParams.get('match'),120);const b=await loadPublicBroadcast(uid,matchId);return ok({broadcast:b,version:b.updatedAt||null});}
     if(path==='/api/admin/state'&&method==='GET'){const {user,profile}=await requireAdmin();return {status:200,body:await adminState(user.uid,profile)};}
     if(path==='/api/admin/studio-library'&&method==='GET'){await requireAdmin();return ok({studioDesign:await getGlobalLibrary('studio')});}
     if(path==='/api/admin/studio-library'&&method==='POST'){
@@ -479,7 +508,7 @@ async function handleApi(url,init={}) {
       if(!teamId)return fail(405,'यह Team action उपलब्ध नहीं है।');
       const team=await teamDetails(user.uid,teamId);if(!team)return fail(404,'Team नहीं मिली।');
       if(playerId&&method==='PUT'){const player=(team.players||[]).find(p=>String(p.id)===playerId);if(!player)return fail(404,'Player नहीं मिला।');Object.assign(player,{name:cleanText(body.name,80)||player.name,role:cleanText(body.role,30)||player.role});team.updatedAt=nowIso();await saveOwner(user.uid,'teams',teamId,team);const tr=await listOwner(user.uid,'tournaments');await publishTeam(teamId,user.uid,tr.filter(t=>(t.teamIds||[]).includes(teamId)).map(t=>t.id));return ok({team});}
-      if(playerId&&method==='DELETE'){team.players=(team.players||[]).filter(p=>String(p.id)!==playerId);team.updatedAt=nowIso();await saveOwner(user.uid,'teams',teamId,team);return ok({team});}
+      if(playerId&&method==='DELETE'){team.players=(team.players||[]).filter(p=>String(p.id)!==playerId);team.updatedAt=nowIso();await saveOwner(user.uid,'teams',teamId,team);const tr=await listOwner(user.uid,'tournaments');await publishTeam(teamId,user.uid,tr.filter(t=>(t.teamIds||[]).includes(teamId)).map(t=>t.id));return ok({team});}
       if(!playerId&&method==='PUT'){if(body.name)team.name=cleanText(body.name,80);team.updatedAt=nowIso();await saveOwner(user.uid,'teams',teamId,team);const tr=await listOwner(user.uid,'tournaments');await publishTeam(teamId,user.uid,tr.filter(t=>(t.teamIds||[]).includes(teamId)).map(t=>t.id));return ok({team});}
       if(!playerId&&method==='DELETE'){const matches=await listOwner(user.uid,'matches');if(matches.some(m=>m.status==='live'&&(m.teamA===teamId||m.teamB===teamId)))return fail(409,'इस Team का Match अभी LIVE है। पहले Match समाप्त करें।');await deleteDoc(ownerDoc(user.uid,'teams',teamId));const ts=await listOwner(user.uid,'tournaments');for(const t of ts){t.teamIds=(t.teamIds||[]).filter(x=>x!==teamId);delete t.teamGroups?.[teamId];await saveOwner(user.uid,'tournaments',t.id,t);await refreshPublicTournament(user.uid,t.id);}return ok({deletedId:teamId});}
       if(!playerId&&method==='POST'){const name=cleanText(body.name,80);if(!name)return fail(400,'Player का नाम लिखें।');if((team.players||[]).length>=100)return fail(400,'एक Team में अधिकतम 100 Players रख सकते हैं।');const player={id:rid('p_'),name,role:cleanText(body.role,30)||'batsman',captain:!!body.captain,viceCaptain:!!body.viceCaptain};if(player.captain)team.players=team.players.map(p=>({...p,captain:false}));if(player.viceCaptain)team.players=team.players.map(p=>({...p,viceCaptain:false}));team.players.push(player);team.updatedAt=nowIso();await saveOwner(user.uid,'teams',teamId,team);const ts=await listOwner(user.uid,'tournaments');await publishTeam(teamId,user.uid,ts.filter(t=>(t.teamIds||[]).includes(teamId)).map(t=>t.id));return ok({team,player});}
@@ -516,19 +545,22 @@ async function handleApi(url,init={}) {
       const eventId=cleanText(body.eventId,100),eventName=cleanText(body.event,40).toUpperCase(),matchId=cleanText(body.matchId,100);
       if(!eventId||!eventName||!matchId)return fail(400,'Broadcast Event में eventId, event और matchId जरूरी हैं।');
       const safeEventId=eventId.replace(/[^a-zA-Z0-9_-]/g,'_');
-      if(!safeEventId)return fail(400,'Broadcast Event ID सही नहीं है।');
+      const safeMatchId=matchId.replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,110);
+      if(!safeEventId||!safeMatchId)return fail(400,'Broadcast Event ID या Match ID सही नहीं है।');
       const record={ownerUid:uid,uid,eventId,event:eventName,matchId,eventAt:Number(body.eventAt)||Date.now(),createdAt:nowIso(),
         eventStyle:cleanText(body.eventStyle,32)||'generic',animation:cleanText(body.animation,40)||'zoom',
         duration:Math.max(300,Math.min(10000,Number(body.duration)||2200)),
         eventAnimations:body.eventAnimations||{},eventDurations:body.eventDurations||{},
         eventPlayer:body.eventPlayer||null,wicketDetails:body.wicketDetails||null,
         teamMilestone:body.teamMilestone||null,resultDetails:body.resultDetails||null};
-      await setDoc(publicDoc('publicBroadcastDesigns',uid+'_broadcast_event_'+safeEventId),cleanData({...record,kind:'broadcast-event'}),{merge:true});
+      await setDoc(publicDoc('publicBroadcastDesigns',uid+'_broadcast_event_'+safeMatchId+'_'+safeEventId),cleanData({...record,kind:'broadcast-event'}),{merge:true});
       return ok({eventId,createdAt:record.createdAt});
     }
     if(path==='/api/broadcast'&&method==='POST'){
       const {user,profile}=await requireUser();gate(profile,'basic');const uid=user.uid;
-      const b={...(await getOwner(uid,'broadcasts','current')||{}),...body,updatedAt:nowIso()};
+      const matchId=cleanText(body.matchId,120),safeMatch=safeBroadcastMatchKey(matchId);
+      const storageId=safeMatch?'match_'+safeMatch:'current';
+      const b={...(await getOwner(uid,'broadcasts',storageId)||{}),...body,matchId:matchId||null,updatedAt:nowIso()};
       for(const key of ['studioDesign','cardDesign','animationDesign','sponsorLibrary']) {
         if(body[key]!==undefined) {
           const coll=key==='studioDesign'?'studio':key==='cardDesign'?'card':key==='animationDesign'?'animation':'sponsors';
@@ -537,7 +569,7 @@ async function handleApi(url,init={}) {
       }
       const publicPayload={...b};
       for(const key of ['studioDesign','cardDesign','animationDesign','sponsorLibrary']) delete b[key];
-      await saveOwner(uid,'broadcasts','current',b);
+      await saveOwner(uid,'broadcasts',storageId,b);
       await savePublicBroadcast(uid,publicPayload);
       return ok({});
     }

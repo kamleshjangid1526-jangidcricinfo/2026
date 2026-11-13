@@ -28,3 +28,38 @@
  .tm-tabs{border-radius:12px}
  .tm-tabs button{flex:0 0 auto!important}
 }
+
+/* Compact Team cards with a dedicated, editable player-roster view. */
+.tm-team-grid-compact{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:stretch}
+.tm-team-card-compact{padding:0;overflow:hidden}
+.tm-team-open{display:flex;align-items:center;gap:12px;width:100%;min-height:94px;padding:14px;border:0;background:linear-gradient(135deg,#102a43,#0c1c30);color:#eff8ff;text-align:left;cursor:pointer}
+.tm-team-open:hover,.tm-team-open:focus-visible{background:linear-gradient(135deg,#17466b,#102b48);outline:2px solid #51caff;outline-offset:-2px}
+.tm-team-open>img{width:48px;height:48px;flex:0 0 48px;object-fit:contain;border-radius:12px;background:#ffffff12;padding:4px}
+.tm-team-open>.tm-team-emblem{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:12px;background:#ffffff12;font-size:24px}
+.tm-team-open-copy{display:grid;gap:5px;min-width:0;flex:1}
+.tm-team-open-copy b{font-size:15px;overflow-wrap:anywhere}
+.tm-team-open-copy small{font-size:11px;color:#a8c4d9}
+.tm-team-arrow{font-size:10px;font-weight:900;color:#82d9ff;white-space:nowrap}
+.tm-team-detail{display:grid;gap:14px}
+.tm-team-detail-head{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px}
+.tm-team-identity{display:flex;align-items:center;gap:12px;min-width:0;padding:12px;border-radius:14px;background:linear-gradient(135deg,#102c46,#0a1d31);border:1px solid #2c4f6d}
+.tm-team-identity img,.tm-team-identity .tm-team-emblem{width:54px;height:54px;flex:0 0 54px;object-fit:contain;border-radius:12px;background:#ffffff10;padding:5px}
+.tm-team-identity h3{margin:2px 0;font-size:18px;overflow-wrap:anywhere}
+.tm-team-identity small{color:#a6c1d6;font-size:11px}
+.tm-roster-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.tm-roster-head h4{margin:0 0 4px}.tm-roster-head p{margin:0;font-size:11px;color:#9bb2c6}
+.tm-roster-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px}
+.tm-roster-player{display:flex;align-items:center;gap:10px;min-width:0;padding:10px;border:1px solid #274b66;border-radius:12px;background:#0d2236}
+.tm-roster-number{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border-radius:9px;background:#173a57;color:#89ddff;font-size:11px;font-weight:900}
+.tm-roster-copy{display:grid;gap:3px;min-width:0;flex:1}
+.tm-roster-copy b{font-size:13px;overflow-wrap:anywhere}
+.tm-roster-copy small{font-size:10px;color:#a5bdd0;text-transform:capitalize}
+.tm-roster-actions{display:flex;gap:5px}
+.tm-roster-actions .miniBtn{padding:6px 8px;font-size:10px}
+@media(max-width:600px){
+ .tm-team-grid-compact{grid-template-columns:minmax(0,1fr)}
+ .tm-team-detail-head{grid-template-columns:minmax(0,1fr)}
+ .tm-team-identity h3{font-size:16px}
+ .tm-roster-list{grid-template-columns:minmax(0,1fr)}
+ .tm-roster-head{align-items:flex-start;flex-direction:column}
+}
