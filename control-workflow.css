@@ -309,3 +309,11 @@ body:has(#scoring:not(.hidden)){overflow:hidden}
 #scoring .jcFieldExtra{font-size:8px;line-height:1.1;color:#9ab3c7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #scoring .jcFieldExtra span{color:#6f91a8;padding:0 2px}
 #scoring .jcBowlingTeam{color:#e4c79e}
+
+/* Scoring match picker and after-match card workspace. */
+#scoring .liveMatchPicker{position:relative;z-index:1}
+#scoring .liveMatchPickerCard{box-shadow:0 8px 20px #0002}
+#scoring .scoreActionGrid.disabledScoreGrid{opacity:.56;filter:saturate(.5);pointer-events:none}
+#scoring .scoringCardPanel{position:relative;z-index:2}
+#scoring .scoringCardPanel[open] .scoringCardSummary{color:#d7f5ff}
+#scoring .scoreCardAction:disabled{opacity:.42;cursor:not-allowed}
