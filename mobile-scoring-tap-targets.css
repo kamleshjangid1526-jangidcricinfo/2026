@@ -77,3 +77,14 @@
   body.jc-scoring-view #scoring .scoringCardSummary{flex-basis:34px!important;min-height:34px!important}
   body.jc-scoring-view #scoring .powerplayControl button{min-height:26px!important}
 }
+
+
+/* Touch-first activation for the dedicated mobile scoring desk. */
+@media(max-width:700px){
+  body.jc-scoring-view #scoring #scoreActionGrid button{
+    touch-action:manipulation!important;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+}
