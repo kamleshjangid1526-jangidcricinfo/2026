@@ -455,7 +455,9 @@
     if(nextInnings){const canStart=m.status==='live'&&Number(m.inningsNo||1)===1&&!m.awaitingMatchFinish;nextInnings.disabled=!canStart;nextInnings.setAttribute('aria-disabled',String(!canStart));nextInnings.title=canStart?(m.awaitingNextInnings||m.awaitingInningsSetup?'दूसरी पारी की टीम और खिलाड़ी चुनें':'पहली पारी अभी जारी है — दबाने पर इसे समाप्त करके दूसरी पारी शुरू होगी'):'दूसरी पारी में Finish Match का उपयोग करें';nextInnings.textContent=(m.awaitingNextInnings||m.awaitingInningsSetup)?'▶ Set Up Next Innings':'▶ Start Next Innings';}
     if(resume){const pendingBatter=!!(i.awaitingNewBatter||i._replaceSlot),pendingBowler=!!i.awaitingBowler;const showResume=m.status==='live'&&(pendingBatter||pendingBowler);resume.style.display=showResume?'inline-flex':'none';resume.textContent=pendingBatter?'Select New Batter':pendingBowler?'Select Next Bowler':'Resume Match Setup';resume.disabled=false;}
     const activeCard=STATE?.broadcast?.card?.type||null;
-    document.querySelectorAll('[data-card-button]').forEach(b=>{const selected=!!activeCard&&b.dataset.cardButton===activeCard;b.disabled=m.status!=='live';b.classList.toggle('cardOn',selected);b.setAttribute('aria-pressed',String(selected));});
+    // Card controls stay enabled after a completed match so commentators can
+    // display scorecard details for a short post-match wrap-up.
+    document.querySelectorAll('[data-card-button]').forEach(b=>{const selected=!!activeCard&&b.dataset.cardButton===activeCard;b.disabled=false;b.classList.toggle('cardOn',selected);b.setAttribute('aria-pressed',String(selected));});
     document.querySelectorAll('[data-powerplay]').forEach(b=>{const selected=String(b.dataset.powerplay||'').toUpperCase()===pp;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected));});
     ['manualStrikeChange','changeBatter','changeBowler','retiredHurt','undoBall'].forEach(id=>{const b=el(id);if(b)b.disabled=m.status!=='live'||!isOpen;});
   }
@@ -555,8 +557,15 @@
       const scoreForTeam=teamId=>{const inn=inningsForResult.find(x=>String(x?.battingId)===String(teamId));return inn?`${Number(inn.score||0)}/${Number(inn.wickets||0)} (${fmtOvers(inn.balls||0)})`:''};
       const winnerName=finished.resultType==='winner'?(String(finished.winnerTeamId)===String(finished.teamA)?(finished.teamAName||'Team A'):(finished.teamBName||'Team B')):'';
       const resultDetails={winnerName,result:finished.result||'Match complete',resultType:finished.resultType||resultType,teamAName:finished.teamAName||'Team A',teamBName:finished.teamBName||'Team B',teamAScore:scoreForTeam(finished.teamA),teamBScore:scoreForTeam(finished.teamB)};
-       MATCH=null;await fireEvent('RESULT',{eventStyle:'result',resultDetails,card:null,cardId:Date.now(),matchId:finished.id}).catch(()=>{});
-       await refresh();showPage('dashboard');if(!options.automatic)alert('मैच सफलतापूर्वक समाप्त हुआ। परिणाम और स्कोरकार्ड सेव हो गए हैं।');
+       await fireEvent('RESULT',{eventStyle:'result',resultDetails,card:null,cardId:Date.now(),matchId:finished.id}).catch(()=>{});
+      // Keep the finished scorecard on the Scoring page. Ball-entry controls are
+      // disabled by renderScoring, while the broadcast card buttons remain available.
+      await refresh();
+      MATCH=finished;
+      if(STATE){STATE.activeMatch=null;STATE.matches||=[];const ix=STATE.matches.findIndex(x=>String(x.id)===String(finished.id));if(ix>=0)STATE.matches[ix]=finished;else STATE.matches.push(finished);}
+      renderScoring();
+      showPage('scoring');
+      if(!options.automatic)alert('मैच सफलतापूर्वक समाप्त हुआ। Scoring स्क्रीन पर Cards उपलब्ध हैं; रन और विकेट की scoring बंद है।');
       return res;
     } catch(err) { MATCH=old;if(STATE)STATE.activeMatch=clone(old);renderScoring();alert(`Match finish नहीं हुआ: ${err.message}`);throw err; }
   }
