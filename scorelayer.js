@@ -463,7 +463,7 @@ function renderEvent(b,matchId){
   const batterName=resolveEventBatterName(b,eventName);
   if(batterName){const name=document.createElement('div');name.className='eventPlayerName jcEventPlayerNameOverlay';name.textContent=batterName;el.appendChild(name);}
  }
- el.dataset.eventType=eventName.toLowerCase().replace(/\s+/g,'-');el.style.animationDuration=`${b.duration||2200}ms`;el.style.display='grid';const inner=el.querySelector('.eventInner,.jlStudioOverlayRoot,.incomingPlayerToast');if(inner)inner.style.animationDuration=`${b.duration||2200}ms`;
+ el.dataset.eventType=['NO BALL','FREE HIT'].includes(eventName)?'free-hit':eventName.toLowerCase().replace(/\s+/g,'-');el.style.animationDuration=`${b.duration||2200}ms`;el.style.display='grid';const inner=el.querySelector('.eventInner,.jlStudioOverlayRoot,.incomingPlayerToast');if(inner)inner.style.animationDuration=`${b.duration||2200}ms`;
  el._hide=setTimeout(()=>clearEventVisual(el,cardEl,true),Math.max(900,Number(b.duration||2200)-50));
 }
 function renderCard(b,m){
@@ -477,7 +477,7 @@ function renderCard(b,m){
   el.classList.remove('isVisible');el.style.display='none';el.innerHTML='';el.removeAttribute('data-anim');el.dataset.cardMarkup='';el.dataset.cardId='';lastCardId=null;document.body.classList.remove('cardActive');flushPendingSponsor();return;
  }
  hideSponsorLayer();
- const type=card.type||'batter',newCard=currentCardId!==String(lastCardId??''),anim=b.cardAnimations?.[type]||b.cardAnimation||'zoom';
+ const type=card.type||'batter',newCard=currentCardId!==String(lastCardId??''),anim=b.cardAnimations?.[type]||b.cardMotion||b.cardAnimation||'soft-pop';
  const cardTemplate=selectedStudioOverlay(b.cardDesign||b.studioDesign,'card');
  const custom=cardTemplate?studioOverlayTemplateMarkup(cardTemplate,m,{kind:'card',card}):cardMarkup(card,m);
  const duration=Number(b.cardDurations?.[type]||b.cardDuration||1800);
@@ -508,16 +508,21 @@ function renderCard(b,m){
 }
 
 function render(m,b){if(!m?.activeInnings)return;latestMatch=m;latestBroadcast=b||{};renderBar(m,b||{});renderCard(b||{},m);renderEvent(b||{},m.id);processSponsorBroadcast(m,b||{});lastRenderMatchId=m.id;}
-async function loadOwnerBroadcast(userId,version){
+async function loadOwnerBroadcast(userId,version,matchId=''){
  if(!userId)return;
- if(ownerBroadcastUserId===String(userId)&&ownerBroadcastRequestedVersion===String(version||''))return;
- ownerBroadcastUserId=String(userId);ownerBroadcastRequestedVersion=String(version||'');
+ const requestKey=String(matchId||'')+'|'+String(version||'');
+ if(ownerBroadcastUserId===String(userId)&&ownerBroadcastRequestedVersion===requestKey)return;
+ ownerBroadcastUserId=String(userId);ownerBroadcastRequestedVersion=requestKey;
  try{
-  const response=await fetch(`/api/public/broadcast/${encodeURIComponent(userId)}?v=${encodeURIComponent(version||'')}`,{cache:'no-store'});
+  const response=await fetch(`/api/public/broadcast/${encodeURIComponent(userId)}?match=${encodeURIComponent(matchId||'')}&v=${encodeURIComponent(version||'')}`,{cache:'no-store'});
   if(!response.ok)throw new Error(`Broadcast config request failed (${response.status})`);
   const payload=await response.json();
-  if(payload.ok){ownerBroadcast=payload.broadcast||{};ownerBroadcastVersion=[ownerBroadcast.studioDesignUpdatedAt,ownerBroadcast.cardDesignUpdatedAt,ownerBroadcast.animationDesignUpdatedAt].join('|');if(latestMatch&&String(latestMatch.userId)===String(userId))render(latestMatch,{...ownerBroadcast,...latestSSEBroadcast});}
- }catch(error){console.warn('Could not load uploaded Score Layer layout:',error);ownerBroadcastRequestedVersion='';}
+  if(payload.ok){
+   ownerBroadcast=payload.broadcast||{};
+   ownerBroadcastVersion=[String(matchId||''),ownerBroadcast.studioDesignUpdatedAt,ownerBroadcast.cardDesignUpdatedAt,ownerBroadcast.animationDesignUpdatedAt].join('|');
+   if(latestMatch&&String(latestMatch.userId)===String(userId)&&String(latestMatch.id)===String(matchId))render(latestMatch,{...ownerBroadcast,...latestSSEBroadcast});
+  }
+ }catch(error){console.warn('Could not load match-specific Score Layer layout:',error);ownerBroadcastRequestedVersion='';}
 }
 function boot(){
  const es=new EventSource('/events');
@@ -531,20 +536,28 @@ function boot(){
      ?matchPool.find(x=>String(x.id)===String(requested)&&['live','finished'].includes(x.status)&&(!owner||x.userId===owner))
      :matchPool.find(x=>x.status==='live'&&(!owner||x.userId===owner))
       ||matchPool.find(x=>x.status==='finished'&&(!owner||x.userId===owner)&&d.broadcasts?.[x.userId]?.event==='RESULT'&&String(d.broadcasts?.[x.userId]?.matchId||'')===String(x.id));
-   if(!m){const bar=document.getElementById('scoreBar');if(requested)bar.innerHTML='';return;}
+   if(!m){
+    const bar=document.getElementById('scoreBar');if(requested)bar.innerHTML='';
+    const card=document.getElementById('cardLayer'),event=document.getElementById('eventLayer'),sponsor=document.getElementById('sponsorLayer');
+    if(card){card.classList.remove('isVisible');card.style.display='none';card.innerHTML='';}
+    if(event){clearTimeout(event._hide);event.className='eventLayer';event.style.display='none';event.innerHTML='';}
+    if(sponsor){sponsor.classList.remove('isVisible');sponsor.style.display='none';sponsor.innerHTML='';}
+    latestMatch=null;latestSSEBroadcast={};ownerBroadcast={};return;
+   }
    latestMatch=m;
-   const incoming={...(d.broadcasts?.[m.userId]||{})};
-   const cardState=d.broadcastCards?.[m.userId];
-   if(cardState){incoming.card=cardState.card??null;incoming.cardId=cardState.cardId??incoming.cardId;incoming.cardAnimation=cardState.cardAnimation||incoming.cardAnimation;incoming.cardAnimations=cardState.cardAnimations||incoming.cardAnimations;incoming.cardDurations=cardState.cardDurations||incoming.cardDurations;}
-   const durableEvent=d.broadcastEvents?.[m.userId];
-   if(durableEvent&&String(durableEvent.matchId||'')===String(m.id))Object.assign(incoming,durableEvent);
+   const matchKey=String(m.userId)+':'+String(m.id);
+   const incoming={...(d.broadcastsByMatch?.[matchKey]||d.broadcasts?.[m.userId]||{})};
+   const cardState=d.broadcastCardsByMatch?.[matchKey]||d.broadcastCards?.[m.userId];
+   if(cardState){incoming.card=cardState.card??null;incoming.cardId=cardState.cardId??incoming.cardId;incoming.cardAnimation=cardState.cardAnimation||incoming.cardAnimation;incoming.cardMotion=cardState.cardMotion||incoming.cardMotion;incoming.cardAnimations=cardState.cardAnimations||incoming.cardAnimations;incoming.cardDurations=cardState.cardDurations||incoming.cardDurations;}
+   const durableEvent=d.broadcastEventsByMatch?.[matchKey]||d.broadcastEvents?.[m.userId];
+   if(durableEvent&&String(durableEvent.matchId||m.id)===String(m.id))Object.assign(incoming,durableEvent);
    latestSSEBroadcast=incoming;
-   const version=[incoming.studioDesignUpdatedAt,incoming.cardDesignUpdatedAt,incoming.animationDesignUpdatedAt].join('|');
+   const version=[String(m.id),incoming.studioDesignUpdatedAt,incoming.cardDesignUpdatedAt,incoming.animationDesignUpdatedAt].join('|');
    const sponsorVersion=String(incoming.sponsorLibraryUpdatedAt||incoming.sponsorDisplayUpdatedAt||'');if(sponsorVersion!==sponsorLibraryVersion&&!sponsorLibraryRequested)loadSponsorLibrary(sponsorVersion);
    const hasStudio=!!(incoming.hasStudioDesign||incoming.hasCardDesign||incoming.hasAnimationDesign);
    delete incoming.hasStudioDesign;delete incoming.hasCardDesign;delete incoming.hasAnimationDesign;
    if(version!==ownerBroadcastVersion||String(m.userId)!==ownerBroadcastUserId){
-    if(hasStudio)loadOwnerBroadcast(m.userId,version);
+    if(hasStudio)loadOwnerBroadcast(m.userId,version,m.id);
     else {ownerBroadcast={};ownerBroadcastVersion=version;ownerBroadcastRequestedVersion=version;ownerBroadcastUserId=String(m.userId);}
    }
    render(m,{...ownerBroadcast,...incoming});
