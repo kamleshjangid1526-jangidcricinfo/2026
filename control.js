@@ -134,6 +134,27 @@ function showAppRuntimeNotice(message){
  let box=$('appRuntimeNotice');if(!box){box=document.createElement('div');box.id='appRuntimeNotice';box.className='notice';box.setAttribute('role','status');main.prepend(box);}
  box.textContent=String(message||'इस सेक्शन को लोड करने में समस्या आई। दूसरे सेक्शन इस्तेमाल कर सकते हैं।');
 }
+let controlBroadcastMatchId='';
+async function loadBroadcastForControlMatch(matchId){
+ const id=String(matchId||''),uid=String(STATE?.user?.id||'');
+ if(!id||!uid){STATE.broadcast={};controlBroadcastMatchId='';return;}
+ const requestKey=uid+':'+id;
+ if(controlBroadcastMatchId===requestKey)return;
+ controlBroadcastMatchId=requestKey;
+ try{
+  const response=await fetch(`/api/public/broadcast/${encodeURIComponent(uid)}?match=${encodeURIComponent(id)}`,{cache:'no-store'});
+  const payload=await response.json();
+  if(!response.ok||!payload.ok)throw new Error(payload.error||'Match graphics could not load');
+  if(String(MATCH?.id||'')!==id||String(STATE?.user?.id||'')!==uid)return;
+  STATE.broadcast={...(payload.broadcast||{}),matchId:id};
+  activeCardType=STATE.broadcast.card?.type||null;
+  syncCardButtonState(activeCardType);
+  renderScoring();
+ }catch(error){
+  console.warn('Could not load saved graphics for selected Match:',error);
+  if(String(MATCH?.id||'')===id)STATE.broadcast={matchId:id};
+ }
+}
 function showPage(id){
  if(scoringPageLocked&&id!=='scoring'){showScoringLockNotice('Scoring LOCKED है। पहले ऊपर Unlock दबाएँ।');return;}
  if(!STATE?.user){setAuthView(false);return;}
@@ -149,7 +170,12 @@ function showPage(id){
   if(id==='teams')renderTeams();
   if(id==='tournament')renderTournament();
   if(id==='match')initMatchPage();
-  if(id==='scoring'){renderLiveMatchPicker();renderScoring();}
+  if(id==='scoring'){
+   renderLiveMatchPicker();
+   renderScoring();
+   if(MATCH?.id)void loadBroadcastForControlMatch(MATCH.id);
+   else {controlBroadcastMatchId='';STATE.broadcast={};activeCardType=null;syncCardButtonState(null);}
+  }
   if(id==='graphics')renderGraphics();
  }catch(err){console.error(`Could not render ${id} page`,err);showAppRuntimeNotice(`पेज लोड करने में समस्या: ${err.message||err}. बाकी Control Board खुला रहेगा।`);}
  window.scrollTo({top:0,behavior:'smooth'});
@@ -157,7 +183,7 @@ function showPage(id){
 
 document.addEventListener('click',async e=>{
  const openScore=e.target.closest('[data-open-scoring-match]');
- if(openScore){e.preventDefault();const id=String(openScore.dataset.openScoringMatch||'');const found=(STATE?.matches||[]).find(m=>String(m.id)===id&&m.status==='live'&&String(m.userId)===String(STATE?.user?.id));if(!found)return alert('यह Live Match अब उपलब्ध नहीं है।');MATCH=JSON.parse(JSON.stringify(found));STATE.activeMatch=MATCH;showPage('scoring');return;}
+ if(openScore){e.preventDefault();const id=String(openScore.dataset.openScoringMatch||'');const found=(STATE?.matches||[]).find(m=>String(m.id)===id&&['live','finished'].includes(m.status)&&String(m.userId)===String(STATE?.user?.id));if(!found)return alert('यह Match अब उपलब्ध नहीं है।');MATCH=JSON.parse(JSON.stringify(found));STATE.activeMatch=found.status==='live'?MATCH:null;controlBroadcastMatchId='';showPage('scoring');return;}
  const copyLayer=e.target.closest('[data-copy-scorelayer]');
  if(copyLayer){e.preventDefault();const m=(STATE?.matches||[]).find(x=>String(x.id)===String(copyLayer.dataset.copyScorelayer));if(!m)return;const url=scoreLayerUrlFor(m);try{await navigator.clipboard.writeText(url);copyLayer.textContent='Copied';setTimeout(()=>{if(copyLayer.isConnected)copyLayer.textContent='Copy OBS URL'},1300);}catch{window.prompt('OBS URL copy करें:',url);}return;}
  const g=e.target.closest('[data-go]');if(g){e.preventDefault();showPage(g.dataset.go);}
@@ -477,7 +503,7 @@ async function publishEventNow(event,meta={}){
   clearTimeout(broadcastEventClearTimer);
   await saveBroadcast({card:null,cardId:Date.now(),event,eventStyle:eventStyle(event),animation:EVENT_ANIM_MAP[event]||EVENT_THEME_NAMES[0],duration,...meta,matchId:MATCH?.id||meta.matchId||null,eventAt:Date.now()});
   const publishedEventId=STATE?.broadcast?.eventId;
-  await api('/api/broadcast/event',{method:'POST',body:JSON.stringify({eventId:String(publishedEventId||Date.now()),event,matchId:String(MATCH?.id||meta.matchId||''),eventAt:Date.now(),eventStyle:eventStyle(event),animation:EVENT_ANIM_MAP[event]||$('animationSelect').value,duration,eventAnimations:EVENT_ANIM_MAP,eventDurations:EVENT_DURATION_MAP,...meta})});
+  await api('/api/broadcast/event',{method:'POST',body:JSON.stringify({eventId:String(publishedEventId||Date.now()),event,matchId:String(MATCH?.id||meta.matchId||''),eventAt:Date.now(),eventStyle:eventStyle(event),animation:EVENT_ANIM_MAP[event]||EVENT_THEME_NAMES[0],duration,eventAnimations:EVENT_ANIM_MAP,eventDurations:EVENT_DURATION_MAP,...meta})});
   broadcastEventClearTimer=setTimeout(()=>{
    if(String(STATE?.broadcast?.eventId??'')!==String(publishedEventId??''))return;
    void saveBroadcast({event:null,eventId:publishedEventId,eventAt:null,matchId:null}).catch(error=>console.warn('Broadcast event cleanup could not sync:',error));
@@ -523,7 +549,7 @@ function fireEventSequence(events){
     const item=sequence[index++],event=item.event;
     const result=await enqueueCurrentEvent(event,item.meta,generation);
     if(!result?.ok||generation!==eventPublishGeneration){done(false);return;}
-    const duration=Math.max(900,Number(EVENT_DURATION_MAP[event]||$('animationDuration')?.value||2200));
+    const duration=Math.max(900,Number(EVENT_DURATION_MAP[event]||2400));
     const timer=setTimeout(()=>{eventSequenceTimers.delete(timer);if(index>=sequence.length)done(true);else void showNext();},duration+100);
     eventSequenceTimers.add(timer);
    };
@@ -569,10 +595,10 @@ async function toggleCard(type){
  }
  const data=cardDataFor(type);if(!data)return alert('Start a match before showing a card.');
  activeCardType=type;syncCardButtonState(type);
- try{await saveBroadcast({card:{type,data},cardId:Date.now(),cardAnimation:CARD_ANIM_MAP[type]||$('cardAnimationSelect').value,cardDurations:CARD_DURATION_MAP,event:null});}
+ try{await saveBroadcast({card:{type,data},cardId:Date.now(),cardAnimation:CARD_ANIM_MAP[type]||CARD_MOTION_CURRENT,cardDurations:CARD_DURATION_MAP,event:null});}
  catch(error){activeCardType=STATE?.broadcast?.card?.type||null;syncCardButtonState();throw error;}
 }
-async function refreshActiveCard(){const type=STATE?.broadcast?.card?.type||activeCardType;if(!type)return;const data=cardDataFor(type);if(data)await saveBroadcast({card:{type,data},cardId:STATE?.broadcast?.cardId||0,event:null,cardAnimation:CARD_ANIM_MAP[type]||'zoom',cardDurations:CARD_DURATION_MAP})}
+async function refreshActiveCard(){const type=STATE?.broadcast?.card?.type||activeCardType;if(!type)return;const data=cardDataFor(type);if(data)await saveBroadcast({card:{type,data},cardId:STATE?.broadcast?.cardId||0,event:null,cardAnimation:CARD_ANIM_MAP[type]||CARD_MOTION_CURRENT,cardDurations:CARD_DURATION_MAP})}
 function planModal(heading='Match access is required'){
  openModal(`<div class="modalHead"><div><div class="eyebrow">SUBSCRIPTION</div><h3>${heading}</h3></div><button class="closeBtn" id="planCloseX" type="button">×</button></div><p class="muted">Team और Player data पहले से सुरक्षित रहेगा। Match start के समय ही plan activate करना जरूरी है.</p><div class="planChoices"><div class="planCard"><h4>Basic</h4><div class="price">₹100/day</div><p>1–5 days · Single Match · Broadcast Graphics</p></div><div class="planCard"><h4>Pro</h4><div class="price">₹200/day</div><p>3–15 days · Tournament + All Features</p></div></div><div class="modalNotice">Activation ID WhatsApp से मिलता है. Auto-generated Activation ID 6 characters का होगा. Manual ID अधिकतम 18 characters तक हो सकती है. Contact: <b>9928262424</b></div><div class="field" style="margin-top:12px"><label>Activation ID</label><input id="modalActivation" maxlength="18" autocomplete="off" placeholder="A7K2P9"></div><div class="rowBtns"><button class="btn primary" id="activateFromModal" type="button">Activate Plan</button><a class="btn ghost" href="https://wa.me/919928262424" target="_blank">WhatsApp Seller</a><button class="btn ghost" id="planCancel" type="button">Cancel</button></div>`,box=>{
    box.querySelector('#planCloseX').onclick=e=>{e.preventDefault();e.stopPropagation();closeModal()};
