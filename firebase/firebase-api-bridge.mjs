@@ -264,6 +264,7 @@ async function savePublicBroadcast(uid, broadcast) {
     eventAt: broadcast.eventAt !== undefined ? Number(broadcast.eventAt)||null : previous.eventAt || null,
     wicketDetails: broadcast.event==='WICKET' ? (broadcast.wicketDetails||null) : broadcast.event===null ? null : (previous.wicketDetails||null),
     eventPlayer: broadcast.eventPlayer !== undefined ? broadcast.eventPlayer : previous.eventPlayer || null,
+    resultDetails: broadcast.resultDetails !== undefined ? broadcast.resultDetails : previous.resultDetails || null,
     eventId: broadcast.eventId !== undefined ? broadcast.eventId : previous.eventId || null,
     matchId: broadcast.matchId !== undefined ? broadcast.matchId : previous.matchId || null,
     selectedLayout: broadcast.selectedLayout || previous.selectedLayout || null };
@@ -443,6 +444,38 @@ async function handleApi(url,init={}) {
     if(path==='/api/match/state'&&method==='POST'){const {user,profile}=await requireUser();gate(profile,'basic');const match=body.match;if(!match?.id||match.userId!==user.uid||match.status!=='live'||!match.teamA||!match.teamB||match.teamA===match.teamB)return fail(400,'Match डेटा गलत है।');const validationKey=user.uid+':'+match.id,teamPair=JSON.stringify([match.teamA,match.teamB]);if(validatedMatchTeams.get(validationKey)!==teamPair){const teams=await Promise.all([teamDetails(user.uid,match.teamA),teamDetails(user.uid,match.teamB)]);if(!teams[0]||!teams[1])return fail(400,'Match की Teams सही नहीं हैं।');validatedMatchTeams.set(validationKey,teamPair);}await saveMatch(user.uid,match);return ok({});}
     if(path==='/api/match/finish'&&method==='POST'){const {user,profile}=await requireUser();gate(profile,'basic');const m=await getOwner(user.uid,'matches',String(body.matchId||''));if(!m)return fail(404,'Live Match नहीं मिला।');if(m.status!=='live')return fail(409,'यह Match LIVE नहीं है।');const type=['winner','tie','no-result'].includes(body.resultType)?body.resultType:'winner';if(type==='winner'){if(![m.teamA,m.teamB].includes(String(body.winnerTeamId)))return fail(400,'Winner Team चुनें।');m.winnerTeamId=String(body.winnerTeamId);m.resultType='winner';m.result=`${m.winnerTeamId===m.teamA?m.teamAName:m.teamBName} won`;}else{m.winnerTeamId=null;m.resultType=type==='tie'?'tie':'no-result';m.result=type==='tie'?'Match tied':'No Result';}m.status='finished';m.completedAt=nowIso();m.updatedAt=m.completedAt;await saveMatch(user.uid,m);return ok({match:m});}
     if(path==='/api/match/recover-stale'&&method==='POST'){const {user}=await requireUser();const m=await getOwner(user.uid,'matches',String(body.matchId||''));if(!m)return fail(404,'Match नहीं मिला।');if(m.status!=='live')return fail(409,'यह Match अब LIVE नहीं है।');m.status='abandoned';m.resultType='abandoned';m.result='Abandoned / closed by account owner';m.completedAt=nowIso();await saveMatch(user.uid,m);return ok({match:m,preservedScorecard:true});}
+    if(path==='/api/match/archive-completed'&&method==='POST'){
+      const {user}=await requireUser();
+      const id=String(body.matchId||'');
+      const m=await getOwner(user.uid,'matches',id);
+      if(!m)return fail(404,'Match नहीं मिला।');
+      if(m.status==='finished')return ok({match:m,archived:false});
+      if(m.status!=='live')return fail(409,'यह Match अब LIVE नहीं है।');
+      const innings=m.activeInnings||{};
+      const completed=!!(m.awaitingMatchFinish||(innings.finished&&Number(m.inningsNo||innings.number||1)>=2));
+      if(!completed||Number(m.inningsNo||innings.number||1)<2)return fail(409,'दूसरी पारी पूरी होने की पुष्टि नहीं है; इस Match को LIVE से नहीं हटाया गया।');
+      const history=[...(Array.isArray(m.inningsHistory)?m.inningsHistory:[]),innings];
+      const first=history.find(x=>Number(x?.number||0)===1)||history.find(x=>String(x?.battingId||'')!==String(innings.battingId||''));
+      if(!first)return fail(409,'पहली पारी का JSON score record नहीं मिला; Match सुरक्षित रखते हुए बदलाव रोक दिया गया।');
+      const firstScore=Math.max(0,Number(first.score)||0),secondScore=Math.max(0,Number(innings.score)||0);
+      const target=Math.max(1,Number(innings.target)||firstScore+1);
+      if(secondScore>=target){
+        m.resultType='winner';m.winnerTeamId=String(innings.battingId||'');
+        const teamName=m.winnerTeamId===String(m.teamA)?(m.teamAName||'Team A'):(m.teamBName||'Team B');
+        const xi=(m.teamXIs?.[String(innings.battingId)]||[]).length||Object.keys(innings.batStats||{}).length||11;
+        const wicketsLeft=Math.max(0,xi-1-Number(innings.wickets||0));
+        m.result=`${teamName} won by ${wicketsLeft} wickets`;
+      }else if(secondScore===firstScore){
+        m.resultType='tie';m.winnerTeamId=null;m.result='Match tied';
+      }else{
+        m.resultType='winner';m.winnerTeamId=String(innings.bowlingId||'');
+        const teamName=m.winnerTeamId===String(m.teamA)?(m.teamAName||'Team A'):(m.teamBName||'Team B');
+        m.result=`${teamName} won by ${Math.max(1,firstScore-secondScore)} runs`;
+      }
+      m.status='finished';m.completedAt=nowIso();m.updatedAt=m.completedAt;
+      await saveMatch(user.uid,m);
+      return ok({match:m,archived:true,preservedScorecard:true});
+    }
     const matchDelete=path.match(/^\/api\/match\/([^/]+)$/);if(matchDelete&&method==='DELETE'){const {user}=await requireUser();const id=decodeURIComponent(matchDelete[1]);const m=await getOwner(user.uid,'matches',id);if(!m)return fail(404,'Match नहीं मिला।');await deleteDoc(ownerDoc(user.uid,'matches',id));await deleteDoc(publicDoc('publicMatches',id));return ok({deletedId:id});}
     if(path==='/api/broadcast'&&method==='POST'){
       const {user,profile}=await requireUser();gate(profile,'basic');const uid=user.uid;
