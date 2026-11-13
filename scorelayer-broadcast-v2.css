@@ -646,16 +646,16 @@
 #layerPreview.layerPreview.jlInternationalPreview.color20 .jcPvBowling{background:linear-gradient(110deg,#502c7c,#21143f)!important}
 
 /* Five additional signature score layouts: the first twenty are retained unchanged. */
-#scoreBar.scoreBar.jlInternationalScorebar.layout21 .jcIntlPanel{clip-path:polygon(0 0,93% 0,100% 16%,100% 84%,93% 100%,0 100%)!important;border-radius:0!important}
-#scoreBar.scoreBar.jlInternationalScorebar.layout21 .jcIntlScorePanel{clip-path:polygon(5% 0,100% 0,95% 100%,0 100%)!important}
-#scoreBar.scoreBar.jlInternationalScorebar.layout22 .jcIntlPanel{border-radius:16px 3px 16px 3px!important;backdrop-filter:blur(10px) saturate(1.25)!important}
-#scoreBar.scoreBar.jlInternationalScorebar.layout22 .jcIntlScorePanel{border-radius:24px 4px!important}
-#scoreBar.scoreBar.jlInternationalScorebar.layout23 .jcIntlPanel{clip-path:polygon(0 0,96% 0,100% 50%,96% 100%,0 100%,4% 50%)!important;border-radius:0!important}
-#scoreBar.scoreBar.jlInternationalScorebar.layout23 .jcIntlScorePanel{clip-path:polygon(4% 0,96% 0,100% 50%,96% 100%,4% 100%,0 50%)!important}
-#scoreBar.scoreBar.jlInternationalScorebar.layout24 .jcIntlPanel{border-radius:4px!important;border-top:3px solid var(--intl-accent)!important;box-shadow:inset 0 4px 0 #ffffff16,0 5px 18px #0007!important}
-#scoreBar.scoreBar.jlInternationalScorebar.layout24 .jcIntlTargetPanel{clip-path:polygon(0 0,100% 0,96% 100%,4% 100%)!important}
-#scoreBar.scoreBar.jlInternationalScorebar.layout25 .jcIntlPanel{border-radius:14px!important;border:1px solid var(--intl-accent)!important;box-shadow:inset 0 0 20px #ffffff12,0 0 18px #0007!important}
-#scoreBar.scoreBar.jlInternationalScorebar.layout25 .jcIntlScorePanel{border-radius:28px!important;border:2px solid var(--intl-accent)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer21 .jcIntlPanel{clip-path:polygon(0 0,93% 0,100% 16%,100% 84%,93% 100%,0 100%)!important;border-radius:0!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer21 .jcIntlScorePanel{clip-path:polygon(5% 0,100% 0,95% 100%,0 100%)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer22 .jcIntlPanel{border-radius:16px 3px 16px 3px!important;backdrop-filter:blur(10px) saturate(1.25)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer22 .jcIntlScorePanel{border-radius:24px 4px!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer23 .jcIntlPanel{clip-path:polygon(0 0,96% 0,100% 50%,96% 100%,0 100%,4% 50%)!important;border-radius:0!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer23 .jcIntlScorePanel{clip-path:polygon(4% 0,96% 0,100% 50%,96% 100%,4% 100%,0 50%)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer24 .jcIntlPanel{border-radius:4px!important;border-top:3px solid var(--intl-accent)!important;box-shadow:inset 0 4px 0 #ffffff16,0 5px 18px #0007!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer24 .jcIntlTargetPanel{clip-path:polygon(0 0,100% 0,96% 100%,4% 100%)!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer25 .jcIntlPanel{border-radius:14px!important;border:1px solid var(--intl-accent)!important;box-shadow:inset 0 0 20px #ffffff12,0 0 18px #0007!important}
+#scoreBar.scoreBar.jlInternationalScorebar.layer25 .jcIntlScorePanel{border-radius:28px!important;border:2px solid var(--intl-accent)!important}
 #layerPreview.layerPreview.jlInternationalPreview.layout21 .jcPvPanel{clip-path:polygon(0 0,93% 0,100% 16%,100% 84%,93% 100%,0 100%)!important;border-radius:0!important}
 #layerPreview.layerPreview.jlInternationalPreview.layout22 .jcPvPanel{border-radius:16px 3px!important;box-shadow:inset 0 0 18px #ffffff12!important}
 #layerPreview.layerPreview.jlInternationalPreview.layout23 .jcPvPanel{clip-path:polygon(0 0,96% 0,100% 50%,96% 100%,0 100%,4% 50%)!important}
