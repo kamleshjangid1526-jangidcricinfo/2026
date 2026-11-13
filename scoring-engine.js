@@ -267,12 +267,12 @@
     statusAfterDelivery(i);
     try { const saveTask=saveMatch(false); renderScoring(); await saveTask; }
     catch(err) { MATCH=old; if(STATE)STATE.activeMatch=clone(old); renderScoring(); alert(`स्कोर device पर सेव नहीं हुआ: ${err.message}`); return; }
-    if(extraName==='wide') void fireEvent('WIDE');
-    else if(extraName==='noball') void fireEvent('NO BALL');
-    else if(extraName==='legbye') void fireEvent('LEG BYE');
-    else if(extraName==='bye') void fireEvent('BYE');
-    else if(batRuns===4) void fireEvent('FOUR');
-    else if(batRuns===6) void fireEvent('SIX');
+    const scoringGraphic=extraName==='wide'?'WIDE':extraName==='noball'?'NO BALL':extraName==='legbye'?'LEG BYE':extraName==='bye'?'BYE':batRuns===4?'FOUR':batRuns===6?'SIX':'';
+    if(scoringGraphic){
+      // Mobile taps can arrive quickly; wait until the event is safely queued locally
+      // before allowing the next delivery to supersede it.
+      try{await fireEvent(scoringGraphic);}catch(graphicError){console.warn('Scoring event graphic could not be queued:',graphicError);}
+    }
     if(MATCH?.awaitingMatchFinish&&typeof window.archiveCompletedMatchNow==='function'){
       try{await window.archiveCompletedMatchNow(MATCH);}
       catch(archiveError){console.warn('Completed match archive will retry on next Control Board load:',archiveError);}
@@ -560,16 +560,39 @@
   window.requestNextInnings=requestNextInnings;
   window.resumeScoringSetup=()=>{const i=innings();if(!i)return;if(MATCH?.awaitingNextInnings||MATCH?.awaitingInningsSetup)startSecondInnings();else if(i.awaitingNewBatter&&i._replaceSlot)promptReplacement(i._replaceSlot);else if(i.awaitingBowler)promptBowler();};
   window.JangidScoring={recordDelivery,undoLastDelivery,saveMatch,finalizeMatch,renderScoring,startSecondInnings,requestNextInnings,openChangeBatter,getAllOutWicketLimit:allOutWicketLimit,isInningsAllOut};
+  const scoringActionSelector='[data-run],[data-extra],#wicketBtn,#undoBall,#changeBowler,#retiredHurt,#changeBatter,#startNextInningsBtn';
+  let lastMobileScoringPointer=null;
+  async function dispatchScoringAction(button,event){
+    const run=button.closest('[data-run]');
+    const extra=button.closest('[data-extra]');
+    if(run){event.preventDefault();await recordDelivery({kind:'run',runs:Number(run.dataset.run)||0});return true;}
+    if(extra){event.preventDefault();promptExtra(extra.dataset.extra);return true;}
+    if(button.closest('#wicketBtn')){event.preventDefault();pickWicket();return true;}
+    if(button.closest('#undoBall')){event.preventDefault();await undoLastDelivery();return true;}
+    if(button.closest('#changeBowler')){event.preventDefault();promptBowler(true);return true;}
+    if(button.closest('#retiredHurt')){event.preventDefault();retireHurt();return true;}
+    if(button.closest('#changeBatter')){event.preventDefault();openChangeBatter();return true;}
+    if(button.closest('#startNextInningsBtn')){event.preventDefault();requestNextInnings();return true;}
+    return false;
+  }
+  // Mobile scoring has its own compact touch layout. Handle touch-pointer release directly,
+  // then suppress the synthetic click that mobile browsers emit for the same tap.
+  document.addEventListener('pointerup',async event=>{
+    if(!window.matchMedia?.('(max-width:700px)').matches)return;
+    const node=event.target instanceof Element?event.target:null;
+    const button=node?.closest(scoringActionSelector);
+    if(!button)return;
+    event.preventDefault();
+    lastMobileScoringPointer={button,at:Date.now()};
+    await dispatchScoringAction(button,event);
+  },{passive:false});
   document.addEventListener('click',async event=>{
-    const run=event.target.closest('[data-run]');
-    const extra=event.target.closest('[data-extra]');
-    if(run){event.preventDefault();await recordDelivery({kind:'run',runs:Number(run.dataset.run)||0});return;}
-    if(extra){event.preventDefault();promptExtra(extra.dataset.extra);return;}
-    if(event.target.closest('#wicketBtn')){event.preventDefault();pickWicket();return;}
-    if(event.target.closest('#undoBall')){event.preventDefault();await undoLastDelivery();return;}
-    if(event.target.closest('#changeBowler')){event.preventDefault();promptBowler(true);return;}
-    if(event.target.closest('#retiredHurt')){event.preventDefault();retireHurt();return;}
-    if(event.target.closest('#changeBatter')){event.preventDefault();openChangeBatter();return;}
-    if(event.target.closest('#startNextInningsBtn')){event.preventDefault();requestNextInnings();return;}
+    const node=event.target instanceof Element?event.target:null;
+    const button=node?.closest(scoringActionSelector);
+    if(!button)return;
+    if(lastMobileScoringPointer&&lastMobileScoringPointer.button===button&&Date.now()-lastMobileScoringPointer.at<900){
+      event.preventDefault();lastMobileScoringPointer=null;return;
+    }
+    await dispatchScoringAction(button,event);
   });
 })();
