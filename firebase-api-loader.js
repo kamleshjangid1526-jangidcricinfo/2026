@@ -5,7 +5,7 @@
   const ready=new Promise((resolve,reject)=>{resolveBridge=resolve;rejectBridge=reject;});
   window.__JC_FIREBASE_BRIDGE_READY__=ready;window.__JC_FIREBASE_BRIDGE_RESOLVE__=resolveBridge;window.__JC_FIREBASE_BRIDGE_REJECT__=rejectBridge;
   window.__JC_FIREBASE_EVENTS__=new Set();window.__JC_LAST_PUBLIC_PAYLOAD__=null;window.__JC_FIREBASE_INIT_ERROR__=null;
-  let cachedState=null,activeUid='',syncing=false,syncRequested=false,cacheWriteSequence=0,channel=null,syncRetryTimer=null,syncFailureCount=0,syncStatusTimer=null;
+  let cachedState=null,activeUid='',syncing=false,urgentBroadcastFlush=false,syncRequested=false,cacheWriteSequence=0,channel=null,syncRetryTimer=null,syncFailureCount=0,syncStatusTimer=null;
   const BG_SYNC_TAG='jangid-cricinfo-pending-sync-v1';
   function requestBackgroundSync(){
     if(!('serviceWorker' in navigator))return;
@@ -88,16 +88,16 @@
   }
   function scheduleSync(delay=220){
     if(!navigator.onLine)return;
-    if(syncing){syncRequested=true;return;}
+    if(syncing||urgentBroadcastFlush){syncRequested=true;return;}
     if(syncRetryTimer)clearTimeout(syncRetryTimer);
     syncRetryTimer=setTimeout(()=>{
       syncRetryTimer=null;
-      if(syncing){syncRequested=true;return;}
+      if(syncing||urgentBroadcastFlush){syncRequested=true;return;}
       void syncNow();
     },Math.max(50,Number(delay)||220));
   }
   async function syncNow(){
-    if(syncing||!navigator.onLine){if(syncing)syncRequested=true;return false;}syncing=true;syncRequested=false;let rerunSync=false;clearTimeout(syncStatusTimer);syncStatusTimer=setTimeout(()=>{if(syncing)localStatus('syncing','स्कोर device पर सुरक्षित है; Firebase में background upload चल रहा है।');},700);
+    if(syncing||urgentBroadcastFlush||!navigator.onLine){if(syncing||urgentBroadcastFlush)syncRequested=true;return false;}syncing=true;syncRequested=false;let rerunSync=false;clearTimeout(syncStatusTimer);syncStatusTimer=setTimeout(()=>{if(syncing)localStatus('syncing','स्कोर device पर सुरक्षित है; Firebase में background upload चल रहा है।');},700);
     try{
       const state=await readState(),uid=activeUid||uidOf(state);if(!uid){localStatus('offline','Login करें; saved offline data इस device पर सुरक्षित है।');return false;}
       const matchRows=await records('queue:'+uid+':match:');
@@ -169,10 +169,35 @@
         catch(error){if(!isNetworkError(error))throw error;requestBackgroundSync();localStatus('pending','Match result offline सेव है; internet आने पर Sync होगा।');return toResponse({status:200,body:{ok:true,offline:true,queued:true,match:finished}});}
       }
       if(url.pathname==='/api/broadcast'&&method==='POST'){
-        await cacheBroadcast(body);
-        localStatus(navigator.onLine?'saved':'offline',navigator.onLine?'Broadcast graphics device पर सेव हैं; Firebase background में upload होंगी।':'Broadcast graphics device पर सेव हैं; reconnect पर Sync होंगी।');
-        if(navigator.onLine)scheduleSync(220);else requestBackgroundSync();
-        return toResponse({status:200,body:{ok:true,queued:true,localFirst:true}});
+        const queued=await cacheBroadcast(body);
+        const urgentEvent=!!body?.event&&body?.eventId!==undefined&&body?.eventId!==null;
+        let uploaded=false;
+        // Live event graphics must reach OBS on another device before the scorer
+        // moves on. Keep the IndexedDB queue until this exact revision is confirmed.
+        if(urgentEvent&&navigator.onLine&&!syncing&&!urgentBroadcastFlush){
+          urgentBroadcastFlush=true;
+          try{
+            const result=await apiRequest(url,init);
+            if((result.status||200)>=400)throw new Error(result.body?.error||'Live graphic upload failed');
+            const latest=await store?.get(queued.queueKey);
+            if(latest?.version===queued.version)await store?.remove(queued.queueKey);
+            uploaded=true;
+            localStatus('synced','Live event graphic Firebase पर पहुँच गई है।');
+          }catch(error){
+            window.__JC_LAST_BROADCAST_ERROR__=String(error?.message||'Live graphic upload failed');
+            localStatus('pending','Graphic फोन पर सुरक्षित है; Firebase upload दोबारा होगा।');
+            console.warn('Immediate event graphic upload failed; keeping its offline queue entry.',error);
+          }finally{
+            urgentBroadcastFlush=false;
+            if(syncRequested){syncRequested=false;scheduleSync(160);}
+          }
+        }
+        if(!uploaded){
+          if(navigator.onLine)scheduleSync(urgentEvent?120:220);
+          else requestBackgroundSync();
+          if(!urgentEvent)localStatus(navigator.onLine?'saved':'offline',navigator.onLine?'Broadcast graphics device पर सेव हैं; Firebase background में upload होंगी।':'Broadcast graphics device पर सेव हैं; reconnect पर Sync होंगी।');
+        }
+        return toResponse({status:200,body:{ok:true,queued:true,localFirst:true,uploaded}});
       }
       if((url.pathname==='/api/login'||url.pathname==='/api/admin/login')&&method==='POST'){
         try{sessionStorage.removeItem(AUTH_SESSION_KEY);}catch{}
