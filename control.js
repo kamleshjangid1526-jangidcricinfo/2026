@@ -252,7 +252,7 @@ function renderLiveMatchPicker(){
  if(!rows.length){root.innerHTML='<div class="liveMatchPickerEmpty">अभी आपके खाते में कोई Live या Completed match नहीं है।</div>';return;}
  root.innerHTML=`<div class="liveMatchPickerHead"><div><b>SELECT MATCH</b><small>Scoring या OBS Score Layer के लिए मैच चुनें</small></div><span>${live.length} LIVE · ${done.length} COMPLETED</span></div><div class="liveMatchPickerList">${rows.map(m=>{
   const inn=m.activeInnings||{},isLive=m.status==='live',rate=inn.balls?(Number(inn.score||0)/(inn.balls/6)).toFixed(2):'0.00';
-  return `<article class="liveMatchPickerCard"><div><span class="${isLive?'livePulse':'matchCompleteTag'}">${isLive?'● LIVE':'✓ COMPLETED'}</span><b>${esc(m.title||((m.teamAName||'Team A')+' vs '+(m.teamBName||'Team B')))}</b><small>${esc(m.teamAName||'Team A')} vs ${esc(m.teamBName||'Team B')} · ${Number(inn.score||0)}/${Number(inn.wickets||0)} · ${Math.floor((inn.balls||0)/6)}.${(inn.balls||0)%6} ov · CRR ${rate}</small></div><div class="liveMatchPickerActions"><button class="miniBtn primary" data-open-scoring-match="${esc(m.id)}" ${isLive?'':'disabled'}>Scoring</button><a class="miniBtn" target="_blank" rel="noopener" href="${esc(scoreLayerUrlFor(m))}">Score Layer</a><button class="miniBtn" data-copy-scorelayer="${esc(m.id)}">Copy OBS URL</button></div></article>`;
+  return `<article class="liveMatchPickerCard"><div><span class="${isLive?'livePulse':'matchCompleteTag'}">${isLive?'● LIVE':'✓ COMPLETED'}</span><b>${esc(m.title||((m.teamAName||'Team A')+' vs '+(m.teamBName||'Team B')))}</b><small>${esc(m.teamAName||'Team A')} vs ${esc(m.teamBName||'Team B')} · ${Number(inn.score||0)}/${Number(inn.wickets||0)} · ${Math.floor((inn.balls||0)/6)}.${(inn.balls||0)%6} ov · CRR ${rate}</small></div><div class="liveMatchPickerActions"><button class="miniBtn primary" data-open-scoring-match="${esc(m.id)}">${isLive?'Scoring':'View Cards'}</button><a class="miniBtn" target="_blank" rel="noopener" href="${esc(scoreLayerUrlFor(m))}">Score Layer</a><button class="miniBtn" data-copy-scorelayer="${esc(m.id)}">Copy OBS URL</button></div></article>`;
  }).join('')}</div>`;
 }
 function renderDashboardHistory(){
@@ -560,7 +560,7 @@ function cardDataFor(type){
  const i=currentInnings();if(!i)return null;
  const bat=team(i.battingId),bowl=team(i.bowlingId);
  const battingIds=matchXI(i.battingId,'batStats'),bowlingIds=matchXI(i.bowlingId,'bowlStats');
- const bats=battingIds.map(id=>({id:String(id),...i.batStats?.[id]})).filter(p=>Number(p.balls||0)>0||Number(p.runs||0)>0||String(p.id)===String(i.striker)||String(p.id)===String(i.nonStriker));const bowls=bowlingIds.map(id=>({id:String(id),...i.bowlStats?.[id]})).filter(p=>Number(p.balls||0)>0||String(p.id)===String(i.currentBowler));
+ const bats=battingIds.map(id=>({id:String(id),...i.batStats?.[id]})).filter(p=>Number(p.balls||0)>0||Number(p.runs||0)>0||String(p.id)===String(i.striker)||String(p.id)===String(i.nonStriker)||!!p.out||!!p.retired);const bowls=bowlingIds.map(id=>({id:String(id),...i.bowlStats?.[id]})).filter(p=>Number(p.balls||0)>0||String(p.id)===String(i.currentBowler));
  const striker=i.batStats?.[i.striker]||{},nonStriker=i.batStats?.[i.nonStriker]||{},currentBowler=i.bowlStats?.[i.currentBowler]||{};
  const score=Number(i.score||0),wickets=Number(i.wickets||0),balls=Number(i.balls||0);
  const crr=balls?(score/(balls/6)).toFixed(2):'0.00';
