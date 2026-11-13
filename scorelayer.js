@@ -525,10 +525,21 @@ function boot(){
  es.onmessage=e=>{
   try{
    const d=JSON.parse(e.data);
-   const candidates=(d.activeMatches||[]).filter(x=>(x.status==='live'||(x.status==='finished'&&owner&&x.userId===owner))&&(!owner||x.userId===owner));
+   const allMatches=(d.matches||d.activeMatches||[]).filter(x=>!owner||String(x.userId)===String(owner));
+   const liveCandidates=(d.activeMatches||[]).filter(x=>x.status==='live'&&(!owner||String(x.userId)===String(owner)));
    const requested=q.get('match');
-   const m=requested?candidates.find(x=>x.id===requested):candidates[0];
-   if(!m){const bar=document.getElementById('scoreBar');if(requested)bar.innerHTML='';return;}
+   const broadcastOwner=owner||liveCandidates[0]?.userId||Object.keys(d.broadcasts||{}).find(uid=>{
+    const item=d.broadcasts?.[uid]||{};
+    return !!item.matchId&&allMatches.some(m=>String(m.id)===String(item.matchId)&&String(m.userId)===String(uid));
+   });
+   const selectedBroadcast=(d.broadcasts?.[broadcastOwner]||{});
+   const requestedMatch=requested?allMatches.find(x=>String(x.id)===String(requested)):null;
+   const broadcastMatchId=String(selectedBroadcast.matchId||'');
+   const broadcastMatch=broadcastMatchId?allMatches.find(x=>String(x.id)===broadcastMatchId):null;
+   // Prefer a requested match, then a currently live match. A finished match is
+   // only kept on air when its own RESULT event or a manually selected card targets it.
+   const m=requested?requestedMatch:(liveCandidates[0]||((selectedBroadcast.event||selectedBroadcast.card)&&broadcastMatch?.status==='finished'?broadcastMatch:(broadcastMatch?.status==='live'?broadcastMatch:null)));
+   if(!m){const bar=document.getElementById('scoreBar');if(owner||requested)bar.innerHTML='';return;}
    latestMatch=m;
    const incoming={...(d.broadcasts?.[m.userId]||{})};
    latestSSEBroadcast=incoming;
