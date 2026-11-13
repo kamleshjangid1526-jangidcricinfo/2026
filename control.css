@@ -359,3 +359,40 @@
   #scoring #scoreCardActionGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
   #scoring #scoreCardActionGrid .scoreCardAction{min-height:52px;padding:9px 7px;font-size:11px;border-radius:11px}
 }
+
+/* Match-specific Scoring and OBS URL picker. */
+.liveMatchPicker{margin:10px 0 14px;padding:12px;border:1px solid #244766;border-radius:16px;background:linear-gradient(145deg,#071a2b,#0b2439);color:#eaf6ff}
+.liveMatchPickerHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.liveMatchPickerHead>div{display:grid;gap:3px}.liveMatchPickerHead b{font-size:13px;letter-spacing:.08em}.liveMatchPickerHead small{font-size:11px;color:#9bbbd0}
+.liveMatchPickerHead>span{font-size:10px;color:#7de6ba;font-weight:900;white-space:nowrap}
+.liveMatchPickerList{display:grid;gap:8px}
+.liveMatchPickerCard{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;border-radius:12px;border:1px solid #244a66;background:#0b2337;min-width:0}
+.liveMatchPickerCard>div:first-child{display:grid;gap:4px;min-width:0}
+.liveMatchPickerCard>div:first-child>b{font-size:13px;overflow-wrap:anywhere}
+.liveMatchPickerCard>div:first-child>small{font-size:11px;color:#aac3d6;line-height:1.4}
+.liveMatchPickerCard .livePulse,.liveMatchPickerCard .matchCompleteTag{font-size:9px;font-weight:900;letter-spacing:.08em;color:#76e8b9}
+.liveMatchPickerCard .matchCompleteTag{color:#c8d5e5}
+.liveMatchPickerActions,.dashLiveActions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.liveMatchPickerActions .miniBtn,.dashLiveActions .miniBtn{min-height:34px;padding:7px 10px;font-size:10px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.liveMatchPickerEmpty{padding:12px;border-radius:12px;background:#0b2337;color:#95afc4;font-size:12px}
+.dashLiveActions{padding-top:10px}
+.graphicRedesignIntro{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,1fr);gap:12px;margin-bottom:14px}
+.layerGroupPanel,.eventThemePanel,.cardMotionSettings{min-width:0}
+.layerGroupPanel .field{margin-bottom:9px}
+.layerGroupPanel .layerPreview{margin-top:12px}
+.eventThemePanel .eventThemeGrid{gap:9px}
+.cardMotionSettings .field{max-width:520px}
+.cardMotionSettings select,.layerGroupPanel select{min-height:42px}
+@media(max-width:820px){
+ .graphicRedesignIntro{grid-template-columns:minmax(0,1fr)}
+ .liveMatchPickerCard{align-items:stretch;flex-direction:column}
+ .liveMatchPickerActions>*{flex:1 1 30%;min-width:0}
+ .dashLiveActions>*{flex:1 1 40%;min-width:0}
+}
+@media(max-width:520px){
+ .liveMatchPicker{padding:9px}
+ .liveMatchPickerHead{align-items:flex-start;flex-direction:column}
+ .liveMatchPickerActions>*{flex:1 1 45%}
+ .graphicRedesignIntro{gap:9px}
+ .eventThemePanel .eventThemeGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
