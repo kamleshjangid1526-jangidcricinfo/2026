@@ -217,8 +217,8 @@ function renderBar(m,b){
  const savedStudio=studioTemplate(b?.studioDesign);
  if(savedStudio){renderStudioBar(layer,m,b,savedStudio);return;}
  layer.dataset.studio='false';
- const color=Math.max(1,Math.min(20,Number(b?.color)||1));
- const layout=Math.max(1,Math.min(20,Number(b?.layer)||1));
+ const color=Math.max(1,Math.min(25,Number(b?.color)||1));
+ const layout=Math.max(1,Math.min(25,Number(b?.layer)||1));
  layer.className=`scoreBar jlInternationalScorebar layer${layout} color${color}`;
  layer.dataset.layout='international';layer.dataset.family='international-lower-third';layer.dataset.color=String(color);
  layer.removeAttribute('style');
