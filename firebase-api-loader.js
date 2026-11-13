@@ -37,13 +37,35 @@
     const uid=uidOf(state),pending=await records('queue:'+uid+':match:');
     for(const entry of pending){const match=entry.value?.match;if(!match?.id)continue;state.matches=Array.isArray(state.matches)?state.matches:[];const ix=state.matches.findIndex(x=>String(x.id)===String(match.id));if(ix>=0)state.matches[ix]=clone(match);else state.matches.push(clone(match));if(match.status==='live')state.activeMatch=clone(match);state.savedLiveMatches=(state.savedLiveMatches||[]).filter(x=>String(x.id)!==String(match.id));if(match.status==='live')state.savedLiveMatches.push(clone(match));}
     if(!state.activeMatch&&state.savedLiveMatches?.length)state.activeMatch=clone(state.savedLiveMatches.slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0]);
-    const broadcasts=await records('queue:'+uid+':broadcast');if(broadcasts.length)state.broadcast={...(state.broadcast||{}),...(broadcasts[broadcasts.length-1].value?.payload||{})};
+    const broadcasts=await records('queue:'+uid+':broadcast:');
+    const legacyBroadcast=await store?.get(key(uid,'broadcast'));
+    const queuedBroadcasts=[...broadcasts.map(x=>x.value?.payload).filter(Boolean),legacyBroadcast?.payload].filter(Boolean);
+    if(queuedBroadcasts.length){
+      state.broadcasts={...(state.broadcasts||{})};
+      for(const payload of queuedBroadcasts){const mid=String(payload.matchId||'');if(mid)state.broadcasts[mid]=clone(payload);}
+      const currentId=String(state.activeMatch?.id||'');
+      const selected=queuedBroadcasts.find(x=>String(x.matchId||'')===currentId)||queuedBroadcasts[queuedBroadcasts.length-1];
+      state.broadcast={...(state.broadcast||{}),...clone(selected)};
+    }
     return state;
   }
   function emitPublic(payload){window.__JC_LAST_PUBLIC_PAYLOAD__=payload;const event={data:JSON.stringify(payload)};for(const source of window.__JC_FIREBASE_EVENTS__){try{source.onmessage?.(event);}catch(error){console.error(error);}try{source.dispatchEvent?.(new MessageEvent('message',{data:event.data}));}catch{}}try{channel?.postMessage({publicPayload:payload});}catch{}}
   if(channel)channel.addEventListener('message',event=>{const p=event.data;if(p?.type==='status'){window.dispatchEvent(new CustomEvent('jc-offline-status',{detail:{state:p.state,detail:p.detail,online:navigator.onLine}}));return;}if(p?.publicPayload){window.__JC_LAST_PUBLIC_PAYLOAD__=p.publicPayload;const e={data:JSON.stringify(p.publicPayload)};for(const source of window.__JC_FIREBASE_EVENTS__){try{source.onmessage?.(e);}catch{}try{source.dispatchEvent?.(new MessageEvent('message',{data:e.data}));}catch{}}}});
   window.__JC_EMIT_PUBLIC__=emitPublic;
-  function publicPayload(match,broadcast,broadcastEvent){const state=cachedState||{},matches=[...(state.matches||[])];if(match){const ix=matches.findIndex(x=>String(x.id)===String(match.id));if(ix>=0)matches[ix]=clone(match);else matches.push(clone(match));}const broadcasts={...(state.broadcasts||{})};if(broadcast&&activeUid)broadcasts[activeUid]=clone(broadcast);const broadcastCards={...(state.broadcastCards||{})};if(broadcast&&activeUid)broadcastCards[activeUid]={uid:activeUid,ownerUid:activeUid,card:broadcast.card??null,cardId:broadcast.cardId??null,cardAnimation:broadcast.cardAnimation||null,cardAnimations:broadcast.cardAnimations||{},cardDurations:broadcast.cardDurations||{}};const broadcastEvents={...(state.broadcastEvents||{})};if(broadcastEvent&&activeUid)broadcastEvents[activeUid]=clone(broadcastEvent);return {activeMatches:matches.filter(x=>x.status==='live'),matches,tournaments:state.tournaments||[],broadcasts,broadcastCards,broadcastEvents,changedCollection:'local-offline'};}
+  function publicPayload(match,broadcast,broadcastEvent){
+    const state=cachedState||{},matches=[...(state.matches||[])];
+    if(match){const ix=matches.findIndex(x=>String(x.id)===String(match.id));if(ix>=0)matches[ix]=clone(match);else matches.push(clone(match));}
+    const broadcasts={...(state.broadcasts||{})},broadcastsByMatch={...(state.broadcastsByMatch||{})};
+    const broadcastCards={...(state.broadcastCards||{})},broadcastCardsByMatch={...(state.broadcastCardsByMatch||{})};
+    const broadcastEvents={...(state.broadcastEvents||{})},broadcastEventsByMatch={...(state.broadcastEventsByMatch||{})};
+    const matchId=String(broadcast?.matchId||match?.id||broadcastEvent?.matchId||''),matchKey=activeUid&&matchId?activeUid+':'+matchId:'';
+    if(broadcast&&activeUid){
+      if(matchKey){broadcastsByMatch[matchKey]=clone(broadcast);broadcastCardsByMatch[matchKey]={uid:activeUid,ownerUid:activeUid,matchId,card:broadcast.card??null,cardId:broadcast.cardId??null,cardAnimation:broadcast.cardAnimation||null,cardMotion:broadcast.cardMotion||null,cardAnimations:broadcast.cardAnimations||{},cardDurations:broadcast.cardDurations||{}};}
+      else {broadcasts[activeUid]=clone(broadcast);broadcastCards[activeUid]={uid:activeUid,ownerUid:activeUid,card:broadcast.card??null,cardId:broadcast.cardId??null,cardAnimation:broadcast.cardAnimation||null,cardMotion:broadcast.cardMotion||null,cardAnimations:broadcast.cardAnimations||{},cardDurations:broadcast.cardDurations||{}};}
+    }
+    if(broadcastEvent&&activeUid){const eventMatchId=String(broadcastEvent.matchId||matchId);if(eventMatchId)broadcastEventsByMatch[activeUid+':'+eventMatchId]=clone(broadcastEvent);else broadcastEvents[activeUid]=clone(broadcastEvent);}
+    return {activeMatches:matches.filter(x=>x.status==='live'),matches,tournaments:state.tournaments||[],broadcasts,broadcastsByMatch,broadcastCards,broadcastCardsByMatch,broadcastEvents,broadcastEventsByMatch,changedCollection:'local-offline'};
+  }
   async function apiRequest(url,init={}){const bridge=await ready;return bridge.handleApi(url,init);}
   function toResponse(result){return new Response(JSON.stringify(result.body??{}),{status:result.status??200,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});}
   function localFinish(match,body){const finished=clone(match||{}),type=['winner','tie','no-result'].includes(body.resultType)?body.resultType:'winner';if(type==='winner'){if(![String(finished.teamA),String(finished.teamB)].includes(String(body.winnerTeamId)))throw new Error('Winner Team चुनें।');finished.winnerTeamId=String(body.winnerTeamId);finished.resultType='winner';finished.result=String(body.resultText||'').trim().slice(0,140)||(finished.winnerTeamId===String(finished.teamA)?(finished.teamAName||'Team A'):(finished.teamBName||'Team B'))+' won';}else{finished.winnerTeamId=null;finished.resultType=type;finished.result=type==='tie'?'Match tied':'No Result';}finished.status='finished';finished.completedAt=new Date().toISOString();finished.updatedAt=finished.completedAt;return finished;}
@@ -71,19 +93,21 @@
   async function cacheBroadcast(payload){
     const uid=activeUid||uidOf(cachedState);
     if(!uid)throw new Error('पहले online Login करें, फिर offline graphics सेव हो सकेंगी।');
-    const queueKey=key(uid,'broadcast');
-    // eventId intentionally stays unchanged when only a layout, palette or card setting changes.
-    // Give every queue write a new revision so an older upload cannot delete a newer setting.
-    const version=String(Date.now())+':'+String(++cacheWriteSequence);
-    const durable=await store?.put(queueKey,{payload:clone(payload),version});
+    const matchId=String(payload?.matchId||'').trim(),scopeId=matchId||'current';
+    const queueKey=key(uid,'broadcast',scopeId),version=String(Date.now())+':'+String(++cacheWriteSequence);
+    const snapshot=clone({...payload,matchId:matchId||null});
+    const durable=await store?.put(queueKey,{payload:snapshot,version});
     if(durable!==true)throw new Error('इस डिवाइस की IndexedDB storage उपलब्ध नहीं है। Browser storage permission और खाली जगह जाँचें।');
-    // Keep a compact last-known broadcast snapshot after the upload queue is cleared.
-    // This restores the selected graphics on a later offline Score Layer refresh.
-    const localSnapshotSaved=await store?.put('broadcast:last:'+uid,clone(payload));
+    const localSnapshotSaved=await store?.put('broadcast:last:'+uid+':'+scopeId,snapshot);
     if(localSnapshotSaved!==true)throw new Error('Broadcast queue सुरक्षित है, लेकिन आखिरी Graphics की offline copy सेव नहीं हो पाई।');
-    // Do not rewrite both full cached profile records on each graphic update.
-    if(cachedState)cachedState.broadcast={...(cachedState.broadcast||{}),...clone(payload)};
-    emitPublic(publicPayload(cachedState?.activeMatch,cachedState?.broadcast));
+    if(cachedState){
+      cachedState.broadcasts||={};
+      if(matchId)cachedState.broadcasts[matchId]=clone(snapshot);
+      const activeId=String(cachedState.activeMatch?.id||'');
+      if(!matchId||activeId===matchId)cachedState.broadcast={...(cachedState.broadcast||{}),...snapshot};
+    }
+    const match=(cachedState?.matches||[]).find(x=>String(x.id)===matchId)||cachedState?.activeMatch||null;
+    emitPublic(publicPayload(match,snapshot));
     return {uid,queueKey,version};
   }
   async function cacheBroadcastEvent(payload){
@@ -145,8 +169,10 @@
       const matchRows=await records('queue:'+uid+':match:');
       const finishRows=await records('queue:'+uid+':finish:');
       const eventRows=await records('queue:'+uid+':broadcast-event:');
-      const broadcastRow=await store?.get(key(uid,'broadcast'));
-      if(!matchRows.length&&!finishRows.length&&!eventRows.length&&!broadcastRow){
+      const broadcastRows=await records('queue:'+uid+':broadcast:');
+      const legacyBroadcastRow=await store?.get(key(uid,'broadcast'));
+      if(legacyBroadcastRow)broadcastRows.push({key:key(uid,'broadcast'),value:legacyBroadcastRow});
+      if(!matchRows.length&&!finishRows.length&&!eventRows.length&&!broadcastRows.length){
         localStatus('synced','कोई pending बदलाव नहीं है।');return true;
       }
 
@@ -223,14 +249,18 @@
         }catch(error){noteRowError('Broadcast Event sync',row,error);}
       }
 
-      // Crucially, a failing old Match/Finish queue row no longer blocks this upload.
-      if(broadcastRow){
+      // Each Match keeps its own durable graphics queue. An old match's failed upload
+      // cannot overwrite or stop cards and layouts belonging to another match.
+      for(const row of broadcastRows){
         try{
-          const result=await apiRequest(new URL('/api/broadcast',location.href),{method:'POST',body:JSON.stringify(broadcastRow.payload)});
+          const queued=await store?.get(row.key);
+          if(!queued)continue;
+          if(queued.version!==row.value?.version){rerunSync=true;continue;}
+          const result=await apiRequest(new URL('/api/broadcast',location.href),{method:'POST',body:JSON.stringify(queued.payload||{})});
           if((result.status||200)>=400)throw new Error(result.body?.error||'Broadcast save failed');
-          const latest=await store?.get(key(uid,'broadcast'));
-          if(latest?.version===broadcastRow.version)await store?.remove(key(uid,'broadcast'));else rerunSync=true;
-        }catch(error){noteRowError('Broadcast Cards/Graphics sync',broadcastRow,error);}
+          const latest=await store?.get(row.key);
+          if(latest?.version===queued.version)await store?.remove(row.key);else rerunSync=true;
+        }catch(error){noteRowError('Broadcast Cards/Graphics sync',row,error);}
       }
 
       const pending=(await records('queue:'+uid+':')).length;
