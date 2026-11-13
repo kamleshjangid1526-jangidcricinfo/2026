@@ -407,8 +407,16 @@ function rememberEventId(id){
 }
 function clearEventVisual(el,cardEl){
  clearTimeout(el._hide);eventVisible=false;el.style.display='none';el.innerHTML='';
- el.classList.remove('incomingCornerLayer');
+ el.className='eventLayer';el.removeAttribute('data-anim');el.removeAttribute('data-event-type');
+ el.style.removeProperty('animation-duration');
  if(!cardEl.classList.contains('isVisible'))flushPendingSponsor();
+}
+function resetEventAnimation(el){
+ // Remove the previous event selectors and force a style boundary so the next event starts cleanly.
+ el.style.display='none';el.className='eventLayer';
+ el.removeAttribute('data-anim');el.removeAttribute('data-event-type');
+ el.style.removeProperty('animation-duration');
+ void el.offsetWidth;
 }
 function renderEvent(b,matchId){
  const el=document.getElementById('eventLayer'),cardEl=document.getElementById('cardLayer');
@@ -438,7 +446,7 @@ function renderEvent(b,matchId){
  }
  // Each event ID can animate only once for this match, even after SSE re-renders.
  if(!incomingId||incomingId===String(lastEventId??''))return;
- clearTimeout(el._hide);rememberEventId(incomingId);eventVisible=true;hideSponsorLayer();
+ resetEventAnimation(el);clearTimeout(el._hide);rememberEventId(incomingId);eventVisible=true;hideSponsorLayer();
  if(cardEl.classList.contains('isVisible')){dismissedCardId=String(latestBroadcast?.cardId??'');cardEl.classList.remove('isVisible');cardEl.style.display='none';cardEl.innerHTML='';cardEl.dataset.cardMarkup='';cardEl.dataset.cardId='';document.body.classList.remove('cardActive')}
  const eventName=String(b.event||'').toUpperCase();const corner=['NEW BATSMAN','NEW BOWLER'].includes(eventName);
  const animationTemplate=!corner?selectedStudioOverlay(b.animationDesign):null;
