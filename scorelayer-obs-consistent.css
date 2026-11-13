@@ -8,7 +8,7 @@ body.scoreLayerBody{
 
 /* The 1920x1080 design canvas scales to any OBS source size with the same aspect ratio. */
 body.scoreLayerBody #scoreBar.scoreBar.jlInternationalScorebar{
-  height:11.3cqh!important;min-height:0!important;max-height:none!important;
+  height:10.7cqh!important;min-height:0!important;max-height:none!important;
   grid-template-columns:minmax(0,1.30fr) minmax(0,.83fr) minmax(0,.98fr) minmax(0,1.19fr)!important;
   grid-template-rows:minmax(0,1fr)!important;
   grid-template-areas:"batting score target bowling"!important;
@@ -185,3 +185,11 @@ body.scoreLayerBody #cardLayer.cardLayer .broadcastCardStage.studioCardStage{
 body.scoreLayerBody #cardLayer.cardLayer .broadcastCardClose{z-index:50!important}
 body.scoreLayerBody #eventLayer .jlStudioItem[class*="jlStudioMotion-"]{animation-play-state:running!important}
 body.scoreLayerBody #cardLayer.cardLayer .jlStudioItem[class*="jlStudioMotion-"]{animation-play-state:running!important}
+
+/* Small proportional height trim; keep the four-panel canvas and typography adaptive. */
+body.scoreLayerBody #scoreBar.scoreBar.jlInternationalScorebar{height:10.7cqh!important}
+body.scoreLayerBody #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatterName{font-size:clamp(.72cqi, .92cqi, 1.18cqi)!important}
+body.scoreLayerBody #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerName{font-size:clamp(.82cqi,1.05cqi,1.3cqi)!important}
+body.scoreLayerBody #scoreBar.scoreBar.jlInternationalScorebar .jcIntlSectionHead strong{font-size:clamp(.62cqi,.78cqi,1cqi)!important}
+body.scoreLayerBody #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBatScore b{font-size:clamp(.78cqi,1.08cqi,1.34cqi)!important}
+body.scoreLayerBody #scoreBar.scoreBar.jlInternationalScorebar .jcIntlBowlerStats b{font-size:clamp(.7cqi,.92cqi,1.16cqi)!important}
